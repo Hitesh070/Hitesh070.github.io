@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hitesh V S — EEE Engineer &amp; Systems Specialist | VIT Chennai</title>
+    <meta name="description" content="Personal portfolio of Hitesh V S — 2nd Year EEE student at VIT Chennai. Embedded Systems, Power Electronics, VLSI, Carnatic Music &amp; Creative Media.">
+    <meta name="keywords" content="Hitesh V S, EEE Engineer, VIT Chennai, Embedded C, Verilog, MATLAB, Python, Carnatic Music, Premiere Pro, Photoshop">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Hitesh V S | EEE Student &amp; Systems Engineer">
+    <meta property="og:description" content="Portfolio of Hitesh V S — 2nd Year EEE at VIT Chennai. Embedded Systems, Power Electronics, VLSI, Carnatic Music &amp; Creative Media.">
+    <meta property="og:type" content="website">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-void">
+    <!-- Noise Grain Overlay -->
+    <div class="noise-overlay" aria-hidden="true"></div>
+
+    <!-- Ethereal Constellation Mesh & Deep Ambient Canvas Background -->
+    <canvas id="ambient-mesh-canvas"></canvas>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#hero" class="nav-brand">
+                <span class="brand-initial">H</span><span class="brand-dot">.</span>
+            </a>
+
+            <div class="nav-menu" id="nav-links">
+                <a href="#about" class="nav-item">About</a>
+                <a href="#capabilities" class="nav-item">Skills</a>
+                <a href="#hobbies" class="nav-item">Interests &amp; Media</a>
+                <a href="#projects" class="nav-item">Projects</a>
+                <a href="#academics" class="nav-item">Academics</a>
+                <a href="#contact" class="nav-item">Contact</a>
+            </div>
+
+            <div class="nav-actions">
+                <a href="#contact" class="btn-minimal-hire">
+                    <span>Contact Me</span>
+                </a>
+
+                <button class="mobile-toggle-btn" id="mobile-menu-btn" aria-label="Toggle Navigation">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-section" id="hero">
+            <div class="hero-grid-container">
+                <!-- Text Column -->
+                <div class="hero-text-col reveal-on-scroll reveal-up">
+                    <div class="hero-greeting-tag">
+                        <span class="status-indicator-dot"></span>
+                        <span>2nd Year EEE Student • VIT Chennai</span>
+                    </div>
+
+                    <h1 class="hero-name-heading">
+                        <span class="name-highlight">Hitesh V S</span>
+                    </h1>
+
+                    <!-- Clean Role Container (Class of 2029 Badge Removed) -->
+                    <div class="hero-role-block">
+                        <div class="typed-wrapper">
+                            <span class="typed-text" id="typed-output"></span><span class="typed-cursor">|</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-line-divider"></div>
+
+                    <p class="hero-bio-lead">
+                        Electrical &amp; Electronics Engineering undergraduate at VIT Chennai. Passionate about Embedded Systems, Digital VLSI Logic, Power Electronics, Control Systems, Carnatic Music, and Creative Media Production.
+                    </p>
+
+                    <div class="hero-action-row">
+                        <a href="#projects" class="btn-pill-primary">
+                            <span>Explore Projects</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a href="#contact" class="btn-pill-secondary">
+                            <span>Get In Touch</span>
+                        </a>
+                        <div class="social-mini-icons">
+                            <a href="https://github.com/Hitesh070" target="_blank" aria-label="GitHub Profile" title="GitHub: Hitesh070"><i class="fa-brands fa-github"></i></a>
+                            <a href="https://www.linkedin.com/in/hiteshvs" target="_blank" aria-label="LinkedIn Profile" title="LinkedIn: hiteshvs"><i class="fa-brands fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Photo Column (Framed so full outfit & pants are visible) -->
+                <div class="hero-visual-col reveal-on-scroll reveal-scale">
+                    <div class="hero-portrait-frame magnetic-card">
+                        <div class="portrait-ambient-glow"></div>
+                        <div class="portrait-card">
+                            <img src="assets/hero.jpg" alt="Hitesh V S" class="portrait-img">
+                            <div class="portrait-overlay-gradient"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="section-container" id="about">
+            <div class="about-editorial-grid">
+                <div class="editorial-sidebar reveal-on-scroll reveal-left">
+                    <span class="uppercase-tag">About Me</span>
+                    <h2 class="editorial-heading">
+                        Hardware &amp; <br>
+                        <span class="text-muted-highlight">Creative Mindset.</span>
+                    </h2>
+                    <div class="sidebar-accent-line"></div>
+                </div>
+
+                <div class="editorial-body reveal-on-scroll reveal-right">
+                    <p class="lead-paragraph">
+                        I am Hitesh V S, a 2nd year Electrical and Electronics Engineering (EEE) student at Vellore Institute of Technology (VIT), Chennai.
+                    </p>
+                    <p class="body-paragraph">
+                        My technical work spans physical hardware design, digital VLSI logic, control system modeling, and embedded robotics. I have developed autonomous aquatic waste skimmers (ALPS), approximate arithmetic adders for edge computing, dual-loop buck converter control, and precision analog irrigation controllers.
+                    </p>
+                    <p class="body-paragraph">
+                        Beyond engineering, I am deeply devoted to Carnatic Music — playing the keyboard and violin, drawing, and attending live Carnatic and Bharatanatyam concerts. I am also skilled in creative media production using Premiere Pro, Photoshop, Canva, and Linux system administration.
+                    </p>
+
+                    <!-- Academic & Creative Highlights -->
+                    <div class="editorial-stats-row">
+                        <div class="stat-unit">
+                            <div class="stat-value">2029</div>
+                            <div class="stat-caption">Graduation Year</div>
+                        </div>
+                        <div class="stat-unit">
+                            <div class="stat-value">VIT</div>
+                            <div class="stat-caption">Chennai Campus</div>
+                        </div>
+                        <div class="stat-unit">
+                            <div class="stat-value">6+</div>
+                            <div class="stat-caption">Engineering Repos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="section-container" id="capabilities">
+            <div class="section-title-block reveal-on-scroll reveal-up">
+                <span class="uppercase-tag">Technical Toolkit</span>
+                <h2 class="section-title-text">Core <span class="text-muted-highlight">Skills &amp; Software</span></h2>
+            </div>
+
+            <div class="capabilities-grid">
+                <!-- Card 01 -->
+                <div class="capability-card magnetic-card reveal-on-scroll reveal-up">
+                    <div class="card-radial-glow"></div>
+                    <div class="card-content">
+                        <span class="card-number">01</span>
+                        <h3 class="card-title">Programming &amp; Embedded</h3>
+                        <div class="card-line"></div>
+                        <div class="pill-tags-group">
+                            <span class="tech-pill">Python</span>
+                            <span class="tech-pill">Java</span>
+                            <span class="tech-pill">C</span>
+                            <span class="tech-pill">Embedded C</span>
+                            <span class="tech-pill">Verilog HDL</span>
+                            <span class="tech-pill">SQL</span>
+                            <span class="tech-pill">Linux</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 02 -->
+                <div class="capability-card magnetic-card reveal-on-scroll reveal-up" style="transition-delay: 0.15s;">
+                    <div class="card-radial-glow"></div>
+                    <div class="card-content">
+                        <span class="card-number">02</span>
+                        <h3 class="card-title">Simulation &amp; Engineering Tools</h3>
+                        <div class="card-line"></div>
+                        <div class="pill-tags-group">
+                            <span class="tech-pill">MATLAB</span>
+                            <span class="tech-pill">Simulink</span>
+                            <span class="tech-pill">LTspice</span>
+                            <span class="tech-pill">ModelSim</span>
+                            <span class="tech-pill">LabVIEW</span>
+                            <span class="tech-pill">Circuit Simulation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 03 -->
+                <div class="capability-card magnetic-card reveal-on-scroll reveal-up" style="transition-delay: 0.3s;">
+                    <div class="card-radial-glow"></div>
+                    <div class="card-content">
+                        <span class="card-number">03</span>
+                        <h3 class="card-title">Creative Media &amp; Design</h3>
+                        <div class="card-line"></div>
+                        <div class="pill-tags-group">
+                            <span class="tech-pill text-red">Adobe Premiere Pro</span>
+                            <span class="tech-pill text-blue">Adobe Photoshop</span>
+                            <span class="tech-pill">Canva</span>
+                            <span class="tech-pill">Drawing</span>
+                            <span class="tech-pill">Visual Storytelling</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interests, Hobbies & Music Section -->
+        <section class="section-container" id="hobbies">
+            <div class="section-title-block reveal-on-scroll reveal-up">
+                <span class="uppercase-tag">Beyond Engineering</span>
+                <h2 class="section-title-text">Interests, <span class="text-muted-highlight">Music &amp; Hobbies</span></h2>
+            </div>
+
+            <div class="hobbies-grid">
+                <div class="hobby-card magnetic-card reveal-on-scroll reveal-up">
+                    <div class="hobby-icon"><i class="fa-solid fa-music text-blue"></i></div>
+                    <h3>Carnatic Music &amp; Instruments</h3>
+                    <p>Deep passion for Carnatic Classical Music. Play the Music Keyboard and Violin, exploring intricate ragas and rhythmic compositions.</p>
+                </div>
+
+                <div class="hobby-card magnetic-card reveal-on-scroll reveal-up" style="transition-delay: 0.15s;">
+                    <div class="hobby-icon"><i class="fa-solid fa-masks-theater text-red"></i></div>
+                    <h3>Concerts &amp; Fine Arts</h3>
+                    <p>Avid attendee of live Carnatic Music and Bharatanatyam dance concerts. Inspired by classical Indian arts, heritage, and performance.</p>
+                </div>
+
+                <div class="hobby-card magnetic-card reveal-on-scroll reveal-up" style="transition-delay: 0.3s;">
+                    <div class="hobby-icon"><i class="fa-solid fa-palette text-blue"></i></div>
+                    <h3>Drawing &amp; Visual Arts</h3>
+                    <p>Enthusiastic about freehand drawing, sketching, and graphic design using modern software suites like Photoshop, Premiere Pro, and Canva.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Infinite Tech & Hobbies Marquee -->
+        <div class="marquee-wrapper">
+            <div class="marquee-track">
+                <div class="marquee-item"><i class="fa-brands fa-python text-blue"></i> Python</div>
+                <div class="marquee-item"><i class="fa-brands fa-java text-red"></i> Java</div>
+                <div class="marquee-item"><i class="fa-solid fa-code"></i> Embedded C</div>
+                <div class="marquee-item"><i class="fa-solid fa-microchip text-blue"></i> Verilog</div>
+                <div class="marquee-item"><i class="fa-solid fa-music text-red"></i> Carnatic Music</div>
+                <div class="marquee-item"><i class="fa-solid fa-keyboard text-blue"></i> Keyboard &amp; Violin</div>
+                <div class="marquee-item"><i class="fa-brands fa-linux"></i> Linux</div>
+                <div class="marquee-item"><i class="fa-solid fa-video text-red"></i> Premiere Pro</div>
+                <div class="marquee-item"><i class="fa-solid fa-palette text-blue"></i> Photoshop &amp; Canva</div>
+
+                <!-- Duplicate for seamless loop -->
+                <div class="marquee-item"><i class="fa-brands fa-python text-blue"></i> Python</div>
+                <div class="marquee-item"><i class="fa-brands fa-java text-red"></i> Java</div>
+                <div class="marquee-item"><i class="fa-solid fa-code"></i> Embedded C</div>
+                <div class="marquee-item"><i class="fa-solid fa-microchip text-blue"></i> Verilog</div>
+                <div class="marquee-item"><i class="fa-solid fa-music text-red"></i> Carnatic Music</div>
+                <div class="marquee-item"><i class="fa-solid fa-keyboard text-blue"></i> Keyboard &amp; Violin</div>
+                <div class="marquee-item"><i class="fa-brands fa-linux"></i> Linux</div>
+                <div class="marquee-item"><i class="fa-solid fa-video text-red"></i> Premiere Pro</div>
+                <div class="marquee-item"><i class="fa-solid fa-palette text-blue"></i> Photoshop &amp; Canva</div>
+            </div>
+        </div>
+
+        <!-- Featured GitHub Repositories Showcase (Simple Vector Icons instead of AI generated images) -->
+        <section class="section-container" id="projects">
+            <div class="section-title-block flex-between reveal-on-scroll reveal-up">
+                <div>
+                    <span class="uppercase-tag">GitHub Repositories</span>
+                    <h2 class="section-title-text">Featured <span class="text-muted-highlight">Projects</span></h2>
+                </div>
+
+                <!-- Project Filters -->
+                <div class="filter-pill-container">
+                    <button class="proj-filter-pill active" data-proj-filter="all">All Repos</button>
+                    <button class="proj-filter-pill" data-proj-filter="embedded">Embedded &amp; Robotics</button>
+                    <button class="proj-filter-pill" data-proj-filter="vlsi">VLSI &amp; Digital</button>
+                    <button class="proj-filter-pill" data-proj-filter="power">Power &amp; Control</button>
+                    <button class="proj-filter-pill" data-proj-filter="software">Software &amp; AI</button>
+                </div>
+            </div>
+
+            <div class="projects-list-grid" id="projects-container">
+                <!-- Repo 1: ALPS (Boat Icon Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up" data-category="embedded">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-blue">
+                            <i class="fa-solid fa-sailboat"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="alps">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">Embedded &amp; Robotics</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">ALPS — Autonomous Aquatic Waste Skimmer USV</h3>
+                        <p class="project-abstract">
+                            Autonomous unmanned surface vehicle (USV) featuring smart vision-based river cleaning, Raspberry Pi ML camera trash mapping, and extendable robotic collector arm.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>Python</span>
+                            <span>Embedded C</span>
+                            <span>Raspberry Pi</span>
+                            <span>Computer Vision</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="alps">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070" target="_blank" class="icon-link-subtle" title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Repo 2: Approximate Arithmetic Adder (Microchip Icon Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up" data-category="vlsi" style="transition-delay: 0.15s;">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-cyan">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="approx_adder">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">VLSI &amp; Digital</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">Approximate Arithmetic Adder for Edge Computing</h3>
+                        <p class="project-abstract">
+                            VLSI design and verification of energy-efficient approximate adders optimized for low-power image processing and edge computing hardware acceleration.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>Verilog HDL</span>
+                            <span>ModelSim</span>
+                            <span>Python</span>
+                            <span>MATLAB</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="approx_adder">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070" target="_blank" class="icon-link-subtle" title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Repo 3: Cascade Buck Converter (Thunder / Lightning Icon Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up" data-category="power" style="transition-delay: 0.3s;">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-red">
+                            <i class="fa-solid fa-bolt-lightning"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="buck_converter">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">Power &amp; Control</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">Cascade Dual-Loop Control of Buck Converter</h3>
+                        <p class="project-abstract">
+                            Design and simulation of dual-loop (voltage outer, current inner) PI/PID control for DC-DC buck converter offering ultra-fast transient response and steady output.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>MATLAB</span>
+                            <span>Simulink</span>
+                            <span>LTspice</span>
+                            <span>Embedded C</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="buck_converter">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070" target="_blank" class="icon-link-subtle" title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Repo 4: Analog Irrigation Controller (Droplet Icon Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up" data-category="embedded">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-emerald">
+                            <i class="fa-solid fa-droplet"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="irrigation">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">Embedded &amp; Circuits</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">Analog Automatic Irrigation Controller</h3>
+                        <p class="project-abstract">
+                            Precision analog sensing circuit with op-amp hysteresis control and relay driver for microcontroller-free automated soil moisture irrigation.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>LTspice</span>
+                            <span>Analog Design</span>
+                            <span>MATLAB</span>
+                            <span>Sensors</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="irrigation">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070" target="_blank" class="icon-link-subtle" title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Repo 5: Battery Thermal Runaway (Flame Icon Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up" data-category="software" style="transition-delay: 0.15s;">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-orange">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="thermal_runaway">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">Software &amp; AI</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">Thermal Runaway Prediction in Li-Ion Batteries</h3>
+                        <p class="project-abstract">
+                            Predictive machine learning pipeline and thermal model analyzing early signs of thermal runaway in Lithium-Ion EV battery packs.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>Python</span>
+                            <span>MATLAB</span>
+                            <span>Machine Learning</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="thermal_runaway">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070" target="_blank" class="icon-link-subtle" title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Repo 6: Advance Online Learning System (Graduation Cap Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up" data-category="software" style="transition-delay: 0.3s;">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-purple">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="learning_system">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">Software &amp; Web</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">Advance Online Learning System</h3>
+                        <p class="project-abstract">
+                            Full-stack learning portal supporting micro-courses, interactive practice sessions, student-teacher class management, and SQL database analytics.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>Python</span>
+                            <span>JavaScript</span>
+                            <span>SQL</span>
+                            <span>PHP</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="learning_system">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070" target="_blank" class="icon-link-subtle" title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Academic Milestone Section -->
+        <section class="section-container" id="academics">
+            <div class="section-title-block reveal-on-scroll reveal-up">
+                <span class="uppercase-tag">Education &amp; Background</span>
+                <h2 class="section-title-text">Academic <span class="text-muted-highlight">Journey</span></h2>
+            </div>
+
+            <div class="timeline-container reveal-on-scroll reveal-up">
+                <div class="timeline-row">
+                    <div class="timeline-period-col">2025 — 2029</div>
+                    <div class="timeline-detail-col">
+                        <h3 class="timeline-role-title">B.Tech in Electrical &amp; Electronics Engineering (EEE)</h3>
+                        <span class="timeline-org">Vellore Institute of Technology (VIT), Chennai</span>
+                        <p class="timeline-paragraph">
+                            Currently in 2nd Year. Coursework includes Electric Circuits, Digital Logic Design, Microcontrollers &amp; Embedded Systems, Control Engineering, Signals &amp; Systems, Power Electronics, and VLSI Design.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>VIT Chennai</span>
+                            <span>EEE Department</span>
+                            <span>Batch 2025-2029</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section class="section-container" id="contact">
+            <div class="section-title-block reveal-on-scroll reveal-up">
+                <span class="uppercase-tag">Contact</span>
+                <h2 class="section-title-text">Connect with <span class="text-muted-highlight">Me</span></h2>
+            </div>
+
+            <div class="contact-editorial-layout">
+                <div class="contact-direct-info reveal-on-scroll reveal-left">
+                    <h3>Direct Channels</h3>
+                    <p>Open for research collaborations, engineering internships, hardware project inquiries, and musical discussions.</p>
+
+                    <div class="contact-link-list">
+                        <div class="contact-channel-item">
+                            <span class="channel-label">Email</span>
+                            <div class="channel-value-wrap">
+                                <a href="mailto:hiteshvs616@gmail.com" class="channel-value">hiteshvs616@gmail.com</a>
+                                <button class="btn-copy-mini" data-copy="hiteshvs616@gmail.com" title="Copy Email">
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="contact-channel-item">
+                            <span class="channel-label">Institution</span>
+                            <span class="channel-value">VIT Chennai, India</span>
+                        </div>
+                    </div>
+
+                    <div class="social-links-flex">
+                        <a href="https://github.com/Hitesh070" target="_blank" class="social-pill"><i class="fa-brands fa-github"></i> GitHub (Hitesh070)</a>
+                        <a href="https://www.linkedin.com/in/hiteshvs" target="_blank" class="social-pill"><i class="fa-brands fa-linkedin"></i> LinkedIn (hiteshvs)</a>
+                    </div>
+                </div>
+
+                <!-- Clean Aligned Contact Form -->
+                <form class="minimal-contact-form reveal-on-scroll reveal-right" id="contact-form">
+                    <div class="form-grid-2">
+                        <div class="input-field-group">
+                            <label for="name">Your Name</label>
+                            <input type="text" id="name" name="name" required placeholder="e.g. Dr. Ramesh Kumar">
+                        </div>
+                        <div class="input-field-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" required placeholder="name@domain.com">
+                        </div>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label for="subject">Topic / Engagement Type</label>
+                        <select id="subject" name="subject" class="aligned-select">
+                            <option value="Engineering Internship / Opportunity">Engineering Internship / Opportunity</option>
+                            <option value="Research Collaboration">Research Collaboration</option>
+                            <option value="Embedded / Hardware Project Query">Embedded / Hardware Project Query</option>
+                            <option value="Music & Media Connection">Music &amp; Media Connection</option>
+                            <option value="General Inquiry">General Inquiry</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="4" required placeholder="Your message here..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit-editorial" id="submit-form-btn">
+                        <span>Send Message</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+
+                    <!-- Real Success Alert Container -->
+                    <div class="form-status-msg" id="form-status-msg" style="display:none;"></div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-block">
+        <div class="footer-container">
+            <div class="footer-left">
+                <a href="#hero" class="footer-brand">
+                    <span class="brand-initial">H</span><span class="brand-dot">.</span>
+                </a>
+                <span class="copyright-text">© 2026 Hitesh V S • EEE VIT Chennai (Class of 2029)</span>
+            </div>
+            <div class="footer-right">
+                <span class="status-live-tag"><span class="status-dot-green"></span> Available</span>
+                <button class="btn-scroll-top" id="back-to-top" title="Top">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Project Architecture Detail Modal -->
+    <div class="modal-overlay" id="project-modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close-btn" id="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- JavaScript Engine -->
+    <script src="app.js"></script>
+</body>
+</html>

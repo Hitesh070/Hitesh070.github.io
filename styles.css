@@ -1146,31 +1146,39 @@ p {
 
 .timeline-row {
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 140px 1fr;
     gap: 2rem;
     padding-bottom: 2.2rem;
     border-bottom: 1px solid var(--border-subtle);
-    align-items: center; /* CENTER ALIGN LOGO & TEXT VERTICALLY */
+    align-items: center;
 }
 
 .timeline-period-col {
     display: flex;
     flex-direction: column;
-    align-items: center; /* CENTER LOGO & PERIOD TEXT */
+    align-items: center;
     justify-content: center;
     gap: 0.6rem;
     text-align: center;
+    width: 100%;
 }
 
 .academic-institution-logo {
-    width: 64px;
-    height: 64px;
-    object-fit: contain;
-    border-radius: 50%;
-    background: #ffffff;
-    padding: 6px;
+    width: 64px !important;
+    height: 64px !important;
+    max-width: 64px !important;
+    max-height: 64px !important;
+    min-width: 64px !important;
+    min-height: 64px !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    padding: 6px !important;
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
     border: 2px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0 !important;
+    display: block !important;
+    margin: 0 auto 0.4rem auto !important;
     transition: transform var(--transition-fast);
 }
 
@@ -1181,10 +1189,11 @@ p {
 .timeline-period-badge {
     font-family: var(--font-mono);
     font-size: 0.85rem;
-    color: var(--accent-blue) !important; /* ELECTRIC BLUE PERIOD TEXT */
+    color: var(--accent-blue) !important;
     font-weight: 600;
-    white-space: nowrap;
+    white-space: nowrap !important;
     letter-spacing: 0.05em;
+    display: block !important;
 }
 
 .timeline-role-title {
@@ -1527,7 +1536,8 @@ p {
     .hero-greeting-tag, .hero-role-block, .hero-action-row { justify-content: center; }
     .hero-line-divider { margin: 0 auto 1.8rem auto; }
     .about-editorial-grid, .contact-editorial-layout { grid-template-columns: 1fr; gap: 3rem; }
-    .timeline-row { grid-template-columns: 1fr; gap: 0.5rem; }
+    .timeline-row { grid-template-columns: 1fr; gap: 1rem; text-align: center; }
+    .timeline-period-col { margin-bottom: 0.4rem; }
     .form-grid-2 { grid-template-columns: 1fr; }
 }
 

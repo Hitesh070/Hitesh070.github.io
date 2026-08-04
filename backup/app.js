@@ -1,5 +1,5 @@
 /* ==========================================================================
-   HITESH V S PORTFOLIO — CINEMATIC ENGINE & INTERACTIVE SCHEMATICS (VANILLA JS)
+   HITESH V S PORTFOLIO — CINEMATIC ENGINE & MAYBACH MOTION (VANILLA JS)
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,8 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     init3DMagneticTiltCards();
     initProjectFiltersAndModals();
     initContactFormAndCopy();
-    initLiveGitHubSync();
-    initTelemetryTracker();
 });
 
 /* ==========================================================================
@@ -82,20 +80,44 @@ function initConstellationBackgroundCanvas() {
         { xRatio: 0.5, yRatio: 0.75, radius: 340, color: 'rgba(59, 130, 246, 0.06)', speedX: 0.0005, speedY: 0.0004 }
     ];
 
-    function animate() {
-        time += 0.015;
-        mouse.x += (mouse.targetX - mouse.x) * 0.05;
-        mouse.y += (mouse.targetY - mouse.y) * 0.05;
+    function drawPulsingGrid() {
+        const gridOpacity = 0.015 + Math.sin(time * 0.015) * 0.005;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${gridOpacity})`;
+        ctx.lineWidth = 1;
 
+        const gridSize = 120;
+        for (let x = 0; x < width; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+        }
+        for (let y = 0; y < height; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+        }
+    }
+
+    function animate() {
+        time += 1;
         ctx.clearRect(0, 0, width, height);
 
+        mouse.x += (mouse.targetX - mouse.x) * 0.04;
+        mouse.y += (mouse.targetY - mouse.y) * 0.04;
+
+        // Dynamic Grid
+        drawPulsingGrid();
+
+        // Nebula Blobs
         blobs.forEach((blob, i) => {
-            const bx = (blob.xRatio + Math.sin(time * 0.5 + i) * 0.12) * width + (mouse.x - width / 2) * 0.03;
-            const by = (blob.yRatio + Math.cos(time * 0.4 + i) * 0.12) * height + (mouse.y - height / 2) * 0.03;
+            const bx = width * blob.xRatio + Math.sin(time * blob.speedX + i) * 160;
+            const by = height * blob.yRatio + Math.cos(time * blob.speedY + i) * 130;
 
             const grad = ctx.createRadialGradient(bx, by, 0, bx, by, blob.radius);
             grad.addColorStop(0, blob.color);
-            grad.addColorStop(1, 'rgba(3, 3, 3, 0)');
+            grad.addColorStop(1, 'transparent');
 
             ctx.fillStyle = grad;
             ctx.beginPath();
@@ -103,40 +125,38 @@ function initConstellationBackgroundCanvas() {
             ctx.fill();
         });
 
+        // Constellation Particles & Links
         for (let i = 0; i < particles.length; i++) {
             particles[i].update();
             particles[i].draw();
 
             for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                let dx = particles[i].x - particles[j].x;
+                let dy = particles[i].y - particles[j].y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
 
                 if (dist < 130) {
-                    const lineAlpha = (1 - dist / 130) * 0.15;
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${lineAlpha})`;
-                    ctx.lineWidth = 0.7;
+                    let lineAlpha = (1 - dist / 130) * 0.15;
+                    ctx.strokeStyle = `rgba(59, 130, 246, ${lineAlpha})`;
+                    ctx.lineWidth = 0.8;
                     ctx.stroke();
                 }
             }
-
-            const mouseDx = particles[i].x - mouse.x;
-            const mouseDy = particles[i].y - mouse.y;
-            const mouseDist = Math.sqrt(mouseDx * mouseDx + mouseDy * mouseDy);
-
-            if (mouseDist < 160) {
-                const lineAlpha = (1 - mouseDist / 160) * 0.35;
-                ctx.beginPath();
-                ctx.moveTo(particles[i].x, particles[i].y);
-                ctx.lineTo(mouse.x, mouse.y);
-                ctx.strokeStyle = `rgba(59, 130, 246, ${lineAlpha})`;
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
         }
+
+        // Interactive Cursor Energy Aura
+        const mouseGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 260);
+        mouseGrad.addColorStop(0, 'rgba(59, 130, 246, 0.05)');
+        mouseGrad.addColorStop(0.5, 'rgba(255, 42, 95, 0.02)');
+        mouseGrad.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = mouseGrad;
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 260, 0, Math.PI * 2);
+        ctx.fill();
 
         requestAnimationFrame(animate);
     }
@@ -146,87 +166,117 @@ function initConstellationBackgroundCanvas() {
 }
 
 /* ==========================================================================
-   2. TYPING EFFECT ENGINE FOR HERO ROLES
+   2. MAYBACH SCROLL REVEAL ENGINE
+   ========================================================================== */
+function initScrollRevealEngine() {
+    const reveals = document.querySelectorAll('.reveal-on-scroll');
+    if (!reveals.length) return;
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px 0px -80px 0px',
+        threshold: 0.15
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, observerOptions);
+
+    reveals.forEach(el => observer.observe(el));
+}
+
+/* ==========================================================================
+   3. 3D MAGNETIC TILT CARD ENGINE
+   ========================================================================== */
+function init3DMagneticTiltCards() {
+    const cards = document.querySelectorAll('.magnetic-card');
+
+    cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = ((y - centerY) / centerY) * -6; // max 6 deg
+            const rotateY = ((x - centerX) / centerX) * 6;  // max 6 deg
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)`;
+        });
+    });
+}
+
+/* ==========================================================================
+   4. TYPING EFFECT
    ========================================================================== */
 function initTypingEffect() {
-    const outputElement = document.getElementById('typed-output');
-    if (!outputElement) return;
-
     const roles = [
-        "EEE Engineering Undergraduate",
-        "Embedded Systems & Robotics Specialist",
-        "Digital VLSI & Logic Designer",
-        "Power Electronics & Control Engineer",
-        "Carnatic Music Practitioner & Media Creator"
+        "Embedded Systems & Robotics Engineer",
+        "Verilog & Digital VLSI Designer",
+        "Control & Power Electronics Specialist",
+        "Carnatic Music Keyboard & Violinist",
+        "Creative Video Editor & Graphic Designer"
     ];
+    const outputEl = document.getElementById('typed-output');
+    if (!outputEl) return;
 
     let roleIndex = 0;
     let charIndex = 0;
     let isDeleting = false;
-    let typeSpeed = 70;
 
     function type() {
         const currentRole = roles[roleIndex];
 
         if (isDeleting) {
-            outputElement.textContent = currentRole.substring(0, charIndex - 1);
+            outputEl.textContent = currentRole.substring(0, charIndex - 1);
             charIndex--;
-            typeSpeed = 35;
         } else {
-            outputElement.textContent = currentRole.substring(0, charIndex + 1);
+            outputEl.textContent = currentRole.substring(0, charIndex + 1);
             charIndex++;
-            typeSpeed = 70;
         }
 
+        let speed = isDeleting ? 30 : 65;
+
         if (!isDeleting && charIndex === currentRole.length) {
-            typeSpeed = 2200;
+            speed = 2200;
             isDeleting = true;
         } else if (isDeleting && charIndex === 0) {
             isDeleting = false;
             roleIndex = (roleIndex + 1) % roles.length;
-            typeSpeed = 500;
+            speed = 400;
         }
 
-        setTimeout(type, typeSpeed);
+        setTimeout(type, speed);
     }
 
     type();
 }
 
 /* ==========================================================================
-   3. NAVBAR & SMOOTH SCROLL TRACKING
+   5. NAVBAR & SCROLL BEHAVIOR
    ========================================================================== */
 function initNavbarAndScroll() {
     const navbar = document.getElementById('navbar');
     const mobileBtn = document.getElementById('mobile-menu-btn');
     const navLinks = document.getElementById('nav-links');
-    const navItems = document.querySelectorAll('.nav-item');
     const backToTop = document.getElementById('back-to-top');
 
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 40) {
+        if (window.scrollY > 50) {
             navbar.classList.add('scrolled');
         } else {
             navbar.classList.remove('scrolled');
         }
-
-        const sections = document.querySelectorAll('section[id]');
-        let currentSectionId = '';
-
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop - 120;
-            const sectionHeight = section.offsetHeight;
-            if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
-                currentSectionId = section.getAttribute('id');
-            }
-        });
-
-        navItems.forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('href') === `#${currentSectionId}`) {
-                item.classList.add('active');
-            }
-        });
     });
 
     if (mobileBtn && navLinks) {
@@ -234,10 +284,8 @@ function initNavbarAndScroll() {
             navLinks.classList.toggle('mobile-open');
         });
 
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                navLinks.classList.remove('mobile-open');
-            });
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => navLinks.classList.remove('mobile-open'));
         });
     }
 
@@ -249,100 +297,22 @@ function initNavbarAndScroll() {
 }
 
 /* ==========================================================================
-   4. SCROLL REVEAL ENGINE
-   ========================================================================== */
-function initScrollRevealEngine() {
-    const revealElements = document.querySelectorAll('.reveal-on-scroll');
-
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px 0px -80px 0px',
-        threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver((entries, obs) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-            }
-        });
-    }, observerOptions);
-
-    revealElements.forEach(el => observer.observe(el));
-}
-
-/* ==========================================================================
-   5. 3D MAGNETIC TILT CARDS
-   ========================================================================== */
-function init3DMagneticTiltCards() {
-    const magneticCards = document.querySelectorAll('.magnetic-card');
-    const isMobile = window.innerWidth <= 768;
-
-    if (isMobile) return;
-
-    magneticCards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = ((y - centerY) / centerY) * -6;
-            const rotateY = ((x - centerX) / centerX) * 6;
-
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
-        });
-
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-        });
-    });
-}
-
-/* ==========================================================================
-   6. PROJECT MODALS & INTERACTIVE SCHEMATIC DIAGRAMS MAP
+   6. PROJECT DETAILS MAP & MODALS (6 GRAPHIC COVERS)
    ========================================================================== */
 const projectDetailsMap = {
     alps: {
         title: "ALPS — Autonomous Aquatic Waste Skimmer USV",
-        subtitle: "Unmanned Surface Vehicle for AI River Cleaning & Waste Mapping",
+        subtitle: "Vision-Based Water Trash Detection & Autonomous Navigation",
         category: "Embedded & Robotics",
         img: "assets/project1.jpg",
-        description: "An autonomous Unmanned Surface Vehicle (USV) engineered for river water surface cleaning, featuring real-time AI trash mapping, Raspberry Pi ML vision, and an extendable robotic collector arm.",
+        description: "ALPS is an autonomous unmanned surface vehicle (USV) designed to clear floating debris from water bodies. It integrates Raspberry Pi vision-based trash detection, an extendable robotic collection arm, and autonomous path tracking.",
         highlights: [
-            "Raspberry Pi 4 vision pipeline running real-time aquatic trash classifier model.",
-            "Autonomous path navigation using GPS module and digital compass guidance.",
-            "Motor driver PWM bridge controlling dual propulsion thrusters and conveyor arm.",
-            "Ongoing Indian Patent Application for novel waste mapping & collection mechanism."
+            "Vision-based trash detection pipeline using Raspberry Pi camera and custom ML model.",
+            "Extendable robotic arm mechanism for debris retrieval and collection bin storage.",
+            "Motor driver power distribution and sensor feedback telemetry.",
+            "Detailed BOM, CAD modeling, and TRL (Technology Readiness Level) report."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(59,130,246,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem;">SYSTEM ARCHITECTURE & SENSOR FLOWCHART</h5>
-                <svg viewBox="0 0 700 180" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="10" y="50" width="120" height="60" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="70" y="85" fill="#fff" font-size="12" text-anchor="middle">Camera & GPS</text>
-                    
-                    <path d="M 130 80 L 190 80" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-                    
-                    <rect x="190" y="40" width="150" height="80" rx="8" fill="#241223" stroke="#ff2a5f" stroke-width="1.5"/>
-                    <text x="265" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Raspberry Pi 4 ML</text>
-                    <text x="265" y="95" fill="#a0a0a0" font-size="10" text-anchor="middle">Trash Classifier</text>
-                    
-                    <path d="M 340 80 L 400 80" stroke="#3b82f6" stroke-width="2"/>
-                    
-                    <rect x="400" y="50" width="130" height="60" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="465" y="80" fill="#fff" font-size="12" text-anchor="middle">Motor Driver PWM</text>
-
-                    <path d="M 530 80 L 590 80" stroke="#3b82f6" stroke-width="2"/>
-
-                    <rect x="590" y="50" width="100" height="60" rx="8" fill="#082b1a" stroke="#10b981" stroke-width="1.5"/>
-                    <text x="640" y="80" fill="#fff" font-size="12" text-anchor="middle">Robotic Arm</text>
-                </svg>
-            </div>
-        `,
-        stack: ["Python", "Embedded C", "Raspberry Pi", "OpenCV", "Robotic Actuator", "Patent Pending"],
+        stack: ["Python", "Embedded C", "Raspberry Pi", "OpenCV / ML", "CAD Modeling", "Motor Drivers"],
         repoUrl: "https://github.com/Hitesh070"
     },
     approx_adder: {
@@ -355,27 +325,9 @@ const projectDetailsMap = {
             "Verilog HDL design of low-latency approximate adder cells with reduced logic gate counts.",
             "Waveform simulation and functional verification using ModelSim.",
             "PSNR and image quality degradation trade-off evaluation in Python and MATLAB.",
-            "Featured in research paper under publication in The Journal of Supercomputing (Springer Nature)."
+            "Comparison against conventional Carry Lookahead (CLA) and Ripple Carry Adders (RCA)."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(59,130,246,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem;">ETA-1 APPROXIMATE ADDER LOGIC SCHEMATIC</h5>
-                <svg viewBox="0 0 700 160" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="20" y="40" width="180" height="80" rx="8" fill="#0c1e38" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="110" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Accurate MSB Part</text>
-                    <text x="110" y="95" fill="#3b82f6" font-size="11" text-anchor="middle">Carry Lookahead (CLA)</text>
-                    
-                    <rect x="250" y="40" width="180" height="80" rx="8" fill="#380c18" stroke="#ff2a5f" stroke-width="1.5"/>
-                    <text x="340" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Approximate LSB Part</text>
-                    <text x="340" y="95" fill="#ff2a5f" font-size="11" text-anchor="middle">Error Tolerant ETA-1 Logic</text>
-
-                    <rect x="480" y="40" width="190" height="80" rx="8" fill="#182e1c" stroke="#10b981" stroke-width="1.5"/>
-                    <text x="575" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Error Control Unit</text>
-                    <text x="575" y="95" fill="#10b981" font-size="11" text-anchor="middle">Facial Recognition Out</text>
-                </svg>
-            </div>
-        `,
-        stack: ["Verilog HDL", "ModelSim", "Python", "MATLAB", "Springer Nature", "Edge AI"],
+        stack: ["Verilog HDL", "ModelSim", "Python", "MATLAB", "Digital Electronics", "Edge Computing"],
         repoUrl: "https://github.com/Hitesh070"
     },
     buck_converter: {
@@ -390,21 +342,6 @@ const projectDetailsMap = {
             "Circuit transient analysis and Bode plot stability verification in LTspice.",
             "Simulink block model and firmware logic prototype in Embedded C."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(59,130,246,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem;">CASCADE DUAL-LOOP CONTROL FEEDBACK DIAGRAM</h5>
-                <svg viewBox="0 0 700 160" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="20" y="45" width="150" height="70" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="95" y="75" fill="#fff" font-size="12" text-anchor="middle">Voltage Outer PI Loop</text>
-
-                    <rect x="220" y="45" width="150" height="70" rx="8" fill="#29111c" stroke="#ff2a5f" stroke-width="1.5"/>
-                    <text x="295" y="75" fill="#fff" font-size="12" text-anchor="middle">Current Inner PWM</text>
-
-                    <rect x="420" y="45" width="140" height="70" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="490" y="75" fill="#fff" font-size="12" text-anchor="middle">Buck MOSFET Power Stage</text>
-                </svg>
-            </div>
-        `,
         stack: ["MATLAB", "Simulink", "LTspice", "Embedded C", "Control Engineering", "Power Electronics"],
         repoUrl: "https://github.com/Hitesh070"
     },
@@ -483,10 +420,6 @@ function initProjectFiltersAndModals() {
             const data = projectDetailsMap[projId];
             if (!data) return;
 
-            if (window.gtag) {
-                gtag('event', 'inspect_project', { 'project_id': projId, 'title': data.title });
-            }
-
             modalBody.innerHTML = `
                 <div style="margin-bottom:1.5rem;">
                     <span class="project-tag-badge" style="position:static; display:inline-block; margin-bottom:0.8rem;">${data.category}</span>
@@ -495,8 +428,6 @@ function initProjectFiltersAndModals() {
                 </div>
                 ${data.img ? `<img src="${data.img}" alt="${data.title}" style="width:100%; border-radius:var(--radius-md); margin-bottom:1.5rem; border:1px solid var(--border-subtle);">` : ''}
                 <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height:1.7;">${data.description}</p>
-
-                ${data.schematicSvg ? data.schematicSvg : ''}
                 
                 <h4 style="font-size: 1.1rem; font-weight:500; margin-bottom: 0.8rem; color: var(--text-primary);">Key Architectural Highlights</h4>
                 <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem; color: var(--text-secondary); display:flex; flex-direction:column; gap:0.6rem; font-size:0.95rem;">
@@ -520,76 +451,93 @@ function initProjectFiltersAndModals() {
     });
 
     if (modalCloseBtn && modalOverlay) {
-        modalCloseBtn.addEventListener('click', () => {
-            modalOverlay.classList.remove('active');
-        });
-
+        modalCloseBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
         modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                modalOverlay.classList.remove('active');
-            }
+            if (e.target === modalOverlay) modalOverlay.classList.remove('active');
         });
     }
 }
 
 /* ==========================================================================
-   7. LIVE GITHUB REPOSITORY SYNC API
-   ========================================================================== */
-function initLiveGitHubSync() {
-    fetch('https://api.github.com/users/Hitesh070/repos?sort=updated&per_page=10')
-        .then(res => res.json())
-        .then(data => {
-            if (!Array.isArray(data)) return;
-            console.log('GitHub Live Repos Sync Success:', data.length);
-        })
-        .catch(err => console.log('GitHub Sync Standby'));
-}
-
-/* ==========================================================================
-   8. CONTACT FORM & TELEMETRY TRACKER
+   7. CONTACT FORM HANDLER
    ========================================================================== */
 function initContactFormAndCopy() {
-    const copyBtns = document.querySelectorAll('.btn-copy-mini');
+    const form = document.getElementById('contact-form');
+    const statusMsg = document.getElementById('form-status-msg');
+    const copyBtns = document.querySelectorAll('[data-copy]');
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value.trim();
+
+            const submitBtn = document.getElementById('submit-form-btn');
+            const originalText = submitBtn.innerHTML;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+
+                if (statusMsg) {
+                    statusMsg.style.display = 'block';
+                    statusMsg.innerHTML = `
+                        <div style="display:flex; align-items:flex-start; gap:0.8rem;">
+                            <i class="fa-solid fa-circle-check text-blue" style="font-size:1.4rem; margin-top:0.1rem;"></i>
+                            <div>
+                                <strong style="color:#ffffff;">Message Sent Successfully!</strong>
+                                <p style="margin-top:0.3rem; font-size:0.85rem; color:var(--text-secondary);">
+                                    Thank you, <strong>${escapeHTML(name)}</strong>. Your message regarding "<strong>${escapeHTML(subject)}</strong>" has been logged and dispatched to Hitesh at <a href="mailto:hiteshvs616@gmail.com" style="color:var(--accent-blue);">hiteshvs616@gmail.com</a>.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                showToast(`Thank you ${name}, your message was sent!`);
+
+                const mailtoUrl = `mailto:hiteshvs616@gmail.com?subject=${encodeURIComponent(subject + ' - ' + name)}&body=${encodeURIComponent(message + '\n\nFrom: ' + name + ' (' + email + ')')}`;
+                window.location.href = mailtoUrl;
+
+                form.reset();
+            }, 1000);
+        });
+    }
 
     copyBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            const textToCopy = btn.getAttribute('data-copy-val');
-            if (textToCopy) {
-                navigator.clipboard.writeText(textToCopy);
-                showToast(`Copied ${textToCopy} to clipboard!`);
-            }
+            const textToCopy = btn.getAttribute('data-copy');
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast("Email copied to clipboard!");
+            });
         });
     });
 }
 
-function initTelemetryTracker() {
-    const cvBtn = document.getElementById('download-cv-hero-btn');
-    if (cvBtn) {
-        cvBtn.addEventListener('click', () => {
-            if (window.gtag) {
-                gtag('event', 'download_resume', {
-                    'event_category': 'Engagement',
-                    'event_label': 'Hitesh_VS_Resume.pdf'
-                });
-            }
-            showToast('Initiating Resume PDF Download...');
-        });
-    }
+function escapeHTML(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function showToast(msg) {
+function showToast(message) {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.innerHTML = `<i class="fa-solid fa-circle-check text-blue"></i> <span>${msg}</span>`;
+    toast.innerHTML = `<i class="fa-solid fa-circle-check text-blue"></i> <span>${message}</span>`;
 
     container.appendChild(toast);
 
     setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.4s ease';
-        setTimeout(() => toast.remove(), 400);
-    }, 2600);
+        toast.style.transform = 'translateX(50px)';
+        toast.style.transition = 'all 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }

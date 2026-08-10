@@ -787,9 +787,9 @@ p {
 }
 
 .exp-period-badge.active-period {
-    background: rgba(255, 42, 95, 0.12);
-    border-color: rgba(255, 42, 95, 0.4);
-    color: var(--accent-red) !important;
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: var(--accent-blue) !important;
 }
 
 .exp-role-title {

@@ -585,7 +585,11 @@ function initLiveGitHubSync() {
         return 'fa-folder-open';
     }
 
-    fetch('https://api.github.com/users/Hitesh070/repos?sort=updated&per_page=100')
+    fetch(`https://api.github.com/users/Hitesh070/repos?sort=updated&direction=desc&per_page=100&_t=${Date.now()}`, {
+        headers: {
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    })
         .then(res => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return res.json();

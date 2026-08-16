@@ -643,7 +643,7 @@ function initLiveGitHubSync() {
                        (repoNameNorm.includes('learning') && hNorm.includes('learning'));
             });
 
-            if (isAlreadyPresent && !repo.isPrivate) return;
+            if (isAlreadyPresent) return;
 
             const category = categorizeRepo(repo);
             const iconClass = getRepoIcon(category, repo.language);

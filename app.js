@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     init3DMagneticTiltCards();
     initProjectFiltersAndModals();
     initContactFormAndCopy();
-    initLiveGitHubSync();
     initTelemetryTracker();
 });
 
@@ -450,6 +449,55 @@ const projectDetailsMap = {
         ],
         stack: ["Python", "JavaScript", "SQL", "PHP", "HTML5", "CSS3"],
         repoUrl: "https://github.com/Hitesh070"
+    },
+    uav_guardian: {
+        title: "UAV-Guardian-ESP32 — Autonomous Flight Guardian & Telemetry System",
+        subtitle: "Real-Time ESP32 UAV Telemetry, IMU Sensor Fusion & Failsafe Controller",
+        category: "Embedded & Robotics",
+        img: "assets/project1.jpg",
+        description: "ESP32-based flight safety guardian and telemetry system for unmanned aerial vehicles (UAVs). Features real-time IMU sensor fusion, failsafe geofencing overrides, wireless telemetry transmission, and deterministic FreeRTOS task scheduling.",
+        schematicSvg: `
+            <div class="schematic-container" style="margin-bottom:1.5rem; background:#080808; padding:1.2rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+                <span class="schematic-title" style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.8rem; display:block; margin-bottom:1rem;">
+                    <i class="fa-solid fa-diagram-project"></i> SYSTEM SCHEMATIC — ESP32 UAV FLIGHT GUARDIAN & TELEMETRY
+                </span>
+                <svg viewBox="0 0 700 240" style="width:100%; height:auto;" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="20" y="30" width="130" height="60" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="85" y="60" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">MPU6050 / BMP280</text>
+                    <text x="85" y="75" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">IMU & Barometer</text>
+
+                    <rect x="20" y="140" width="130" height="60" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="85" y="170" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">GPS & Battery Sense</text>
+                    <text x="85" y="185" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">NMEA / ADC Voltage</text>
+
+                    <rect x="230" y="65" width="180" height="110" rx="10" fill="#0d1527" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="320" y="105" fill="#3b82f6" font-size="15" font-weight="bold" text-anchor="middle" font-family="sans-serif">ESP32 MCU</text>
+                    <text x="320" y="130" fill="#aaa" font-size="11" text-anchor="middle" font-family="sans-serif">FreeRTOS Dual-Core</text>
+                    <text x="320" y="150" fill="#aaa" font-size="10" text-anchor="middle" font-family="sans-serif">Sensor Fusion & Failsafe</text>
+
+                    <rect x="510" y="30" width="160" height="60" rx="8" fill="#111" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="590" y="60" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">Wireless Telemetry</text>
+                    <text x="590" y="75" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">Wi-Fi / ESP-NOW GCS</text>
+
+                    <rect x="510" y="140" width="160" height="60" rx="8" fill="#111" stroke="#ef4444" stroke-width="1.5"/>
+                    <text x="590" y="170" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">Servo & Motor Cutoff</text>
+                    <text x="590" y="185" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">Emergency Failsafe Relay</text>
+
+                    <path d="M 150 60 L 230 100" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                    <path d="M 150 170 L 230 140" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                    <path d="M 410 100 L 510 60" stroke="#10b981" stroke-width="1.5" fill="none"/>
+                    <path d="M 410 140 L 510 170" stroke="#ef4444" stroke-width="1.5" fill="none"/>
+                </svg>
+            </div>
+        `,
+        highlights: [
+            "ESP32 dual-core FreeRTOS scheduling for deterministic IMU sensor sampling (100Hz) and telemetry broadcast.",
+            "Real-time sensor fusion combining MPU6050 accelerometer/gyroscope and BMP280 barometric altitude estimation.",
+            "Automatic hardware failsafe routines for signal loss, geofencing boundary violations, and low battery voltage.",
+            "Low-latency wireless telemetry protocol transmitting real-time attitude & status packet stream to Ground Control Station."
+        ],
+        stack: ["ESP32", "Embedded C", "FreeRTOS", "Sensor Fusion", "Telemetry", "Wireless Protocols"],
+        repoUrl: "https://github.com/Hitesh070/UAV-Guardian-ESP32"
     }
 };
 
@@ -533,205 +581,7 @@ function initProjectFiltersAndModals() {
 }
 
 /* ==========================================================================
-   7. LIVE GITHUB REPOSITORY SYNC API (UNIFIED PROJECTS AUTO-APPEND)
-   ========================================================================== */
-function initLiveGitHubSync() {
-    const projectsGrid = document.getElementById('projects-container');
-    if (!projectsGrid) return;
-
-    // Private Repositories Manifest (Add any private repos here to showcase on your website securely)
-    const privateReposManifest = [
-        {
-            name: "ETA-1-Facial-Recognition-Accelerator",
-            description: "Private VLSI design & verification repository for Error-Tolerant Adder Type-1 (ETA-1) approximate hardware acceleration in low-power facial recognition.",
-            category: "vlsi",
-            language: "Verilog HDL",
-            isPrivate: true,
-            html_url: "https://github.com/Hitesh070"
-        },
-        {
-            name: "ALPS-USV-Autonomous-Skimmer",
-            description: "Private hardware control & computer vision pipeline repository for the ALPS Aquatic Waste Mapping & Skimmer USV system.",
-            category: "embedded",
-            language: "Python / Embedded C",
-            isPrivate: true,
-            html_url: "https://github.com/Hitesh070"
-        }
-    ];
-
-    const langColors = {
-        'Python': '#3572A5',
-        'JavaScript': '#f1e05a',
-        'TypeScript': '#2b7489',
-        'C': '#555555',
-        'C++': '#f34b7d',
-        'Java': '#b07219',
-        'Verilog': '#b2b7f8',
-        'Verilog HDL': '#b2b7f8',
-        'SystemVerilog': '#DAE1C2',
-        'VHDL': '#adb2cb',
-        'MATLAB': '#e16737',
-        'HTML': '#e34c26',
-        'CSS': '#563d7c',
-        'Shell': '#89e051',
-        'Jupyter Notebook': '#DA5B0B',
-        'PHP': '#4F5D95',
-        'Python / Embedded C': '#3572A5'
-    };
-
-    function categorizeRepo(repo) {
-        if (repo.category) return repo.category;
-        const name = (repo.name || '').toLowerCase();
-        const desc = (repo.description || '').toLowerCase();
-        const lang = (repo.language || '').toLowerCase();
-
-        if (name.includes('vlsi') || name.includes('adder') || name.includes('verilog') || lang.includes('verilog') || lang.includes('vhdl')) {
-            return 'vlsi';
-        }
-        if (name.includes('buck') || name.includes('power') || name.includes('converter') || name.includes('control')) {
-            return 'power';
-        }
-        if (name.includes('alps') || name.includes('robot') || name.includes('embedded') || name.includes('irrigation') || name.includes('usv')) {
-            return 'embedded';
-        }
-        return 'software';
-    }
-
-    function getRepoIcon(category, language) {
-        if (category === 'vlsi') return 'fa-microchip';
-        if (category === 'power') return 'fa-bolt-lightning';
-        if (category === 'embedded') return 'fa-robot';
-        if (language && language.includes('Python')) return 'fa-python';
-        if (language && (language.includes('JavaScript') || language.includes('HTML'))) return 'fa-code';
-        return 'fa-folder-open';
-    }
-
-    function getRepoBadge(category) {
-        if (category === 'vlsi') return 'VLSI &amp; Digital';
-        if (category === 'power') return 'Power &amp; Control';
-        if (category === 'embedded') return 'Embedded &amp; Robotics';
-        return 'Software &amp; Web';
-    }
-
-    function getGraphicColorClass(category) {
-        if (category === 'vlsi') return 'graphic-cyan';
-        if (category === 'power') return 'graphic-red';
-        if (category === 'embedded') return 'graphic-blue';
-        return 'graphic-purple';
-    }
-
-    function appendNewReposToGrid(repos) {
-        // Collect existing titles in #projects-container to prevent duplicating static cards
-        const existingHeadings = Array.from(projectsGrid.querySelectorAll('.project-heading'))
-            .map(h => h.textContent.trim().toLowerCase());
-
-        // Remove any previously appended dynamic cards to refresh cleanly
-        projectsGrid.querySelectorAll('[data-auto-synced="true"]').forEach(el => el.remove());
-
-        repos.forEach(repo => {
-            const repoNameNorm = (repo.name || '').toLowerCase().replace(/[-_]/g, ' ');
-            
-            // Skip the portfolio site's own repository itself
-            if (repoNameNorm.includes('github.io')) return;
-
-            // Check if exact title is already statically present in index.html
-            const isAlreadyPresent = existingHeadings.some(h => {
-                const hNorm = h.toLowerCase().replace(/[-_]/g, ' ');
-                return hNorm === repoNameNorm || 
-                       (hNorm.includes('advance online learning system') && repoNameNorm.includes('advance online learning system'));
-            });
-
-            if (isAlreadyPresent) return;
-
-            const category = categorizeRepo(repo);
-            const iconClass = getRepoIcon(category, repo.language);
-            const graphicClass = getGraphicColorClass(category);
-            const badgeText = getRepoBadge(category);
-            const desc = repo.description || 'GitHub repository for hardware, software, and systems engineering.';
-            const lang = repo.language || 'Code';
-            const isPrivate = repo.isPrivate || repo.private || false;
-
-            const card = document.createElement('article');
-            card.className = 'project-editorial-card magnetic-card reveal-on-scroll reveal-up';
-            card.setAttribute('data-category', category);
-            card.setAttribute('data-auto-synced', 'true');
-
-            const linkTarget = repo.html_url || 'https://github.com/Hitesh070';
-            const actionButton = isPrivate
-                ? `<span class="btn-text-link" style="font-size:0.8rem; color:var(--accent-blue);">
-                    <i class="fa-solid fa-lock"></i> Private Repository
-                   </span>`
-                : `<a href="${linkTarget}" target="_blank" class="btn-text-link">
-                    <span>View on GitHub</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                   </a>`;
-
-            card.innerHTML = `
-                <div class="project-thumbnail-wrapper">
-                    <div class="project-icon-graphic ${graphicClass}">
-                        <i class="fa-solid ${iconClass}"></i>
-                    </div>
-                    <div class="thumbnail-hover-overlay">
-                        <a href="${linkTarget}" target="_blank" class="btn-inspect-arch" style="text-decoration:none;">
-                            <i class="${isPrivate ? 'fa-solid fa-lock' : 'fa-brands fa-github'}"></i> ${isPrivate ? 'Private Repo' : 'View on GitHub'}
-                        </a>
-                    </div>
-                    <span class="project-tag-badge">${badgeText}</span>
-                </div>
-                <div class="project-info-block">
-                    <h3 class="project-heading">${repo.name}</h3>
-                    <p class="project-abstract">${desc}</p>
-                    <div class="tech-stack-row">
-                        <span>${lang}</span>
-                        ${isPrivate ? '<span>Private Repo</span>' : '<span>GitHub Sync</span>'}
-                    </div>
-                    <div class="project-card-footer">
-                        ${actionButton}
-                        <a href="${linkTarget}" target="_blank" class="icon-link-subtle" title="View on GitHub">
-                            <i class="fa-brands fa-github"></i>
-                        </a>
-                    </div>
-                </div>
-            `;
-
-            projectsGrid.appendChild(card);
-        });
-
-        // Apply active filter pill if one is selected
-        const activeFilterBtn = document.querySelector('.proj-filter-pill.active');
-        if (activeFilterBtn) {
-            const currentFilter = activeFilterBtn.getAttribute('data-proj-filter');
-            if (currentFilter && currentFilter !== 'all') {
-                projectsGrid.querySelectorAll('.project-editorial-card').forEach(card => {
-                    const cat = card.getAttribute('data-category');
-                    card.style.display = (cat === currentFilter) ? 'flex' : 'none';
-                });
-            }
-        }
-    }
-
-    // Process initial private manifest repos
-    appendNewReposToGrid(privateReposManifest);
-
-    // Fetch new public repos from GitHub API and append cleanly
-    fetch(`https://api.github.com/users/Hitesh070/repos?sort=updated&direction=desc&per_page=100&_t=${Date.now()}`, {
-        headers: { 'Accept': 'application/vnd.github.v3+json' }
-    })
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-        })
-        .then(repos => {
-            if (Array.isArray(repos)) {
-                const publicRepos = repos.filter(r => !r.fork || r.stargazers_count > 0);
-                appendNewReposToGrid([...privateReposManifest, ...publicRepos]);
-            }
-        })
-        .catch(err => console.log('GitHub Sync Standby:', err));
-}
-
-/* ==========================================================================
-   8. CONTACT FORM & TELEMETRY TRACKER
+   7. CONTACT FORM & TELEMETRY TRACKER
    ========================================================================== */
 function initContactFormAndCopy() {
     const copyBtns = document.querySelectorAll('.btn-copy-mini');

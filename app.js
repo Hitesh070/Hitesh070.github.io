@@ -631,16 +631,14 @@ function initLiveGitHubSync() {
         repos.forEach(repo => {
             const repoNameNorm = (repo.name || '').toLowerCase().replace(/[-_]/g, ' ');
             
-            // Check if repo matches or is already represented by an existing static card
+            // Skip the portfolio site's own repository itself
+            if (repoNameNorm.includes('github.io')) return;
+
+            // Check if exact title is already statically present in index.html
             const isAlreadyPresent = existingHeadings.some(h => {
-                const hNorm = h.toLowerCase();
-                return hNorm.includes(repoNameNorm) || repoNameNorm.includes(hNorm) ||
-                       (repoNameNorm.includes('alps') && hNorm.includes('alps')) ||
-                       (repoNameNorm.includes('adder') && hNorm.includes('adder')) ||
-                       (repoNameNorm.includes('buck') && hNorm.includes('buck')) ||
-                       (repoNameNorm.includes('irrigation') && hNorm.includes('irrigation')) ||
-                       (repoNameNorm.includes('thermal') && hNorm.includes('thermal')) ||
-                       (repoNameNorm.includes('learning') && hNorm.includes('learning'));
+                const hNorm = h.toLowerCase().replace(/[-_]/g, ' ');
+                return hNorm === repoNameNorm || 
+                       (hNorm.includes('advance online learning system') && repoNameNorm.includes('advance online learning system'));
             });
 
             if (isAlreadyPresent) return;

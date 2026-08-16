@@ -451,52 +451,64 @@ const projectDetailsMap = {
         repoUrl: "https://github.com/Hitesh070"
     },
     uav_guardian: {
-        title: "UAV-Guardian-ESP32 — Autonomous Flight Guardian & Telemetry System",
-        subtitle: "Real-Time ESP32 UAV Telemetry, IMU Sensor Fusion & Failsafe Controller",
+        title: "UAV Guardian — Autonomous Disturbance Detection & Rerouting System",
+        subtitle: "Onboard ESP32 Sensor Fusion, Priority AI Threat Classifier & Closed-Loop Actuation",
         category: "Embedded & Robotics",
-        img: "assets/project1.jpg",
-        description: "ESP32-based flight safety guardian and telemetry system for unmanned aerial vehicles (UAVs). Features real-time IMU sensor fusion, failsafe geofencing overrides, wireless telemetry transmission, and deterministic FreeRTOS task scheduling.",
+        img: "assets/uav_guardian.png",
+        description: "A self-contained onboard module that senses real-time environmental disturbances (RF/GPS jamming, adverse weather, wind buffeting, biological intrusion, and mid-air obstacles), classifies threat severity using a priority AI classifier engine, and autonomously executes rerouting maneuvers via physical servo direction pointing and telemetry reporting.",
         schematicSvg: `
             <div class="schematic-container" style="margin-bottom:1.5rem; background:#080808; padding:1.2rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
                 <span class="schematic-title" style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.8rem; display:block; margin-bottom:1rem;">
-                    <i class="fa-solid fa-diagram-project"></i> SYSTEM SCHEMATIC — ESP32 UAV FLIGHT GUARDIAN & TELEMETRY
+                    <i class="fa-solid fa-diagram-project"></i> SYSTEM ARCHITECTURE — ESP32 DISTURBANCE FUSION & REROUTING
                 </span>
                 <svg viewBox="0 0 700 240" style="width:100%; height:auto;" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="20" y="30" width="130" height="60" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="85" y="60" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">MPU6050 / BMP280</text>
-                    <text x="85" y="75" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">IMU & Barometer</text>
+                    <rect x="20" y="25" width="140" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="90" y="52" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">NEO-6M GPS & MPU-6050</text>
+                    <text x="90" y="67" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">GPS Satellites & IMU Accel</text>
 
-                    <rect x="20" y="140" width="130" height="60" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="85" y="170" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">GPS & Battery Sense</text>
-                    <text x="85" y="185" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">NMEA / ADC Voltage</text>
+                    <rect x="20" y="95" width="140" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="90" y="122" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">BMP280 & DHT22</text>
+                    <text x="90" y="137" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Baro Pressure & Humidity</text>
 
-                    <rect x="230" y="65" width="180" height="110" rx="10" fill="#0d1527" stroke="#3b82f6" stroke-width="2"/>
-                    <text x="320" y="105" fill="#3b82f6" font-size="15" font-weight="bold" text-anchor="middle" font-family="sans-serif">ESP32 MCU</text>
-                    <text x="320" y="130" fill="#aaa" font-size="11" text-anchor="middle" font-family="sans-serif">FreeRTOS Dual-Core</text>
-                    <text x="320" y="150" fill="#aaa" font-size="10" text-anchor="middle" font-family="sans-serif">Sensor Fusion & Failsafe</text>
+                    <rect x="20" y="165" width="140" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="90" y="192" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">Ultrasonic & PIR Motion</text>
+                    <text x="90" y="207" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Obstacle & Intrusion Sense</text>
 
-                    <rect x="510" y="30" width="160" height="60" rx="8" fill="#111" stroke="#10b981" stroke-width="1.5"/>
-                    <text x="590" y="60" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">Wireless Telemetry</text>
-                    <text x="590" y="75" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">Wi-Fi / ESP-NOW GCS</text>
+                    <rect x="240" y="60" width="200" height="120" rx="10" fill="#0d1527" stroke="#3b82f6" stroke-width="2"/>
+                    <text x="340" y="95" fill="#3b82f6" font-size="15" font-weight="bold" text-anchor="middle" font-family="sans-serif">ESP32 Dual-Core (240MHz)</text>
+                    <text x="340" y="118" fill="#aaa" font-size="11" text-anchor="middle" font-family="sans-serif">Sensor Data Aggregator</text>
+                    <text x="340" y="138" fill="#aaa" font-size="10" text-anchor="middle" font-family="sans-serif">Priority Threat AI Classifier</text>
+                    <text x="340" y="158" fill="#10b981" font-size="10" text-anchor="middle" font-family="sans-serif">50Hz PWM Maneuver Engine</text>
 
-                    <rect x="510" y="140" width="160" height="60" rx="8" fill="#111" stroke="#ef4444" stroke-width="1.5"/>
-                    <text x="590" y="170" fill="#fff" font-size="12" text-anchor="middle" font-family="sans-serif">Servo & Motor Cutoff</text>
-                    <text x="590" y="185" fill="#888" font-size="10" text-anchor="middle" font-family="sans-serif">Emergency Failsafe Relay</text>
+                    <rect x="520" y="30" width="160" height="55" rx="8" fill="#111" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="600" y="57" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">SG90 Servo Direction Pointer</text>
+                    <text x="600" y="72" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Physical Maneuver Angle θ</text>
 
-                    <path d="M 150 60 L 230 100" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
-                    <path d="M 150 170 L 230 140" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
-                    <path d="M 410 100 L 510 60" stroke="#10b981" stroke-width="1.5" fill="none"/>
-                    <path d="M 410 140 L 510 170" stroke="#ef4444" stroke-width="1.5" fill="none"/>
+                    <rect x="520" y="95" width="160" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
+                    <text x="600" y="122" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">SSD1306 OLED & RGB Alarm</text>
+                    <text x="600" y="137" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Live Threat Dashboard</text>
+
+                    <rect x="520" y="165" width="160" height="55" rx="8" fill="#111" stroke="#8b5cf6" stroke-width="1.5"/>
+                    <text x="600" y="192" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">Wi-Fi Web Telemetry Link</text>
+                    <text x="600" y="207" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Live Ground Station Buffer</text>
+
+                    <path d="M 160 52 L 240 95" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                    <path d="M 160 122 L 240 120" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                    <path d="M 160 192 L 240 145" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+
+                    <path d="M 440 95 L 520 57" stroke="#10b981" stroke-width="1.5" fill="none"/>
+                    <path d="M 440 120 L 520 122" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                    <path d="M 440 145 L 520 192" stroke="#8b5cf6" stroke-width="1.5" fill="none"/>
                 </svg>
             </div>
         `,
         highlights: [
-            "ESP32 dual-core FreeRTOS scheduling for deterministic IMU sensor sampling (100Hz) and telemetry broadcast.",
-            "Real-time sensor fusion combining MPU6050 accelerometer/gyroscope and BMP280 barometric altitude estimation.",
-            "Automatic hardware failsafe routines for signal loss, geofencing boundary violations, and low battery voltage.",
-            "Low-latency wireless telemetry protocol transmitting real-time attitude & status packet stream to Ground Control Station."
+            "ESP32 Dual-Core (240MHz) sensor fusion aggregating NEO-6M GPS, BMP280, MPU-6050 IMU, ultrasonic & PIR sensor vectors every 500ms.",
+            "Priority Rule-Based AI Classifier Engine evaluating 6 threat severity levels (GPS Jamming, Severe Weather, Wind Buffeting, Obstacles, Human Intrusion).",
+            "Closed-loop SG90 servo motor directional pointer executing 50Hz PWM escape maneuvers (180° Reverse Escape, 90° RTH, 45° Descend & Hover).",
+            "Integrated SSD1306 128x64 OLED status display, RGB alert beacons, active buzzer alarms, and MATLAB Simulink control system analysis."
         ],
-        stack: ["ESP32", "Embedded C", "FreeRTOS", "Sensor Fusion", "Telemetry", "Wireless Protocols"],
+        stack: ["ESP32", "Arduino C++", "MATLAB Simulink", "MPU-6050", "BMP280", "NEO-6M GPS", "HC-SR04"],
         repoUrl: "https://github.com/Hitesh070/UAV-Guardian-ESP32"
     }
 };

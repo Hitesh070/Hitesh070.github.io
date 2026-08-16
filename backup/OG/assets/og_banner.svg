@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#030303"/>
+      <stop offset="50%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#120814"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#ff2a5f"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle Grid Lines -->
+  <g stroke="rgba(255,255,255,0.05)" stroke-width="1">
+    <line x1="100" y1="0" x2="100" y2="630"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="500" y1="0" x2="500" y2="630"/>
+    <line x1="700" y1="0" x2="700" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+    <line x1="1100" y1="0" x2="1100" y2="630"/>
+    <line x1="0" y1="150" x2="1200" y2="150"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="480" x2="1200" y2="480"/>
+  </g>
+  
+  <!-- Glowing Accent Line -->
+  <rect x="100" y="110" width="120" height="4" rx="2" fill="url(#accentGrad)"/>
+  
+  <!-- Subtitle Tag -->
+  <text x="100" y="150" fill="#3b82f6" font-family="'Outfit', sans-serif" font-size="20" font-weight="600" letter-spacing="4">
+    2ND YEAR EEE STUDENT • VIT CHENNAI
+  </text>
+  
+  <!-- Big Title -->
+  <text x="100" y="240" fill="#ffffff" font-family="'Outfit', sans-serif" font-size="72" font-weight="800">
+    Hitesh V S
+  </text>
+  
+  <!-- Specializations -->
+  <text x="100" y="310" fill="rgba(255,255,255,0.75)" font-family="'Plus Jakarta Sans', sans-serif" font-size="28" font-weight="300">
+    Embedded Systems • Digital VLSI Logic • Power Electronics
+  </text>
+  
+  <text x="100" y="355" fill="rgba(255,255,255,0.55)" font-family="'Plus Jakarta Sans', sans-serif" font-size="22" font-weight="300">
+    Research &amp; Publications • Carnatic Music • Creative Media Design
+  </text>
+  
+  <!-- Pill Badges -->
+  <g transform="translate(100, 420)">
+    <rect x="0" y="0" width="160" height="44" rx="22" fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.4)" stroke-width="1.5"/>
+    <text x="80" y="28" fill="#3b82f6" font-family="'Fira Code', monospace" font-size="16" font-weight="600" text-anchor="middle">VIT CHENNAI</text>
+    
+    <rect x="180" y="0" width="220" height="44" rx="22" fill="rgba(255,42,95,0.15)" stroke="rgba(255,42,95,0.4)" stroke-width="1.5"/>
+    <text x="290" y="28" fill="#ff2a5f" font-family="'Fira Code', monospace" font-size="16" font-weight="600" text-anchor="middle">SPRINGER NATURE</text>
+    
+    <rect x="420" y="0" width="200" height="44" rx="22" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+    <text x="520" y="28" fill="#ffffff" font-family="'Fira Code', monospace" font-size="16" font-weight="600" text-anchor="middle">PATENT PENDING</text>
+  </g>
+
+  <!-- URL Footer -->
+  <text x="100" y="550" fill="rgba(255,255,255,0.4)" font-family="'Fira Code', monospace" font-size="18">
+    https://hitesh070.github.io
+  </text>
+</svg>

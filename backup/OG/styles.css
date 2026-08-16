@@ -505,13 +505,12 @@ p {
     object-fit: cover;
     object-position: center 25%;
     display: block;
-    transform: scale(1.0); /* FLUSH EDGE TO EDGE - ZERO BLACK GAPS! */
-    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform;
+    transform: none !important;
+    transition: none !important;
 }
 
 .portrait-card:hover .portrait-img {
-    transform: scale(1.04);
+    transform: none !important;
 }
 
 .portrait-overlay-gradient {
@@ -696,6 +695,126 @@ p {
 .capability-card:hover .tech-pill {
     color: #ffffff;
     border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   EXPERIENCE SECTION & CIRCULAR EMBLEM LOGO BADGES
+   ========================================================================== */
+
+.experience-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.8rem;
+}
+
+.experience-card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2.2rem;
+    overflow: hidden;
+    backdrop-filter: blur(16px);
+    transition: all var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+}
+
+.experience-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-blue);
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: var(--glow-blue);
+}
+
+.experience-card:hover .card-radial-glow {
+    opacity: 1;
+}
+
+.exp-card-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+}
+
+.exp-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.exp-circular-logo {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #ffffff;
+    padding: 6px;
+    object-fit: contain;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+    transition: transform var(--transition-fast);
+}
+
+.experience-card:hover .exp-circular-logo {
+    transform: scale(1.08);
+}
+
+.exp-period-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.38rem 0.95rem;
+    border-radius: var(--radius-pill);
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: var(--accent-blue) !important;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+}
+
+.exp-period-badge.active-period {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: var(--accent-blue) !important;
+}
+
+.exp-role-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+    line-height: 1.3;
+}
+
+.exp-org-name {
+    font-size: 0.9rem;
+    color: var(--accent-blue);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.exp-description {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    flex: 1;
 }
 
 /* ==========================================================================
@@ -1027,17 +1146,54 @@ p {
 
 .timeline-row {
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 140px 1fr;
     gap: 2rem;
-    padding-bottom: 2rem;
+    padding-bottom: 2.2rem;
     border-bottom: 1px solid var(--border-subtle);
+    align-items: center;
 }
 
 .timeline-period-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    text-align: center;
+    width: 100%;
+}
+
+.academic-institution-logo {
+    width: 64px !important;
+    height: 64px !important;
+    max-width: 64px !important;
+    max-height: 64px !important;
+    min-width: 64px !important;
+    min-height: 64px !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    padding: 6px !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0 !important;
+    display: block !important;
+    margin: 0 auto 0.4rem auto !important;
+    transition: transform var(--transition-fast);
+}
+
+.timeline-row:hover .academic-institution-logo {
+    transform: scale(1.08);
+}
+
+.timeline-period-badge {
     font-family: var(--font-mono);
     font-size: 0.85rem;
-    color: var(--accent-red);
-    font-weight: 500;
+    color: var(--accent-blue) !important;
+    font-weight: 600;
+    white-space: nowrap !important;
+    letter-spacing: 0.05em;
+    display: block !important;
 }
 
 .timeline-role-title {
@@ -1380,7 +1536,8 @@ p {
     .hero-greeting-tag, .hero-role-block, .hero-action-row { justify-content: center; }
     .hero-line-divider { margin: 0 auto 1.8rem auto; }
     .about-editorial-grid, .contact-editorial-layout { grid-template-columns: 1fr; gap: 3rem; }
-    .timeline-row { grid-template-columns: 1fr; gap: 0.5rem; }
+    .timeline-row { grid-template-columns: 1fr; gap: 1rem; text-align: center; }
+    .timeline-period-col { margin-bottom: 0.4rem; }
     .form-grid-2 { grid-template-columns: 1fr; }
 }
 

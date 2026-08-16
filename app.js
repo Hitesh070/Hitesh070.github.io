@@ -533,13 +533,11 @@ function initProjectFiltersAndModals() {
 }
 
 /* ==========================================================================
-   7. LIVE GITHUB REPOSITORY SYNC API
+   7. LIVE GITHUB REPOSITORY SYNC API (UNIFIED PROJECTS AUTO-APPEND)
    ========================================================================== */
 function initLiveGitHubSync() {
-    const reposContainer = document.getElementById('auto-github-repos-grid');
-    const countBadge = document.getElementById('live-repo-count');
-    const statusTag = document.getElementById('live-sync-status');
-    if (!reposContainer) return;
+    const projectsGrid = document.getElementById('projects-container');
+    if (!projectsGrid) return;
 
     // Private Repositories Manifest (Add any private repos here to showcase on your website securely)
     const privateReposManifest = [
@@ -549,9 +547,6 @@ function initLiveGitHubSync() {
             category: "vlsi",
             language: "Verilog HDL",
             isPrivate: true,
-            stargazers_count: 0,
-            forks_count: 0,
-            updated_at: new Date().toISOString(),
             html_url: "https://github.com/Hitesh070"
         },
         {
@@ -560,9 +555,6 @@ function initLiveGitHubSync() {
             category: "embedded",
             language: "Python / Embedded C",
             isPrivate: true,
-            stargazers_count: 0,
-            forks_count: 0,
-            updated_at: new Date().toISOString(),
             html_url: "https://github.com/Hitesh070"
         }
     ];
@@ -614,109 +606,130 @@ function initLiveGitHubSync() {
         return 'fa-folder-open';
     }
 
-    // Perform immediate initial render so UI never hangs on "Syncing..."
-    renderCombinedRepos([], privateReposManifest);
+    function getRepoBadge(category) {
+        if (category === 'vlsi') return 'VLSI &amp; Digital';
+        if (category === 'power') return 'Power &amp; Control';
+        if (category === 'embedded') return 'Embedded &amp; Robotics';
+        return 'Software &amp; Web';
+    }
 
-    fetch(`https://api.github.com/users/Hitesh070/repos?sort=updated&direction=desc&per_page=100&_t=${Date.now()}`, {
-        headers: {
-            'Accept': 'application/vnd.github.v3+json'
-        }
-    })
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-        })
-        .then(repos => {
-            const publicRepos = (Array.isArray(repos) ? repos : []).filter(r => !r.fork || r.stargazers_count > 0);
-            renderCombinedRepos(publicRepos, privateReposManifest);
-        })
-        .catch(err => {
-            console.log('GitHub Sync Standby:', err);
-            renderCombinedRepos([], privateReposManifest);
-        });
+    function getGraphicColorClass(category) {
+        if (category === 'vlsi') return 'graphic-cyan';
+        if (category === 'power') return 'graphic-red';
+        if (category === 'embedded') return 'graphic-blue';
+        return 'graphic-purple';
+    }
 
-    function renderCombinedRepos(publicRepos, privateRepos) {
-        const combined = [...privateRepos, ...publicRepos];
+    function appendNewReposToGrid(repos) {
+        // Collect existing titles in #projects-container to prevent duplicating static cards
+        const existingHeadings = Array.from(projectsGrid.querySelectorAll('.project-heading'))
+            .map(h => h.textContent.trim().toLowerCase());
 
-        if (countBadge) countBadge.textContent = `${combined.length} Repos (${publicRepos.length} Public, ${privateRepos.length} Private)`;
-        if (statusTag) statusTag.innerHTML = `<i class="fa-solid fa-circle-check text-blue"></i> Synced (${combined.length} Repositories)`;
+        // Remove any previously appended dynamic cards to refresh cleanly
+        projectsGrid.querySelectorAll('[data-auto-synced="true"]').forEach(el => el.remove());
 
-        reposContainer.innerHTML = combined.map(repo => {
+        repos.forEach(repo => {
+            const repoNameNorm = (repo.name || '').toLowerCase().replace(/[-_]/g, ' ');
+            
+            // Check if repo matches or is already represented by an existing static card
+            const isAlreadyPresent = existingHeadings.some(h => {
+                const hNorm = h.toLowerCase();
+                return hNorm.includes(repoNameNorm) || repoNameNorm.includes(hNorm) ||
+                       (repoNameNorm.includes('alps') && hNorm.includes('alps')) ||
+                       (repoNameNorm.includes('adder') && hNorm.includes('adder')) ||
+                       (repoNameNorm.includes('buck') && hNorm.includes('buck')) ||
+                       (repoNameNorm.includes('irrigation') && hNorm.includes('irrigation')) ||
+                       (repoNameNorm.includes('thermal') && hNorm.includes('thermal')) ||
+                       (repoNameNorm.includes('learning') && hNorm.includes('learning'));
+            });
+
+            if (isAlreadyPresent && !repo.isPrivate) return;
+
             const category = categorizeRepo(repo);
             const iconClass = getRepoIcon(category, repo.language);
+            const graphicClass = getGraphicColorClass(category);
+            const badgeText = getRepoBadge(category);
             const desc = repo.description || 'GitHub repository for hardware, software, and systems engineering.';
             const lang = repo.language || 'Code';
-            const langColor = langColors[repo.language] || '#3b82f6';
             const isPrivate = repo.isPrivate || repo.private || false;
 
-            const privateBadge = isPrivate
-                ? `<span style="font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:var(--radius-pill); background:rgba(59,130,246,0.15); border:1px solid var(--accent-blue); color:var(--accent-blue); font-family:var(--font-mono); display:inline-flex; align-items:center; gap:0.3rem;"><i class="fa-solid fa-lock"></i> PRIVATE REPO</span>`
-                : '';
+            const card = document.createElement('article');
+            card.className = 'project-editorial-card magnetic-card reveal-on-scroll reveal-up';
+            card.setAttribute('data-category', category);
+            card.setAttribute('data-auto-synced', 'true');
 
-            const stars = repo.stargazers_count > 0 ? `<span style="font-size:0.75rem; color:var(--accent-blue);"><i class="fa-solid fa-star"></i> ${repo.stargazers_count}</span>` : '';
-            const forks = repo.forks_count > 0 ? `<span style="font-size:0.75rem; color:var(--text-muted);"><i class="fa-solid fa-code-branch"></i> ${repo.forks_count}</span>` : '';
-            const dateStr = new Date(repo.pushed_at || repo.updated_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-
-            const linkAction = isPrivate
-                ? `<span class="btn-text-link" style="font-size:0.8rem; color:var(--accent-blue); opacity:0.85;">
-                    <i class="fa-solid fa-shield-halved"></i> Private Project
+            const linkTarget = repo.html_url || 'https://github.com/Hitesh070';
+            const actionButton = isPrivate
+                ? `<span class="btn-text-link" style="font-size:0.8rem; color:var(--accent-blue);">
+                    <i class="fa-solid fa-lock"></i> Private Repository
                    </span>`
-                : `<a href="${repo.html_url}" target="_blank" class="btn-text-link" style="font-size:0.8rem;">
-                    <span>View Repo</span>
+                : `<a href="${linkTarget}" target="_blank" class="btn-text-link">
+                    <span>View on GitHub</span>
                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
                    </a>`;
 
-            return `
-            <article class="project-editorial-card magnetic-card" data-category="${category}">
-                <div class="project-thumbnail-wrapper" style="height:140px; background: rgba(10,10,10,0.85);">
-                    <div class="project-icon-graphic" style="font-size: 3rem; color: ${langColor}; opacity: 0.85;">
+            card.innerHTML = `
+                <div class="project-thumbnail-wrapper">
+                    <div class="project-icon-graphic ${graphicClass}">
                         <i class="fa-solid ${iconClass}"></i>
                     </div>
                     <div class="thumbnail-hover-overlay">
-                        <a href="${repo.html_url}" target="_blank" class="btn-inspect-arch" style="text-decoration:none;">
-                            <i class="${isPrivate ? 'fa-solid fa-lock' : 'fa-brands fa-github'}"></i> ${isPrivate ? 'Private Repository' : 'Open on GitHub'}
+                        <a href="${linkTarget}" target="_blank" class="btn-inspect-arch" style="text-decoration:none;">
+                            <i class="${isPrivate ? 'fa-solid fa-lock' : 'fa-brands fa-github'}"></i> ${isPrivate ? 'Private Repo' : 'View on GitHub'}
                         </a>
                     </div>
-                    <span class="project-tag-badge" style="background: rgba(10,10,10,0.9); border-color: ${langColor}; color: #ffffff;">
-                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${langColor}; margin-right:4px;"></span>
-                        ${lang}
-                    </span>
+                    <span class="project-tag-badge">${badgeText}</span>
                 </div>
-                <div class="project-info-block" style="padding: 1.5rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; gap:0.5rem; flex-wrap:wrap;">
-                        <h3 class="project-heading" style="font-size: 1.15rem; margin-bottom:0; font-weight:500; color:#ffffff;">${repo.name}</h3>
-                        <div style="display:flex; gap:0.6rem; align-items:center;">
-                            ${privateBadge}
-                            ${stars}
-                            ${forks}
-                        </div>
+                <div class="project-info-block">
+                    <h3 class="project-heading">${repo.name}</h3>
+                    <p class="project-abstract">${desc}</p>
+                    <div class="tech-stack-row">
+                        <span>${lang}</span>
+                        ${isPrivate ? '<span>Private Repo</span>' : '<span>GitHub Sync</span>'}
                     </div>
-                    <p class="project-abstract" style="font-size: 0.88rem; margin-bottom: 1.2rem; color:var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height:1.6;">
-                        ${desc}
-                    </p>
-                    <div class="project-card-footer" style="padding-top:0.8rem; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">
-                            Updated ${dateStr}
-                        </span>
-                        ${linkAction}
+                    <div class="project-card-footer">
+                        ${actionButton}
+                        <a href="${linkTarget}" target="_blank" class="icon-link-subtle" title="View on GitHub">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
                     </div>
                 </div>
-            </article>
             `;
-        }).join('');
 
-        // Apply active category filter if selected
+            projectsGrid.appendChild(card);
+        });
+
+        // Apply active filter pill if one is selected
         const activeFilterBtn = document.querySelector('.proj-filter-pill.active');
         if (activeFilterBtn) {
             const currentFilter = activeFilterBtn.getAttribute('data-proj-filter');
             if (currentFilter && currentFilter !== 'all') {
-                document.querySelectorAll('#auto-github-repos-grid .project-editorial-card').forEach(card => {
+                projectsGrid.querySelectorAll('.project-editorial-card').forEach(card => {
                     const cat = card.getAttribute('data-category');
                     card.style.display = (cat === currentFilter) ? 'flex' : 'none';
                 });
             }
         }
     }
+
+    // Process initial private manifest repos
+    appendNewReposToGrid(privateReposManifest);
+
+    // Fetch new public repos from GitHub API and append cleanly
+    fetch(`https://api.github.com/users/Hitesh070/repos?sort=updated&direction=desc&per_page=100&_t=${Date.now()}`, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+    })
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        })
+        .then(repos => {
+            if (Array.isArray(repos)) {
+                const publicRepos = repos.filter(r => !r.fork || r.stargazers_count > 0);
+                appendNewReposToGrid([...privateReposManifest, ...publicRepos]);
+            }
+        })
+        .catch(err => console.log('GitHub Sync Standby:', err));
 }
 
 /* ==========================================================================

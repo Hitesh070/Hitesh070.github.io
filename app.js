@@ -614,6 +614,9 @@ function initLiveGitHubSync() {
         return 'fa-folder-open';
     }
 
+    // Perform immediate initial render so UI never hangs on "Syncing..."
+    renderCombinedRepos([], privateReposManifest);
+
     fetch(`https://api.github.com/users/Hitesh070/repos?sort=updated&direction=desc&per_page=100&_t=${Date.now()}`, {
         headers: {
             'Accept': 'application/vnd.github.v3+json'

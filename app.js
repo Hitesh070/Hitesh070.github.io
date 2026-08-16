@@ -541,6 +541,32 @@ function initLiveGitHubSync() {
     const statusTag = document.getElementById('live-sync-status');
     if (!reposContainer) return;
 
+    // Private Repositories Manifest (Add any private repos here to showcase on your website securely)
+    const privateReposManifest = [
+        {
+            name: "ETA-1-Facial-Recognition-Accelerator",
+            description: "Private VLSI design & verification repository for Error-Tolerant Adder Type-1 (ETA-1) approximate hardware acceleration in low-power facial recognition.",
+            category: "vlsi",
+            language: "Verilog HDL",
+            isPrivate: true,
+            stargazers_count: 0,
+            forks_count: 0,
+            updated_at: new Date().toISOString(),
+            html_url: "https://github.com/Hitesh070"
+        },
+        {
+            name: "ALPS-USV-Autonomous-Skimmer",
+            description: "Private hardware control & computer vision pipeline repository for the ALPS Aquatic Waste Mapping & Skimmer USV system.",
+            category: "embedded",
+            language: "Python / Embedded C",
+            isPrivate: true,
+            stargazers_count: 0,
+            forks_count: 0,
+            updated_at: new Date().toISOString(),
+            html_url: "https://github.com/Hitesh070"
+        }
+    ];
+
     const langColors = {
         'Python': '#3572A5',
         'JavaScript': '#f1e05a',
@@ -549,6 +575,7 @@ function initLiveGitHubSync() {
         'C++': '#f34b7d',
         'Java': '#b07219',
         'Verilog': '#b2b7f8',
+        'Verilog HDL': '#b2b7f8',
         'SystemVerilog': '#DAE1C2',
         'VHDL': '#adb2cb',
         'MATLAB': '#e16737',
@@ -556,10 +583,12 @@ function initLiveGitHubSync() {
         'CSS': '#563d7c',
         'Shell': '#89e051',
         'Jupyter Notebook': '#DA5B0B',
-        'PHP': '#4F5D95'
+        'PHP': '#4F5D95',
+        'Python / Embedded C': '#3572A5'
     };
 
     function categorizeRepo(repo) {
+        if (repo.category) return repo.category;
         const name = (repo.name || '').toLowerCase();
         const desc = (repo.description || '').toLowerCase();
         const lang = (repo.language || '').toLowerCase();
@@ -580,8 +609,8 @@ function initLiveGitHubSync() {
         if (category === 'vlsi') return 'fa-microchip';
         if (category === 'power') return 'fa-bolt-lightning';
         if (category === 'embedded') return 'fa-robot';
-        if (language === 'Python') return 'fa-python';
-        if (language === 'JavaScript' || language === 'HTML') return 'fa-code';
+        if (language && language.includes('Python')) return 'fa-python';
+        if (language && (language.includes('JavaScript') || language.includes('HTML'))) return 'fa-code';
         return 'fa-folder-open';
     }
 
@@ -595,83 +624,96 @@ function initLiveGitHubSync() {
             return res.json();
         })
         .then(repos => {
-            if (!Array.isArray(repos) || repos.length === 0) {
-                if (statusTag) statusTag.innerHTML = '<i class="fa-solid fa-circle-check text-blue"></i> Standby';
-                return;
-            }
-
-            const publicRepos = repos.filter(r => !r.fork || r.stargazers_count > 0);
-
-            if (countBadge) countBadge.textContent = `${publicRepos.length} Repos`;
-            if (statusTag) statusTag.innerHTML = `<i class="fa-solid fa-circle-check text-blue"></i> Auto-Synced (${publicRepos.length} Repositories)`;
-
-            reposContainer.innerHTML = publicRepos.map(repo => {
-                const category = categorizeRepo(repo);
-                const iconClass = getRepoIcon(category, repo.language);
-                const desc = repo.description || 'GitHub public repository for hardware, software, and systems engineering.';
-                const lang = repo.language || 'Code';
-                const langColor = langColors[repo.language] || '#3b82f6';
-                const stars = repo.stargazers_count > 0 ? `<span style="font-size:0.75rem; color:var(--accent-blue);"><i class="fa-solid fa-star"></i> ${repo.stargazers_count}</span>` : '';
-                const forks = repo.forks_count > 0 ? `<span style="font-size:0.75rem; color:var(--text-muted);"><i class="fa-solid fa-code-branch"></i> ${repo.forks_count}</span>` : '';
-                const dateStr = new Date(repo.pushed_at || repo.updated_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-
-                return `
-                <article class="project-editorial-card magnetic-card" data-category="${category}">
-                    <div class="project-thumbnail-wrapper" style="height:140px; background: rgba(10,10,10,0.85);">
-                        <div class="project-icon-graphic" style="font-size: 3rem; color: ${langColor}; opacity: 0.85;">
-                            <i class="fa-solid ${iconClass}"></i>
-                        </div>
-                        <div class="thumbnail-hover-overlay">
-                            <a href="${repo.html_url}" target="_blank" class="btn-inspect-arch" style="text-decoration:none;">
-                                <i class="fa-brands fa-github"></i> Open on GitHub
-                            </a>
-                        </div>
-                        <span class="project-tag-badge" style="background: rgba(10,10,10,0.9); border-color: ${langColor}; color: #ffffff;">
-                            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${langColor}; margin-right:4px;"></span>
-                            ${lang}
-                        </span>
-                    </div>
-                    <div class="project-info-block" style="padding: 1.5rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; gap:0.5rem;">
-                            <h3 class="project-heading" style="font-size: 1.15rem; margin-bottom:0; font-weight:500; color:#ffffff;">${repo.name}</h3>
-                            <div style="display:flex; gap:0.6rem; align-items:center;">
-                                ${stars}
-                                ${forks}
-                            </div>
-                        </div>
-                        <p class="project-abstract" style="font-size: 0.88rem; margin-bottom: 1.2rem; color:var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height:1.6;">
-                            ${desc}
-                        </p>
-                        <div class="project-card-footer" style="padding-top:0.8rem; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">
-                                Updated ${dateStr}
-                            </span>
-                            <a href="${repo.html_url}" target="_blank" class="btn-text-link" style="font-size:0.8rem;">
-                                <span>View Repo</span>
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                            </a>
-                        </div>
-                    </div>
-                </article>
-                `;
-            }).join('');
-
-            // Apply current active filter if any button is selected
-            const activeFilterBtn = document.querySelector('.proj-filter-pill.active');
-            if (activeFilterBtn) {
-                const currentFilter = activeFilterBtn.getAttribute('data-proj-filter');
-                if (currentFilter && currentFilter !== 'all') {
-                    document.querySelectorAll('#auto-github-repos-grid .project-editorial-card').forEach(card => {
-                        const cat = card.getAttribute('data-category');
-                        card.style.display = (cat === currentFilter) ? 'flex' : 'none';
-                    });
-                }
-            }
+            const publicRepos = (Array.isArray(repos) ? repos : []).filter(r => !r.fork || r.stargazers_count > 0);
+            renderCombinedRepos(publicRepos, privateReposManifest);
         })
         .catch(err => {
             console.log('GitHub Sync Standby:', err);
-            if (statusTag) statusTag.innerHTML = '<span style="color:var(--text-muted);"><i class="fa-brands fa-github"></i> Standby</span>';
+            renderCombinedRepos([], privateReposManifest);
         });
+
+    function renderCombinedRepos(publicRepos, privateRepos) {
+        const combined = [...privateRepos, ...publicRepos];
+
+        if (countBadge) countBadge.textContent = `${combined.length} Repos (${publicRepos.length} Public, ${privateRepos.length} Private)`;
+        if (statusTag) statusTag.innerHTML = `<i class="fa-solid fa-circle-check text-blue"></i> Synced (${combined.length} Repositories)`;
+
+        reposContainer.innerHTML = combined.map(repo => {
+            const category = categorizeRepo(repo);
+            const iconClass = getRepoIcon(category, repo.language);
+            const desc = repo.description || 'GitHub repository for hardware, software, and systems engineering.';
+            const lang = repo.language || 'Code';
+            const langColor = langColors[repo.language] || '#3b82f6';
+            const isPrivate = repo.isPrivate || repo.private || false;
+
+            const privateBadge = isPrivate
+                ? `<span style="font-size:0.7rem; padding:0.2rem 0.6rem; border-radius:var(--radius-pill); background:rgba(59,130,246,0.15); border:1px solid var(--accent-blue); color:var(--accent-blue); font-family:var(--font-mono); display:inline-flex; align-items:center; gap:0.3rem;"><i class="fa-solid fa-lock"></i> PRIVATE REPO</span>`
+                : '';
+
+            const stars = repo.stargazers_count > 0 ? `<span style="font-size:0.75rem; color:var(--accent-blue);"><i class="fa-solid fa-star"></i> ${repo.stargazers_count}</span>` : '';
+            const forks = repo.forks_count > 0 ? `<span style="font-size:0.75rem; color:var(--text-muted);"><i class="fa-solid fa-code-branch"></i> ${repo.forks_count}</span>` : '';
+            const dateStr = new Date(repo.pushed_at || repo.updated_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+            const linkAction = isPrivate
+                ? `<span class="btn-text-link" style="font-size:0.8rem; color:var(--accent-blue); opacity:0.85;">
+                    <i class="fa-solid fa-shield-halved"></i> Private Project
+                   </span>`
+                : `<a href="${repo.html_url}" target="_blank" class="btn-text-link" style="font-size:0.8rem;">
+                    <span>View Repo</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                   </a>`;
+
+            return `
+            <article class="project-editorial-card magnetic-card" data-category="${category}">
+                <div class="project-thumbnail-wrapper" style="height:140px; background: rgba(10,10,10,0.85);">
+                    <div class="project-icon-graphic" style="font-size: 3rem; color: ${langColor}; opacity: 0.85;">
+                        <i class="fa-solid ${iconClass}"></i>
+                    </div>
+                    <div class="thumbnail-hover-overlay">
+                        <a href="${repo.html_url}" target="_blank" class="btn-inspect-arch" style="text-decoration:none;">
+                            <i class="${isPrivate ? 'fa-solid fa-lock' : 'fa-brands fa-github'}"></i> ${isPrivate ? 'Private Repository' : 'Open on GitHub'}
+                        </a>
+                    </div>
+                    <span class="project-tag-badge" style="background: rgba(10,10,10,0.9); border-color: ${langColor}; color: #ffffff;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${langColor}; margin-right:4px;"></span>
+                        ${lang}
+                    </span>
+                </div>
+                <div class="project-info-block" style="padding: 1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; gap:0.5rem; flex-wrap:wrap;">
+                        <h3 class="project-heading" style="font-size: 1.15rem; margin-bottom:0; font-weight:500; color:#ffffff;">${repo.name}</h3>
+                        <div style="display:flex; gap:0.6rem; align-items:center;">
+                            ${privateBadge}
+                            ${stars}
+                            ${forks}
+                        </div>
+                    </div>
+                    <p class="project-abstract" style="font-size: 0.88rem; margin-bottom: 1.2rem; color:var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height:1.6;">
+                        ${desc}
+                    </p>
+                    <div class="project-card-footer" style="padding-top:0.8rem; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">
+                            Updated ${dateStr}
+                        </span>
+                        ${linkAction}
+                    </div>
+                </div>
+            </article>
+            `;
+        }).join('');
+
+        // Apply active category filter if selected
+        const activeFilterBtn = document.querySelector('.proj-filter-pill.active');
+        if (activeFilterBtn) {
+            const currentFilter = activeFilterBtn.getAttribute('data-proj-filter');
+            if (currentFilter && currentFilter !== 'all') {
+                document.querySelectorAll('#auto-github-repos-grid .project-editorial-card').forEach(card => {
+                    const cat = card.getAttribute('data-category');
+                    card.style.display = (cat === currentFilter) ? 'flex' : 'none';
+                });
+            }
+        }
+    }
 }
 
 /* ==========================================================================

@@ -465,7 +465,7 @@ function initProjectFiltersAndModals() {
             btn.classList.add('active');
 
             const filter = btn.getAttribute('data-proj-filter');
-            const allCards = document.querySelectorAll('.project-editorial-card');
+            const allCards = document.querySelectorAll('#projects .project-editorial-card');
             allCards.forEach(card => {
                 const cat = card.getAttribute('data-category');
                 if (filter === 'all' || cat === filter) {

@@ -1,61 +1,65 @@
-# Hitesh V S — Engineering Portfolio Website
+# Hitesh V S — Personal Portfolio Website
 
-[![Live Website](https://img.shields.io/badge/Website-hitesh070.github.io-blue?style=for-the-badge&logo=github)](https://hitesh070.github.io)
-[![Institution](https://img.shields.io/badge/Institution-VIT%20Chennai-blue?style=for-the-badge)](https://chennai.vit.ac.in)
-[![Degree](https://img.shields.io/badge/Degree-B.Tech%20EEE%20(2025--2029)-electricblue?style=for-the-badge)]()
+[![Live Website](https://img.shields.io/badge/Website-hitesh070.github.io-2563eb?style=flat-square)](https://hitesh070.github.io)
+[![Institution](https://img.shields.io/badge/Institution-VIT%20Chennai-0284c7?style=flat-square)](https://chennai.vit.ac.in)
+[![Degree](https://img.shields.io/badge/Degree-B.Tech%20EEE%20(2025--2029)-0f172a?style=flat-square)]()
 
-Welcome to the personal website repository of **Hitesh V S**, a 2nd Year Electrical and Electronics Engineering (EEE) undergraduate student at VIT Chennai (Class of 2029).
+Personal website repository of **Hitesh V S**, undergraduate student in Electrical and Electronics Engineering (EEE) at VIT Chennai (Class of 2029).
 
-This portfolio showcases engineering projects in Embedded Systems, Digital VLSI Logic, Power Electronics, ongoing research & patent publications, academic background, and creative media endeavors.
-
----
-
-## 🌟 Key Features
-
-- **Automatic Live GitHub Repository Sync**: Dynamic integration with the GitHub REST API (`https://api.github.com/users/Hitesh070/repos`). Whenever a new repository is created on GitHub, it automatically fetches and renders in real-time within the Projects section with language badges, star/fork metrics, and direct repo links.
-- **Interactive Project Modals**: Multi-tab modal views complete with custom SVG hardware schematics, system architecture diagrams, and tech stack tags.
-- **Research & Publications**: Dedicated section highlighting ongoing Springer Nature journal papers and Indian patent applications.
-- **Direct CV Download**: Seamless one-click resume download feature.
-- **Custom Visual & Motion Engine**: Lightweight, pure JavaScript ambient canvas particle grid, scroll-reveal animation pipeline, 3D tilt effects, and theme accent badges.
-- **Analytics & Metadata**: Configured with Google Analytics 4 (GA4) telemetry and OpenGraph protocol cards for social previews (LinkedIn, WhatsApp, Twitter).
+This website highlights engineering projects across Embedded Systems, Digital VLSI Design, Power Electronics, Control Systems, Software Development, scholarly research, and ongoing patent applications.
 
 ---
 
-## 🛠️ Technology Stack
+## Overview & Architecture
 
-- **Frontend**: HTML5, Vanilla CSS3 (Custom Design System with CSS Variables), Modern ES6+ JavaScript
-- **Graphics & Visuals**: Canvas API, Scalable Vector Graphics (SVG) architecture diagrams
-- **Integrations**: GitHub REST API v3 (Dynamic Live Sync), Google Analytics 4
-- **Typography & Icons**: Google Fonts (*Plus Jakarta Sans*, *Outfit*, *Fira Code*), FontAwesome v6
-- **Hosting**: GitHub Pages
+The website is engineered as a static application built with standard web technologies (HTML5, CSS3, ES6+ JavaScript), prioritizing performance, responsive typography, and design aesthetics.
+
+### Key Functional Highlights
+
+- **Featured Engineering Projects**: Detailed project breakdown covering Embedded Systems, Digital VLSI, Power Electronics, Control Systems, and Software.
+- **Interactive Technical Modals**: Modal dialogues featuring system architecture schematics, hardware specifications, and technical highlights for each project.
+- **Scholarly Inquiry & Intellectual Property**: Highlighted sections detailing journal paper submissions and patent applications.
+- **Interactive Ambient Background Canvas**: Custom multi-layer particle canvas grid rendering background motion using HTML5 Canvas API without external heavy frameworks.
+- **Responsive Modular Architecture**: Strict CSS design tokens, flexible grid layouts, and hardware-accelerated scroll animations.
 
 ---
 
-## 📁 Repository Structure
+## Technical Stack
+
+- **Markup & Layout**: HTML5 (Semantic Structure)
+- **Styling & Design System**: Modern Vanilla CSS3 (Custom CSS Custom Properties, Flexbox, Grid)
+- **Scripting & Interactions**: Vanilla JavaScript (ES6+)
+- **Graphics & Vector Schematics**: HTML5 Canvas API, Inline Scalable Vector Graphics (SVG)
+- **Typography & Icons**: Google Fonts (Plus Jakarta Sans, Outfit, Fira Code), FontAwesome v6 Icons
+- **Deployment**: GitHub Pages (Static Hosting)
+
+---
+
+## Repository Layout
 
 ```
 .
-├── index.html              # Main HTML markup, semantic layout & live repo container
-├── styles.css              # Custom CSS design system, typography & card styles
-├── app.js                  # Engine logic: canvas background, modal renderer & GitHub API auto-sync
-├── assets/                 # Profile photos, institution logos & project covers
+├── index.html              # Main HTML document and semantic markup structure
+├── styles.css              # Custom stylesheet, design tokens, responsive layouts
+├── app.js                  # Application engine logic, particle canvas, modal handlers
+├── assets/                 # Profile photography, institutional logos, and project media
 │   ├── hero.jpg            # Profile photo
-│   ├── og_banner.svg       # Social share card banner
-│   ├── vit_logo.png        # Institution logos
-│   ├── ieee_sscs.png       # Department & organization logos
-│   ├── robotics_club.png   # Robotics club emblem logo
-│   ├── santiniketan_logo.png # Santiniketan school logo
-│   ├── little_kingdom_logo.png # Little Kingdom school logo
-│   ├── uav_guardian.png    # UAV Guardian project diagram
-│   └── project1-6.jpg      # High-resolution project covers
-└── README.md               # Project documentation
+│   ├── og_banner.svg       # Social preview image asset
+│   ├── vit_logo.png        # Institution logo
+│   ├── ieee_sscs.png       # IEEE SSCS chapter logo
+│   ├── robotics_club.png   # Robotics Club emblem logo
+│   ├── santiniketan_logo.png # Santiniketan Public School logo
+│   ├── little_kingdom_logo.png # The Little Kingdom School logo
+│   ├── uav_guardian.png    # UAV Guardian block diagram graphic
+│   └── project1-6.jpg      # Project cover images
+└── README.md               # Repository documentation
 ```
 
 ---
 
-## 💻 Local Development
+## Local Setup & Development
 
-To run and preview the website locally:
+To clone and run the portfolio website locally:
 
 1. **Clone the Repository**
    ```bash
@@ -63,22 +67,23 @@ To run and preview the website locally:
    cd Hitesh070.github.io
    ```
 
-2. **Serve Locally**
-   You can serve the directory using Python HTTP server or any standard static file server:
+2. **Launch Local Static Server**
+   Run a simple HTTP server using Python:
    ```bash
    python -m http.server 8000
    ```
 
-3. **Open Browser**
-   Navigate to `http://localhost:8000` in your web browser.
+3. **Access in Browser**
+   Open your browser and navigate to `http://localhost:8000`.
 
 ---
 
-## 📫 Contact & Socials
+## Contact Information
 
 - **Email**: [hiteshvs616@gmail.com](mailto:hiteshvs616@gmail.com)
 - **LinkedIn**: [linkedin.com/in/hiteshvs](https://www.linkedin.com/in/hiteshvs)
 - **GitHub**: [github.com/Hitesh070](https://github.com/Hitesh070)
 
 ---
-© 2026 Hitesh V S • EEE Department, VIT Chennai
+
+Copyright (c) 2026 Hitesh V S. All rights reserved.

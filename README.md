@@ -38,15 +38,16 @@ This portfolio showcases engineering projects in Embedded Systems, Digital VLSI 
 ├── index.html              # Main HTML markup, semantic layout & live repo container
 ├── styles.css              # Custom CSS design system, typography & card styles
 ├── app.js                  # Engine logic: canvas background, modal renderer & GitHub API auto-sync
-├── assets/                 # Profile photos, institution logos, SVG schematics & resume PDF
+├── assets/                 # Profile photos, institution logos & project covers
 │   ├── hero.jpg            # Profile photo
 │   ├── og_banner.svg       # Social share card banner
-│   ├── Hitesh_VS_Resume.pdf# Curated resume / CV download asset
 │   ├── vit_logo.png        # Institution logos
 │   ├── ieee_sscs.png       # Department & organization logos
+│   ├── robotics_club.png   # Robotics club emblem logo
+│   ├── santiniketan_logo.png # Santiniketan school logo
+│   ├── little_kingdom_logo.png # Little Kingdom school logo
+│   ├── uav_guardian.png    # UAV Guardian project diagram
 │   └── project1-6.jpg      # High-resolution project covers
-├── backup/                 # Preserved website backups
-│   └── OG/                 # Complete original website version backup
 └── README.md               # Project documentation
 ```
 

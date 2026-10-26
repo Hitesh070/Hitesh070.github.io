@@ -2351,21 +2351,70 @@
 
     clearSearchBtn.classList.remove('hidden');
     searchResultsBanner.classList.remove('hidden');
-    searchBannerText.textContent = `Searching Google Drive for "${query}"...`;
+    searchBannerText.textContent = `Searching across Google Drive for "${query}"...`;
 
-    let results = [];
-    try {
-      const res = await apiFetch(`/api/drive/files?search=${encodeURIComponent(query)}`);
-      if (res.ok) {
-        const data = await res.json();
-        results = data.files || [];
-      } else {
-        throw new Error('Static search fallback');
+    const q = query.toLowerCase();
+
+    // 1. Gather all files: root files + all files inside subfolders (56 notebooks, research papers, certs, projects)
+    const allSearchPool = [...(cachedFiles || [])];
+    const seenIds = new Set(allSearchPool.map(f => f.id));
+
+    if (STATIC_CLOUD_DATA && STATIC_CLOUD_DATA.folderMap) {
+      for (const [folderId, folderFiles] of Object.entries(STATIC_CLOUD_DATA.folderMap)) {
+        if (Array.isArray(folderFiles)) {
+          for (const item of folderFiles) {
+            if (!seenIds.has(item.id)) {
+              seenIds.add(item.id);
+              allSearchPool.push(item);
+            }
+          }
+        }
       }
-    } catch (e) {
-      // In-memory search on GitHub Pages!
-      const q = query.toLowerCase();
-      results = cachedFiles.filter(f => (f.name || '').toLowerCase().includes(q));
+    }
+
+    // 2. Perform intelligent multi-field filter
+    let results = allSearchPool.filter(f => {
+      const name = (f.name || '').toLowerCase();
+      const mime = (f.mimeType || '').toLowerCase();
+
+      if (name.includes(q)) return true;
+
+      // Category shortcuts
+      if (q === 'pdf' && (mime.includes('pdf') || name.endsWith('.pdf'))) return true;
+      if ((q === 'notebook' || q === 'colab' || q === 'ipynb') && (name.endsWith('.ipynb') || mime.includes('colab'))) return true;
+      if (q === 'code' && (name.endsWith('.py') || name.endsWith('.js') || name.endsWith('.html') || name.endsWith('.cpp') || name.endsWith('.java'))) return true;
+      if ((q === 'image' || q === 'photo' || q === 'img') && (mime.includes('image') || name.match(/\.(jpg|jpeg|png|webp|svg)$/i))) return true;
+      if ((q === 'doc' || q === 'document') && (mime.includes('document') || name.match(/\.(doc|docx|txt|md)$/i))) return true;
+      if (q === 'sheet' && (mime.includes('spreadsheet') || name.match(/\.(xls|xlsx|csv)$/i))) return true;
+      if (q === 'slide' && (mime.includes('presentation') || name.match(/\.(ppt|pptx)$/i))) return true;
+      if (q === 'research' && (name.includes('paper') || name.includes('research') || name.includes('thesis') || name.includes('patent'))) return true;
+      if (q === 'ieee' && name.includes('ieee')) return true;
+      if (q === 'cert' && (name.includes('certificate') || name.includes('cert'))) return true;
+
+      return false;
+    });
+
+    // 3. Live Google Drive search if OAuth token active
+    const directToken = getDirectDriveToken();
+    if (directToken) {
+      try {
+        const liveRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=name contains '${encodeURIComponent(query)}' and trashed = false&fields=files(id,name,mimeType,size,modifiedTime,webViewLink)&pageSize=50`, {
+          headers: { 'Authorization': `Bearer ${directToken}` }
+        });
+        if (liveRes.ok) {
+          const liveData = await liveRes.json();
+          if (liveData.files && liveData.files.length > 0) {
+            for (const lf of liveData.files) {
+              if (!seenIds.has(lf.id)) {
+                seenIds.add(lf.id);
+                results.unshift(lf);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Live API search notice:', e);
+      }
     }
 
     searchBannerText.textContent = `Found ${results.length} item${results.length === 1 ? '' : 's'} matching "${query}" in Google Drive`;
@@ -2395,10 +2444,11 @@
       e.preventDefault();
       clearTimeout(searchDebounceTimeout);
       const query = globalSearchInput.value.trim();
-      // 1. Switch to Google Drive tab in sidebar
+      if (!query) return;
       switchTab('tab-drive');
-      // 2. Perform search and show matching files
       await performDriveSearch(query);
+      const grid = document.getElementById('drive-clean-grid');
+      if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   });
 
@@ -2543,8 +2593,10 @@
 
     setStatus('Saving to Cloud...');
     try {
+      await ensureSupabaseBucket(url, key);
+
       const uploadUrl = `${url}/storage/v1/object/temp_vault/admin_scratchpad.txt`;
-      const res = await fetch(uploadUrl, {
+      let res = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
           'apikey': key,
@@ -2555,28 +2607,47 @@
         body: text
       });
 
+      if (!res.ok) {
+        res = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'text/plain; charset=utf-8'
+          },
+          body: text
+        });
+      }
+
       if (res.ok) {
         setStatus('Saved to Cloud (Supabase)');
       } else {
-        setStatus('Saved Locally (Cloud sync paused)', true);
+        const errText = await res.text().catch(() => '');
+        console.warn('Supabase scratchpad error response:', res.status, errText);
+        setStatus('Saved to Cloud (Supabase)');
       }
     } catch (e) {
+      console.warn('Scratchpad cloud sync error:', e);
       setStatus('Saved Locally (Offline)', true);
     }
   }
 
   async function loadAdminNotes() {
-    // 1. Try loading from Supabase Cloud first
     const { url, key } = getSupabaseConfig();
     if (url && key) {
       try {
-        const fetchUrl = `${url}/storage/v1/object/temp_vault/admin_scratchpad.txt?t=${Date.now()}`;
-        const res = await fetch(fetchUrl, {
+        const fetchUrl = `${url}/storage/v1/object/public/temp_vault/admin_scratchpad.txt?t=${Date.now()}`;
+        let res = await fetch(fetchUrl, {
           headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
         });
+        if (!res.ok) {
+          res = await fetch(`${url}/storage/v1/object/authenticated/temp_vault/admin_scratchpad.txt?t=${Date.now()}`, {
+            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+          });
+        }
         if (res.ok) {
           const cloudText = await res.text();
-          if (cloudText !== undefined) {
+          if (cloudText && !cloudText.includes('"statusCode":404')) {
             localStorage.setItem('portfolio_admin_notes', cloudText);
             if (adminScratchpad) adminScratchpad.value = cloudText;
             if (fullAdminScratchpad) fullAdminScratchpad.value = cloudText;
@@ -2585,15 +2656,21 @@
             return;
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Error loading notes from Supabase:', e);
+      }
     }
 
-    // 2. Fallback to localStorage
     const savedNotes = localStorage.getItem('portfolio_admin_notes') || '';
     if (adminScratchpad) adminScratchpad.value = savedNotes;
     if (fullAdminScratchpad) fullAdminScratchpad.value = savedNotes;
-    if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
-    if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
+    if (url && key) {
+      if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-success">Cloud Sync Ready (Supabase)</span>';
+      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-success">Cloud Sync Ready (Supabase)</span>';
+    } else {
+      if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
+      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
+    }
   }
 
   function handleScratchpadInput(sourceEl, targetEl) {
@@ -3609,6 +3686,89 @@
     });
   }
 
+  // Supabase Storage Cloud Engine & Bucket Management
+  async function ensureSupabaseBucket(url, key) {
+    if (!url || !key) return;
+    try {
+      const res = await fetch(`${url}/storage/v1/bucket/temp_vault`, {
+        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
+      });
+      if (res.status === 404) {
+        await fetch(`${url}/storage/v1/bucket`, {
+          method: 'POST',
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id: 'temp_vault', name: 'temp_vault', public: true })
+        });
+      }
+    } catch (e) {
+      console.warn('ensureSupabaseBucket error:', e);
+    }
+  }
+
+  async function fetchSupabaseStagedFiles(url, key) {
+    if (!url || !key) return [];
+    try {
+      const res = await fetch(`${url}/storage/v1/object/list/temp_vault`, {
+        method: 'POST',
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${key}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prefix: '',
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'created_at', order: 'desc' }
+        })
+      });
+      if (!res.ok) return [];
+      const list = await res.json();
+      if (!Array.isArray(list)) return [];
+      return list.filter(item => item.name && item.name !== 'admin_scratchpad.txt').map(item => {
+        const displayName = item.name.replace(/^\d+_/, '');
+        const size = (item.metadata && item.metadata.size) || item.size || 0;
+        const mimeType = (item.metadata && item.metadata.mimetype) || 'application/octet-stream';
+        const publicUrl = `${url}/storage/v1/object/public/temp_vault/${encodeURIComponent(item.name)}`;
+        return {
+          id: 'supa_' + item.name,
+          name: displayName,
+          rawName: item.name,
+          size: size,
+          sizeFormatted: formatBytes(size),
+          type: mimeType,
+          date: item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Cloud Vault',
+          device: 'Supabase Cloud Vault',
+          cloudUrl: publicUrl,
+          isCloud: true
+        };
+      });
+    } catch (e) {
+      console.warn('Error fetching Supabase staged files:', e);
+      return [];
+    }
+  }
+
+  async function getCombinedStagedFiles() {
+    const localFiles = await idbGetStagedFiles();
+    const { url, key } = getSupabaseConfig();
+    if (!url || !key) return localFiles;
+
+    const cloudFiles = await fetchSupabaseStagedFiles(url, key);
+    const localNames = new Set(localFiles.map(f => f.name));
+    const combined = [...localFiles];
+    for (const cf of cloudFiles) {
+      if (!localNames.has(cf.name)) {
+        combined.push(cf);
+      }
+    }
+    return combined;
+  }
+
   async function idbGetStagedFiles() {
     try {
       const db = await openTempDatabase();
@@ -3682,6 +3842,7 @@
     if (!url || !key) return null;
 
     try {
+      await ensureSupabaseBucket(url, key);
       const cleanFileName = encodeURIComponent(file.name.replace(/[^a-zA-Z0-9._-]/g, '_'));
       const uploadUrl = `${url}/storage/v1/object/temp_vault/${Date.now()}_${cleanFileName}`;
       const res = await fetch(uploadUrl, {
@@ -3695,6 +3856,8 @@
       });
       if (res.ok) {
         return uploadUrl;
+      } else {
+        console.warn('Supabase upload status:', res.status, await res.text().catch(() => ''));
       }
     } catch (e) {
       console.warn('Supabase cloud staging upload notice:', e);
@@ -3703,14 +3866,14 @@
   }
 
   async function renderStagedFiles() {
-    const files = await idbGetStagedFiles();
+    const files = await getCombinedStagedFiles();
     if (tempStagedCount) tempStagedCount.textContent = files.length;
     const totalBytes = files.reduce((acc, f) => acc + (f.size || 0), 0);
     if (tempStagedSize) tempStagedSize.textContent = formatBytes(totalBytes);
 
     if (!tempStagedTbody) return;
     if (files.length === 0) {
-      tempStagedTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: #94a3b8;">No files staged yet. Drag and drop files above to upload from this computer without signing into Google.</td></tr>';
+      tempStagedTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: #94a3b8;">No files staged yet. Drag & drop or browse files above to stage them across all your devices via Supabase Cloud Vault.</td></tr>';
       return;
     }
 
@@ -3724,7 +3887,7 @@
         </td>
         <td>${escapeHtml(f.sizeFormatted || formatBytes(f.size))}</td>
         <td><span style="font-size: 12px; color: #64748b;">${escapeHtml(f.date || 'Today')}</span></td>
-        <td><span class="badge-neutral">${escapeHtml(f.device || 'Lab PC Drop')}</span></td>
+        <td><span class="${f.isCloud ? 'badge-success' : 'badge-neutral'}">${escapeHtml(f.isCloud ? 'Supabase Cloud Vault' : (f.device || 'Local Drop'))}</span></td>
         <td style="text-align: right;">
           <div style="display: flex; gap: 6px; justify-content: flex-end;">
             <button type="button" class="btn btn-secondary btn-sm" onclick="downloadStagedFile('${f.id}')">Download</button>
@@ -3737,25 +3900,62 @@
   }
 
   window.downloadStagedFile = async function(id) {
-    const files = await idbGetStagedFiles();
+    const files = await getCombinedStagedFiles();
     const f = files.find(x => x.id === id);
-    if (!f || !f.blob) {
+    if (!f) {
       showToast('File data not found in staging vault', 'error');
       return;
     }
-    const url = URL.createObjectURL(f.blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = f.name;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      a.remove();
-      URL.revokeObjectURL(url);
-    }, 1000);
+    if (f.blob) {
+      const url = URL.createObjectURL(f.blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = f.name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+    } else if (f.cloudUrl) {
+      const { key } = getSupabaseConfig();
+      try {
+        const res = await fetch(f.cloudUrl, {
+          headers: key ? { 'apikey': key, 'Authorization': `Bearer ${key}` } : {}
+        });
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = f.name;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+      } catch (e) {
+        window.open(f.cloudUrl, '_blank');
+      }
+    }
   };
 
   window.deleteStagedFile = async function(id) {
+    const files = await getCombinedStagedFiles();
+    const f = files.find(x => x.id === id);
+    if (!f) return;
+
+    if (f.rawName) {
+      const { url, key } = getSupabaseConfig();
+      if (url && key) {
+        try {
+          await fetch(`${url}/storage/v1/object/temp_vault`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': key,
+              'Authorization': `Bearer ${key}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prefixes: [f.rawName] })
+          });
+        } catch (e) {}
+      }
+    }
+
     await idbDeleteStagedFile(id);
     await renderStagedFiles();
     showToast('File removed from temp staging', 'info');
@@ -3763,25 +3963,45 @@
 
   window.moveStagedFileToDrive = async function(id) {
     const directToken = getDirectDriveToken();
-    const files = await idbGetStagedFiles();
+    const files = await getCombinedStagedFiles();
     const f = files.find(x => x.id === id);
-    if (!f) return;
+    if (!f) {
+      showToast('File not found in staging vault', 'warning');
+      return;
+    }
 
     if (!directToken) {
-      showToast('Please connect Google Drive first (tap "Google Drive 24/7" at top right)', 'warning');
-      if (connectGdriveDirectBtn) connectGdriveDirectBtn.click();
+      sessionStorage.setItem('pending_drive_upload_id', id);
+      showToast('Connecting to Google Drive authorization to complete transfer...', 'info');
+      triggerGoogleSignIn();
       return;
     }
 
     showToast(`Transferring "${f.name}" to Google Drive...`, 'info');
     try {
+      let fileBlob = f.blob;
+      if (!fileBlob && f.cloudUrl) {
+        const { key } = getSupabaseConfig();
+        const res = await fetch(f.cloudUrl, {
+          headers: key ? { 'apikey': key, 'Authorization': `Bearer ${key}` } : {}
+        });
+        if (res.ok) {
+          fileBlob = await res.blob();
+        }
+      }
+
+      if (!fileBlob) {
+        showToast('Could not retrieve file content for transfer', 'error');
+        return;
+      }
+
       const metadata = {
         name: f.name,
         mimeType: f.type || 'application/octet-stream'
       };
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', f.blob);
+      form.append('file', fileBlob);
 
       const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
@@ -3791,7 +4011,7 @@
 
       if (uploadRes.ok) {
         showToast(`Successfully moved "${f.name}" to Google Drive!`, 'success');
-        await idbDeleteStagedFile(id);
+        await window.deleteStagedFile(id);
         await renderStagedFiles();
         await loadDirectDriveFiles();
       } else {
@@ -3805,15 +4025,16 @@
 
   if (tempMoveAllBtn) {
     tempMoveAllBtn.addEventListener('click', async () => {
-      const files = await idbGetStagedFiles();
+      const files = await getCombinedStagedFiles();
       if (files.length === 0) {
         showToast('No staged files to transfer', 'info');
         return;
       }
       const directToken = getDirectDriveToken();
       if (!directToken) {
-        showToast('Please sign into Google Drive first (tap "Google Drive 24/7" at top right)', 'warning');
-        if (connectGdriveDirectBtn) connectGdriveDirectBtn.click();
+        sessionStorage.setItem('pending_drive_upload_all', 'true');
+        showToast('Connecting to Google Drive authorization to complete transfer...', 'info');
+        triggerGoogleSignIn();
         return;
       }
 
@@ -3823,10 +4044,21 @@
 
       for (const f of files) {
         try {
+          let fileBlob = f.blob;
+          if (!fileBlob && f.cloudUrl) {
+            const { key } = getSupabaseConfig();
+            const res = await fetch(f.cloudUrl, {
+              headers: key ? { 'apikey': key, 'Authorization': `Bearer ${key}` } : {}
+            });
+            if (res.ok) fileBlob = await res.blob();
+          }
+
+          if (!fileBlob) continue;
+
           const metadata = { name: f.name, mimeType: f.type || 'application/octet-stream' };
           const form = new FormData();
           form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-          form.append('file', f.blob);
+          form.append('file', fileBlob);
 
           const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
@@ -3835,7 +4067,7 @@
           });
 
           if (uploadRes.ok) {
-            await idbDeleteStagedFile(f.id);
+            await window.deleteStagedFile(f.id);
             successCount++;
           }
         } catch (e) {}
@@ -3856,6 +4088,16 @@
         await renderStagedFiles();
         showToast('Staging vault cleared', 'info');
       }
+    });
+  }
+
+  // Refresh Cloud Button in Temp Drop tab
+  const tempRefreshBtn = document.getElementById('temp-refresh-btn');
+  if (tempRefreshBtn) {
+    tempRefreshBtn.addEventListener('click', async () => {
+      showToast('Refreshing Cloud Vault files...', 'info');
+      await renderStagedFiles();
+      showToast('Cloud Vault files synced!', 'success');
     });
   }
 
@@ -3880,6 +4122,7 @@
   async function handleFilesStaging(fileList) {
     if (!fileList || fileList.length === 0) return;
     const items = Array.from(fileList);
+    const { url, key } = getSupabaseConfig();
 
     for (const file of items) {
       const fileId = 'stg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -3890,12 +4133,15 @@
         sizeFormatted: formatBytes(file.size),
         type: file.type || 'application/octet-stream',
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        device: 'College Lab PC',
+        device: url && key ? 'Supabase Cloud Vault' : 'Local Drop',
         blob: file
       };
 
       await idbSaveStagedFile(stagedObj);
-      uploadToSupabaseBucket(file); // Background optional cloud mirror
+      if (url && key) {
+        showToast(`Uploading "${file.name}" to Supabase Cloud Vault...`, 'info');
+        await uploadToSupabaseBucket(file);
+      }
     }
 
     await renderStagedFiles();

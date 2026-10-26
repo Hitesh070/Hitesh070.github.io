@@ -2063,7 +2063,9 @@
     refreshVisitorsBtn.addEventListener('click', () => {
       loadDetailedVisitors();
       showToast('Visitor intelligence refreshed', 'success');
-    
+    });
+  }
+
   // =========================================================================
   // REMOTE BACKEND CONNECTION SETTINGS UI
   // =========================================================================
@@ -2209,9 +2211,6 @@
 
   // Initial status UI update
   updateBackendStatusUI();
-
-});
-  }
 
   // Helper
   function escapeHtml(text) {

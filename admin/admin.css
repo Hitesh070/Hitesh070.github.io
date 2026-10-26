@@ -1989,3 +1989,70 @@ body.dashboard-body {
   background: #94a3b8;
   box-shadow: none;
 }
+
+/* TEMP CLOUD DROP & STAGING VAULT */
+.temp-dropzone {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-top: 14px;
+}
+.temp-dropzone:hover, .temp-dropzone.dragover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12);
+}
+.dropzone-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.drop-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.drop-browse {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.drop-sub {
+  font-size: 12.5px;
+  color: #64748b;
+  max-width: 480px;
+  line-height: 1.4;
+}
+.btn-amber {
+  background: #f59e0b;
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-amber:hover {
+  background: #d97706;
+}
+.btn-amber-soft {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-amber-soft:hover {
+  background: #fef3c7;
+  color: #92400e;
+}

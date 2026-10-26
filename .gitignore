@@ -19,6 +19,10 @@ client_secret*.json
 *.env.*
 
 # Local server runtime data, logs & caches
+server/config/
+**/server/config/
+admin_notes.json
+**/admin_notes.json
 access_logs.json
 **/access_logs.json
 drive_cache.json

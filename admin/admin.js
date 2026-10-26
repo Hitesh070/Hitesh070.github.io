@@ -148,9 +148,7 @@
     },
     files: [],
     folderMap: {},
-    logs: [
-      { id: 'log_1', status: 'authorized', user: 'Hitesh', ip: 'Admin Client', os: 'Web Client', browser: 'Browser', device: 'Admin Terminal', location: 'Active Workspace', timestamp: 'Active' }
-    ],
+    logs: [],
     visitors: []
   };
 
@@ -1076,8 +1074,12 @@
     if (directToken) {
       try {
         const escapedTerm = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const qParam = encodeURIComponent(`name contains '${escapedTerm}' and trashed = false`);
-        const liveRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${qParam}&fields=files(id,name,mimeType,size,modifiedTime,webViewLink)&pageSize=50`, {
+        const queryParams = new URLSearchParams({
+          q: `name contains '${escapedTerm}' and trashed = false`,
+          fields: 'files(id,name,mimeType,size,modifiedTime,webViewLink)',
+          pageSize: '100'
+        });
+        const liveRes = await fetch(`https://www.googleapis.com/drive/v3/files?${queryParams.toString()}`, {
           headers: { 'Authorization': `Bearer ${directToken}` }
         });
         if (liveRes.ok) {
@@ -1774,38 +1776,237 @@
   const refreshLogsBtn = document.getElementById('refresh-logs-btn');
   const clearLogsBtn = document.getElementById('clear-logs-btn');
   const viewAllLogsBtn = document.getElementById('view-all-logs-btn');
+  const logFilterStatus = document.getElementById('log-filter-status');
+  const exportLogsCsvBtn = document.getElementById('export-logs-csv-btn');
 
-    async function loadAccessLogs() {
-    let logs = [];
-    let summary = {};
+  let cachedAuditLogs = [];
 
+  // =========================================================================
+  // REAL IP GEOLOCATION, DEVICE TELEMETRY & AUDIT LOGGER
+  // =========================================================================
+  async function fetchClientGeo() {
+    // Primary: https://ipwho.is/ (CORS-friendly, HTTPS, no API key needed)
     try {
-      const res = await apiFetch('/api/admin/logs');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+      const res = await fetch('https://ipwho.is/', { signal: controller.signal });
+      clearTimeout(timeout);
       if (res.ok) {
-        const data = await res.json();
-        logs = data.logs || [];
-        summary = data.summary || {};
-      } else {
-        throw new Error('Static logs fallback');
+        const j = await res.json();
+        if (j && j.success !== false) {
+          return {
+            ip: j.ip || 'Unknown',
+            city: j.city || '',
+            region: j.region || '',
+            country: j.country || '',
+            isp: (j.connection && j.connection.isp) || j.isp || '',
+            timezone: (j.timezone && j.timezone.id) || j.timezone || ''
+          };
+        }
       }
-    } catch (e) {
-      logs = STATIC_CLOUD_DATA.logs || [];
-      summary = {
-        total: logs.length,
-        successful: logs.filter(l => l.status === 'SUCCESS').length,
-        failed: logs.filter(l => l.status === 'FAILED').length,
-        uniqueIps: new Set(logs.map(l => l.ip)).size,
-        lastLogin: logs.length > 0 ? logs[0].dateFormatted : 'None'
-      };
+    } catch (_) {}
+
+    // Fallback: https://ipapi.co/json/
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+      const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const j = await res.json();
+        return {
+          ip: j.ip || 'Unknown',
+          city: j.city || '',
+          region: j.region || '',
+          country: j.country_name || j.country || '',
+          isp: j.org || '',
+          timezone: j.timezone || ''
+        };
+      }
+    } catch (_) {}
+
+    return {
+      ip: 'Client Direct',
+      city: 'Local Network',
+      region: '',
+      country: '',
+      isp: 'Direct Access',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    };
+  }
+
+  async function detectClientDevice() {
+    let os = 'Unknown OS';
+    let osVersion = '';
+    let deviceModel = '';
+    let deviceType = 'Desktop';
+    let browser = 'Unknown Browser';
+
+    // 1. High-Entropy User Agent Data (Chromium / Windows 11 accurate check)
+    if (navigator.userAgentData) {
+      const uad = navigator.userAgentData;
+      deviceType = uad.mobile ? 'Mobile' : 'Desktop';
+      if (uad.platform) os = uad.platform;
+
+      try {
+        const hints = await uad.getHighEntropyValues(['platformVersion', 'model', 'architecture', 'bitness']);
+        if (hints.model) deviceModel = hints.model;
+        if (hints.platformVersion) {
+          osVersion = hints.platformVersion;
+          if (os.toLowerCase().includes('windows')) {
+            const major = parseInt(hints.platformVersion.split('.')[0], 10);
+            os = major >= 13 ? 'Windows 11' : 'Windows 10';
+          }
+        }
+      } catch (_) {}
+
+      if (Array.isArray(uad.brands) && uad.brands.length > 0) {
+        const item = uad.brands.find(b => !b.brand.includes('Not') && !b.brand.includes('Chromium')) || uad.brands[0];
+        if (item) browser = `${item.brand} ${item.version}`;
+      }
     }
 
-    if (logStatTotal) logStatTotal.textContent = summary.total || 0;
-    if (logStatSuccess) logStatSuccess.textContent = summary.successful || 0;
-    if (logStatFailed) logStatFailed.textContent = summary.failed || 0;
-    if (logStatIps) logStatIps.textContent = summary.uniqueIps || 0;
+    // 2. Fallback User-Agent parsing
+    const ua = navigator.userAgent || '';
+    if (os === 'Unknown OS' || os === 'Windows') {
+      if (/Windows NT 10.0/.test(ua)) os = osVersion && parseInt(osVersion, 10) >= 13 ? 'Windows 11' : 'Windows 10/11';
+      else if (/Windows NT 6.3/.test(ua)) os = 'Windows 8.1';
+      else if (/Windows NT 6.1/.test(ua)) os = 'Windows 7';
+      else if (/Mac OS X/.test(ua)) {
+        os = 'macOS';
+        const m = ua.match(/Mac OS X ([0-9_]+)/);
+        if (m) osVersion = m[1].replace(/_/g, '.');
+      } else if (/Android/.test(ua)) {
+        os = 'Android';
+        deviceType = 'Mobile';
+        const m = ua.match(/Android ([0-9.]+)/);
+        if (m) osVersion = m[1];
+      } else if (/iPhone|iPad|iPod/.test(ua)) {
+        os = 'iOS';
+        deviceType = /iPad/.test(ua) ? 'Tablet' : 'Mobile';
+      } else if (/Linux/.test(ua)) os = 'Linux';
+    }
 
-    renderFullLogs(logs);
-    renderRecentLogs(logs.slice(0, 5));
+    if (browser === 'Unknown Browser') {
+      if (/Edg\/([0-9.]+)/.test(ua)) browser = `Edge ${RegExp.$1.split('.')[0]}`;
+      else if (/Chrome\/([0-9.]+)/.test(ua)) browser = `Chrome ${RegExp.$1.split('.')[0]}`;
+      else if (/Firefox\/([0-9.]+)/.test(ua)) browser = `Firefox ${RegExp.$1.split('.')[0]}`;
+      else if (/Version\/([0-9.]+).*Safari/.test(ua)) browser = `Safari ${RegExp.$1.split('.')[0]}`;
+    }
+
+    const screen = window.screen ? `${window.screen.width}x${window.screen.height}` : 'Unknown';
+    const language = navigator.language || 'en';
+
+    return { os, osVersion, deviceModel, deviceType, browser, screen, language, userAgent: ua };
+  }
+
+  // Record login attempts into public.audit_log (Never logs passwords)
+  window.recordAuditLoginAttempt = async function(status, username, isPublicPc) {
+    const { url, key } = getSupabaseConfig();
+    if (!url || !key) return;
+
+    try {
+      const [geo, dev] = await Promise.all([fetchClientGeo(), detectClientDevice()]);
+      const token = getSupabaseUserToken();
+
+      const payload = {
+        username: username || 'Unknown',
+        status: status, // 'SUCCESS' or 'FAILED'
+        ip: geo.ip,
+        city: geo.city,
+        region: geo.region,
+        country: geo.country,
+        isp: geo.isp,
+        timezone: geo.timezone,
+        os: dev.os,
+        os_version: dev.osVersion,
+        browser: dev.browser,
+        device_type: dev.deviceType,
+        device_model: dev.deviceModel,
+        screen: dev.screen,
+        language: dev.language,
+        public_pc: !!isPublicPc,
+        user_agent: dev.userAgent
+      };
+
+      await fetch(`${url}/rest/v1/audit_log`, {
+        method: 'POST',
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${token || key}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.warn('Failed to record security audit log:', e);
+    }
+  };
+
+  // =========================================================================
+  // LOAD & RENDER AUDIT LOGS FROM SUPABASE public.audit_log
+  // =========================================================================
+  async function loadAccessLogs() {
+    const token = getSupabaseUserToken();
+    if (!token) return;
+
+    try {
+      const res = await supa('/rest/v1/audit_log?select=*&order=created_at.desc&limit=100');
+      const data = await res.json();
+      cachedAuditLogs = Array.isArray(data) ? data : [];
+    } catch (err) {
+      console.warn('Failed to load audit logs from Supabase:', err);
+      cachedAuditLogs = [];
+    }
+
+    // Compute metrics
+    const total = cachedAuditLogs.length;
+    const successful = cachedAuditLogs.filter(l => l.status === 'SUCCESS').length;
+    const failed = cachedAuditLogs.filter(l => l.status === 'FAILED').length;
+    const uniqueIps = new Set(cachedAuditLogs.map(l => l.ip).filter(Boolean)).size;
+
+    if (logStatTotal) logStatTotal.textContent = total;
+    if (logStatSuccess) logStatSuccess.textContent = successful;
+    if (logStatFailed) logStatFailed.textContent = failed;
+    if (logStatIps) logStatIps.textContent = uniqueIps;
+
+    applyAuditLogsFilter();
+    renderRecentLogs(cachedAuditLogs.slice(0, 5));
+  }
+
+  function applyAuditLogsFilter() {
+    const filter = logFilterStatus ? logFilterStatus.value : 'ALL';
+    let filtered = cachedAuditLogs;
+    if (filter === 'SUCCESS') {
+      filtered = cachedAuditLogs.filter(l => l.status === 'SUCCESS');
+    } else if (filter === 'FAILED') {
+      filtered = cachedAuditLogs.filter(l => l.status === 'FAILED');
+    }
+    renderFullLogs(filtered);
+  }
+
+  function formatLogDate(isoString) {
+    if (!isoString) return { display: 'Just now', full: '' };
+    try {
+      const d = new Date(isoString);
+      const full = d.toLocaleString();
+      const diffMs = Date.now() - d.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      let relative = '';
+      if (diffMins < 1) relative = 'Just now';
+      else if (diffMins < 60) relative = `${diffMins}m ago`;
+      else if (diffHours < 24) relative = `${diffHours}h ago`;
+      else if (diffDays < 7) relative = `${diffDays}d ago`;
+      else relative = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+      return { display: relative, full };
+    } catch (_) {
+      return { display: isoString, full: isoString };
+    }
   }
 
   function renderFullLogs(logs) {
@@ -1813,26 +2014,33 @@
     fullLogsTbody.innerHTML = '';
 
     if (!logs || logs.length === 0) {
-      fullLogsTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 32px; color: #94a3b8;">No access logs recorded yet.</td></tr>';
+      fullLogsTbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 36px; color: #94a3b8;">No audit records yet. Successful and failed login attempts will appear here with IP and device telemetry.</td></tr>';
       return;
     }
 
     logs.forEach(log => {
       const isSuccess = log.status === 'SUCCESS';
       const badgeHtml = isSuccess
-        ? `<span class="badge-log-success">✓ Authorized</span>`
-        : `<span class="badge-log-failed">✕ Rejected</span>`;
+        ? '<span class="badge-log-success" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: rgba(34,197,94,0.15); color: #22c55e; font-weight: 600; font-size: 11px;"><i class="fas fa-check"></i> Authorized</span>'
+        : '<span class="badge-log-failed" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; background: rgba(239,68,68,0.15); color: #ef4444; font-weight: 600; font-size: 11px;"><i class="fas fa-times"></i> Rejected</span>';
+
+      const locationParts = [log.city, log.region, log.country].filter(Boolean);
+      const locationStr = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown location';
+      const deviceStr = [log.device_type, log.device_model ? `(${log.device_model})` : ''].filter(Boolean).join(' ');
+      const osStr = [log.os, log.os_version].filter(Boolean).join(' ');
+      const dateInfo = formatLogDate(log.created_at);
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${badgeHtml}</td>
-        <td><strong>${escapeHtml(log.username)}</strong></td>
-        <td><code class="font-mono">${escapeHtml(log.ip)}</code></td>
-        <td>${escapeHtml(log.os)}</td>
-        <td>${escapeHtml(log.browser)}</td>
-        <td><span style="color: #64748b; font-size: 12px;">${escapeHtml(log.device)}</span></td>
-        <td>${escapeHtml(log.location)}</td>
-        <td><span style="color: #64748b; font-size: 12px;">${escapeHtml(log.dateFormatted)}</span></td>
+        <td><strong>${escapeHtml(log.username || 'admin')}</strong>${log.public_pc ? ' <span style="font-size: 10px; padding: 1px 4px; border-radius: 3px; background: #334155; color: #94a3b8;">Lab PC</span>' : ''}</td>
+        <td><code class="font-mono" style="font-size: 12px; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">${escapeHtml(log.ip || 'Unknown')}</code></td>
+        <td><span title="${escapeHtml(locationStr)}">${escapeHtml(locationStr)}</span></td>
+        <td><span style="font-size: 12px; color: #94a3b8;">${escapeHtml(log.isp || 'Direct ISP')}</span></td>
+        <td><span style="font-weight: 500;">${escapeHtml(osStr || 'Unknown')}</span> ${deviceStr ? `<span style="font-size: 11px; color: #64748b;">• ${escapeHtml(deviceStr)}</span>` : ''}</td>
+        <td><span style="font-size: 12px;">${escapeHtml(log.browser || 'Browser')}</span></td>
+        <td><span style="font-size: 12px; color: #64748b;">${escapeHtml(log.screen || '--')}</span></td>
+        <td><span title="${escapeHtml(dateInfo.full)}" style="font-size: 12px; color: #94a3b8; cursor: help;">${escapeHtml(dateInfo.display)}</span></td>
       `;
       fullLogsTbody.appendChild(tr);
     });
@@ -1843,49 +2051,102 @@
     overviewRecentLogsTbody.innerHTML = '';
 
     if (!logs || logs.length === 0) {
-      overviewRecentLogsTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #94a3b8;">No recent security activity.</td></tr>';
+      overviewRecentLogsTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: #94a3b8;">No recent security activity.</td></tr>';
       return;
     }
 
     logs.forEach(log => {
       const isSuccess = log.status === 'SUCCESS';
       const badgeHtml = isSuccess
-        ? `<span class="badge-log-success">✓ Authorized</span>`
-        : `<span class="badge-log-failed">✕ Rejected</span>`;
+        ? '<span class="badge-log-success" style="padding: 2px 8px; border-radius: 4px; background: rgba(34,197,94,0.15); color: #22c55e; font-weight: 600; font-size: 11px;"><i class="fas fa-check"></i> Authorized</span>'
+        : '<span class="badge-log-failed" style="padding: 2px 8px; border-radius: 4px; background: rgba(239,68,68,0.15); color: #ef4444; font-weight: 600; font-size: 11px;"><i class="fas fa-times"></i> Rejected</span>';
+
+      const locationParts = [log.city, log.country].filter(Boolean);
+      const locationStr = locationParts.length > 0 ? locationParts.join(', ') : 'Unknown';
+      const osStr = [log.os, log.browser].filter(Boolean).join(' • ');
+      const dateInfo = formatLogDate(log.created_at);
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${badgeHtml}</td>
-        <td><strong>${escapeHtml(log.username)}</strong></td>
-        <td><code class="font-mono">${escapeHtml(log.ip)}</code></td>
-        <td>${escapeHtml(log.os)}</td>
-        <td>${escapeHtml(log.browser)}</td>
-        <td>${escapeHtml(log.location)}</td>
-        <td><span style="color: #64748b; font-size: 12px;">${escapeHtml(log.dateFormatted)}</span></td>
+        <td><strong>${escapeHtml(log.username || 'admin')}</strong></td>
+        <td><code class="font-mono" style="font-size: 12px;">${escapeHtml(log.ip || 'Unknown')}</code></td>
+        <td>${escapeHtml(locationStr)}</td>
+        <td><span style="font-size: 12px; color: #94a3b8;">${escapeHtml(osStr)}</span></td>
+        <td><span title="${escapeHtml(dateInfo.full)}" style="font-size: 12px; color: #94a3b8; cursor: help;">${escapeHtml(dateInfo.display)}</span></td>
       `;
       overviewRecentLogsTbody.appendChild(tr);
     });
   }
 
+  if (logFilterStatus) {
+    logFilterStatus.addEventListener('change', applyAuditLogsFilter);
+  }
+
   if (refreshLogsBtn) {
     refreshLogsBtn.addEventListener('click', () => {
       loadAccessLogs();
-      showToast('Security logs refreshed', 'success');
+      showToast('Security audit logs refreshed', 'success');
     });
   }
 
   if (clearLogsBtn) {
     clearLogsBtn.addEventListener('click', async () => {
-      if (!confirm('Are you sure you want to permanently clear all security audit logs?')) return;
+      if (!confirm('Are you sure you want to permanently clear all security audit logs? This action cannot be undone.')) return;
       try {
-        const res = await apiFetch('/api/admin/logs', { method: 'DELETE' });
-        if (res.ok) {
-          showToast('Audit logs cleared', 'success');
-          loadAccessLogs();
-        }
+        await supa('/rest/v1/audit_log?id=not.is.null', { method: 'DELETE' });
+        showToast('All audit logs cleared successfully', 'success');
+        await loadAccessLogs();
       } catch (e) {
-        showToast('Error clearing logs', 'error');
+        showToast('Error clearing logs: ' + e.message, 'error');
       }
+    });
+  }
+
+  if (exportLogsCsvBtn) {
+    exportLogsCsvBtn.addEventListener('click', () => {
+      if (!cachedAuditLogs || cachedAuditLogs.length === 0) {
+        showToast('No audit logs available to export', 'warning');
+        return;
+      }
+
+      const filter = logFilterStatus ? logFilterStatus.value : 'ALL';
+      let exportSet = cachedAuditLogs;
+      if (filter === 'SUCCESS') exportSet = cachedAuditLogs.filter(l => l.status === 'SUCCESS');
+      if (filter === 'FAILED') exportSet = cachedAuditLogs.filter(l => l.status === 'FAILED');
+
+      const headers = ['Created At', 'Username', 'Status', 'IP', 'City', 'Region', 'Country', 'ISP', 'Timezone', 'OS', 'OS Version', 'Browser', 'Device Type', 'Device Model', 'Screen', 'Language', 'Public PC'];
+      const rows = exportSet.map(l => [
+        l.created_at || '',
+        l.username || '',
+        l.status || '',
+        l.ip || '',
+        l.city || '',
+        l.region || '',
+        l.country || '',
+        l.isp || '',
+        l.timezone || '',
+        l.os || '',
+        l.os_version || '',
+        l.browser || '',
+        l.device_type || '',
+        l.device_model || '',
+        l.screen || '',
+        l.language || '',
+        l.public_pc ? 'Yes' : 'No'
+      ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(','));
+
+      const csvContent = [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      a.download = `audit-log-${dateStr}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
+      showToast(`Exported ${exportSet.length} audit logs to CSV`, 'success');
     });
   }
 

@@ -2854,7 +2854,7 @@
       try {
         gdriveTokenClient = google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email',
+          scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email',
           callback: async (response) => {
             if (response.error) {
               console.warn('GIS callback note:', response.error);
@@ -2865,6 +2865,7 @@
               setDirectDriveToken(response.access_token);
               showToast('Connected to Google Drive 24/7 Live!', 'success');
               await loadDirectDriveFiles();
+              await checkAndResumePendingDriveUploads();
             }
           }
         });
@@ -2896,7 +2897,7 @@
       '?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) +
       '&redirect_uri=' + encodeURIComponent(redirectUri) +
       '&response_type=token' +
-      '&scope=' + encodeURIComponent('https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email') +
+      '&scope=' + encodeURIComponent('https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email') +
       '&prompt=consent';
 
     const popup = window.open(oauthUrl, 'GoogleDriveOAuth', 'width=540,height=660,menubar=no,toolbar=no');
@@ -3002,68 +3003,61 @@
     });
   }
 
-  // Supabase Storage Cloud Engine & Bucket Management
-  async function ensureSupabaseBucket(url, key) {
-    if (!url || !key) return;
-    try {
-      const res = await fetch(`${url}/storage/v1/bucket/temp_vault`, {
-        headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-      });
-      if (res.status === 404) {
-        await fetch(`${url}/storage/v1/bucket`, {
-          method: 'POST',
-          headers: {
-            'apikey': key,
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ id: 'temp_vault', name: 'temp_vault', public: true })
-        });
-      }
-    } catch (e) {
-      console.warn('ensureSupabaseBucket error:', e);
-    }
-  }
+  // =========================================================================
+  // SUPABASE PRIVATE CLOUD STAGING VAULT ENGINE (temp_vault)
+  // =========================================================================
+  let stagingPollInterval = null;
 
-  async function fetchSupabaseStagedFiles(url, key) {
-    if (!url || !key) return [];
+  async function fetchSupabaseStagedFiles() {
+    const { url, key, bucket } = getSupabaseConfig();
+    const token = getSupabaseUserToken();
+    if (!url || !key || !token) return [];
+
     try {
-      const bucketName = getSupabaseConfig().bucket || 'temp_vault';
-      const res = await fetch(`${url}/storage/v1/object/list/${bucketName}`, {
+      const bucketName = bucket || 'temp_vault';
+      const res = await supa(`/storage/v1/object/list/${bucketName}`, {
         method: 'POST',
-        headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           prefix: '',
-          limit: 100,
+          limit: 1000,
           offset: 0,
           sortBy: { column: 'created_at', order: 'desc' }
         })
       });
-      if (!res.ok) return [];
+
       const list = await res.json();
       if (!Array.isArray(list)) return [];
-      return list.filter(item => item.name && item.name !== 'admin_scratchpad.txt' && item.name !== '_vault_ping.txt' && !item.name.startsWith('.')).map(item => {
-        const displayName = item.name.replace(/^\d+_/, '');
-        const size = (item.metadata && item.metadata.size) || item.size || 0;
-        const mimeType = (item.metadata && item.metadata.mimetype) || 'application/octet-stream';
-        const publicUrl = `${url}/storage/v1/object/public/${bucketName}/${encodeURIComponent(item.name)}`;
-        return {
-          id: 'supa_' + item.name,
-          name: displayName,
-          rawName: item.name,
-          size: size,
-          sizeFormatted: formatBytes(size),
-          type: mimeType,
-          date: item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Cloud Vault',
-          device: 'Supabase Cloud Vault',
-          cloudUrl: publicUrl,
-          isCloud: true
-        };
-      });
+
+      return list
+        .filter(item => {
+          if (!item.name) return false;
+          if (item.name === 'admin_scratchpad.txt' || item.name === '_vault_ping.txt') return false;
+          if (item.name.startsWith('.') || item.name.endsWith('/')) return false;
+          return true;
+        })
+        .map(item => {
+          let displayName = item.name;
+          if (item.name.includes('__')) {
+            displayName = item.name.split('__').slice(1).join('__');
+          } else {
+            displayName = item.name.replace(/^\d+_/, '');
+          }
+
+          const size = (item.metadata && item.metadata.size) || item.size || 0;
+          const mimeType = (item.metadata && item.metadata.mimetype) || 'application/octet-stream';
+
+          return {
+            id: 'supa_' + item.name,
+            name: displayName,
+            rawName: item.name,
+            size: size,
+            sizeFormatted: formatBytes(size),
+            type: mimeType,
+            date: item.created_at ? new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Cloud Vault',
+            device: 'Supabase Cloud Vault',
+            isCloud: true
+          };
+        });
     } catch (e) {
       console.warn('Error fetching Supabase staged files:', e);
       return [];
@@ -3071,16 +3065,22 @@
   }
 
   async function getCombinedStagedFiles() {
-    const localFiles = await idbGetStagedFiles();
-    const { url, key } = getSupabaseConfig();
-    if (!url || !key) return localFiles;
+    const cloudFiles = await fetchSupabaseStagedFiles();
 
-    const cloudFiles = await fetchSupabaseStagedFiles(url, key);
-    const localNames = new Set(localFiles.map(f => f.name));
-    const combined = [...localFiles];
-    for (const cf of cloudFiles) {
-      if (!localNames.has(cf.name)) {
-        combined.push(cf);
+    // In Public Computer mode, never rely on IndexedDB
+    if (isPublicComputerMode()) {
+      return cloudFiles;
+    }
+
+    const localFiles = await idbGetStagedFiles();
+    const cloudRawNames = new Set(cloudFiles.map(f => f.rawName));
+    const cloudDisplayNames = new Set(cloudFiles.map(f => f.name));
+
+    // Combine local files that haven't made it to cloud yet
+    const combined = [...cloudFiles];
+    for (const lf of localFiles) {
+      if (!cloudDisplayNames.has(lf.name) && !cloudRawNames.has(lf.rawName)) {
+        combined.push(lf);
       }
     }
     return combined;
@@ -3102,6 +3102,7 @@
   }
 
   async function idbSaveStagedFile(fileObj) {
+    if (isPublicComputerMode()) return true;
     try {
       const db = await openTempDatabase();
       return new Promise((resolve, reject) => {
@@ -3146,43 +3147,69 @@
     }
   }
 
-  // Supabase Cloud Storage Bridge (100% Free Forever • Zero Card)
-  function getSupabaseConfig() {
-    return {
-      url: (localStorage.getItem('admin_supabase_url') || '').trim().replace(/\/+$/, ''),
-      key: (localStorage.getItem('admin_supabase_key') || '').trim(),
-      bucket: (localStorage.getItem('admin_supabase_bucket') || 'temp_vault').trim()
-    };
+  // Upload to private Supabase bucket with progress reporting
+  function uploadToSupabaseBucketWithProgress(file, rawName, onProgress) {
+    return new Promise((resolve, reject) => {
+      const { url, key, bucket } = getSupabaseConfig();
+      const token = getSupabaseUserToken();
+      if (!url || !key) {
+        return reject(new Error('Supabase configuration missing in admin/config.js'));
+      }
+      if (!token) {
+        return reject(new Error('Authentication required for cloud vault upload'));
+      }
+
+      const bucketName = bucket || 'temp_vault';
+      const uploadUrl = `${url}/storage/v1/object/${bucketName}/${encodeURIComponent(rawName)}`;
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl);
+      xhr.setRequestHeader('apikey', key);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.setRequestHeader('x-upsert', 'true');
+
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = (evt) => {
+          if (evt.lengthComputable) {
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({ rawName, status: xhr.status });
+        } else {
+          let errText = xhr.responseText || 'Upload failed';
+          try {
+            const parsed = JSON.parse(errText);
+            errText = parsed.message || parsed.error || errText;
+          } catch (_) {}
+          reject(new Error(`Supabase upload error (${xhr.status}): ${errText}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Network error uploading file to Supabase Cloud Vault'));
+      xhr.send(file);
+    });
   }
 
-  async function uploadToSupabaseBucket(file) {
-    const { url, key, bucket } = getSupabaseConfig();
-    if (!url || !key) return null;
-
-    try {
-      const cleanFileName = encodeURIComponent(file.name.replace(/[^a-zA-Z0-9._-]/g, '_'));
-      const bucketName = bucket || 'temp_vault';
-      const rawName = `${Date.now()}_${cleanFileName}`;
-      const uploadUrl = `${url}/storage/v1/object/${bucketName}/${rawName}`;
-      const res = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': file.type || 'application/octet-stream'
-        },
-        body: file
-      });
-      if (res.ok) {
-        const publicUrl = `${url}/storage/v1/object/public/${bucketName}/${rawName}`;
-        return { rawName, url: publicUrl };
-      } else {
-        console.warn('Supabase upload status:', res.status, await res.text().catch(() => ''));
-      }
-    } catch (e) {
-      console.warn('Supabase cloud staging upload notice:', e);
+  // Generate Signed URL for private Supabase Storage object
+  async function getSupabaseSignedUrl(rawName, expiresInSeconds = 300) {
+    const { url, bucket } = getSupabaseConfig();
+    const bucketName = bucket || 'temp_vault';
+    const res = await supa(`/storage/v1/object/sign/${bucketName}/${encodeURIComponent(rawName)}`, {
+      method: 'POST',
+      body: JSON.stringify({ expiresIn: expiresInSeconds })
+    });
+    const data = await res.json();
+    if (!data || !data.signedURL) {
+      throw new Error('Failed to generate signed download URL from Supabase');
     }
-    return null;
+    return data.signedURL.startsWith('http')
+      ? data.signedURL
+      : `${url}/storage/v1${data.signedURL.startsWith('/') ? '' : '/'}${data.signedURL}`;
   }
 
   async function renderStagedFiles() {
@@ -3193,7 +3220,7 @@
 
     if (!tempStagedTbody) return;
     if (files.length === 0) {
-      tempStagedTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: #94a3b8;">No files staged yet. Drag & drop or browse files above to stage them across all your devices via Supabase Cloud Vault.</td></tr>';
+      tempStagedTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 32px; color: #94a3b8;">No files staged yet. Drag &amp; drop or browse files above to stage them securely across all your devices via Temp Cloud Storage Vault (Supabase).</td></tr>';
       return;
     }
 
@@ -3207,7 +3234,7 @@
         </td>
         <td>${escapeHtml(f.sizeFormatted || formatBytes(f.size))}</td>
         <td><span style="font-size: 12px; color: #64748b;">${escapeHtml(f.date || 'Today')}</span></td>
-        <td><span class="${f.isCloud ? 'badge-success' : 'badge-neutral'}">${escapeHtml(f.isCloud ? 'Supabase Cloud Vault' : (f.device || 'Local Drop'))}</span></td>
+        <td><span class="${f.isCloud ? 'badge-success' : 'badge-neutral'}">${escapeHtml(f.isCloud ? 'Temp Cloud Storage Vault (Supabase)' : (f.device || 'Local Drop'))}</span></td>
         <td style="text-align: right;">
           <div style="display: flex; gap: 6px; justify-content: flex-end;">
             <button type="button" class="btn btn-secondary btn-sm" onclick="downloadStagedFile('${f.id}')">Download</button>
@@ -3223,34 +3250,38 @@
     const files = await getCombinedStagedFiles();
     const f = files.find(x => x.id === id);
     if (!f) {
-      showToast('File data not found in staging vault', 'error');
+      showToast('File not found in staging vault', 'error');
       return;
     }
-    if (f.blob) {
-      const url = URL.createObjectURL(f.blob);
+
+    try {
+      showToast(`Preparing download for "${f.name}"...`, 'info');
+      let downloadBlob = null;
+
+      if (f.blob) {
+        downloadBlob = f.blob;
+      } else if (f.rawName) {
+        const signedUrl = await getSupabaseSignedUrl(f.rawName);
+        const res = await fetch(signedUrl);
+        if (!res.ok) throw new Error(`Failed to fetch file content (${res.status})`);
+        downloadBlob = await res.blob();
+      }
+
+      if (!downloadBlob) {
+        throw new Error('Unable to retrieve file binary');
+      }
+
+      const url = URL.createObjectURL(downloadBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = f.name;
       document.body.appendChild(a);
       a.click();
-      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
-    } else if (f.cloudUrl) {
-      const { key } = getSupabaseConfig();
-      try {
-        const res = await fetch(f.cloudUrl, {
-          headers: key ? { 'apikey': key, 'Authorization': `Bearer ${key}` } : {}
-        });
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = f.name;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
-      } catch (e) {
-        window.open(f.cloudUrl, '_blank');
-      }
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 2000);
+      showToast(`Downloaded "${f.name}" successfully`, 'success');
+    } catch (err) {
+      console.error('Download error:', err);
+      showToast('Download failed: ' + err.message, 'error');
     }
   };
 
@@ -3259,28 +3290,23 @@
     const f = files.find(x => x.id === id);
     if (!f) return;
 
-    if (f.rawName) {
-      const { url, key } = getSupabaseConfig();
-      if (url && key) {
-        try {
-          const { bucket } = getSupabaseConfig();
-          const bucketName = bucket || 'temp_vault';
-          await fetch(`${url}/storage/v1/object/${bucketName}`, {
-            method: 'DELETE',
-            headers: {
-              'apikey': key,
-              'Authorization': `Bearer ${key}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ prefixes: [f.rawName] })
-          });
-        } catch (e) {}
+    try {
+      if (f.rawName) {
+        const { bucket } = getSupabaseConfig();
+        const bucketName = bucket || 'temp_vault';
+        await supa(`/storage/v1/object/${bucketName}`, {
+          method: 'DELETE',
+          body: JSON.stringify({ prefixes: [f.rawName] })
+        });
       }
-    }
 
-    await idbDeleteStagedFile(id);
-    await renderStagedFiles();
-    showToast('File removed from temp staging', 'info');
+      await idbDeleteStagedFile(id);
+      await renderStagedFiles();
+      showToast(`Removed "${f.name}" from temp staging`, 'info');
+    } catch (err) {
+      console.error('Delete error:', err);
+      showToast('Delete failed: ' + err.message, 'error');
+    }
   };
 
   async function checkAndResumePendingDriveUploads() {
@@ -3293,12 +3319,73 @@
     } else if (pendingAll) {
       sessionStorage.removeItem('pending_drive_upload_all');
       showToast('Resuming transfer of all staged files...', 'info');
-      const moveAllBtn = document.getElementById('move-all-to-drive-btn');
+      const moveAllBtn = document.getElementById('temp-move-all-btn');
       if (moveAllBtn) moveAllBtn.click();
     }
   }
 
+  // Upload file binary to Google Drive (Multipart for <= 5MB, Resumable for > 5MB)
+  async function uploadBinaryToGoogleDrive(token, fileName, mimeType, fileBlob) {
+    const fileSize = fileBlob.size;
+    const isSmall = fileSize <= (5 * 1024 * 1024); // 5 MB threshold
+
+    if (isSmall) {
+      // Multipart upload
+      const metadata = { name: fileName, mimeType: mimeType || 'application/octet-stream' };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', fileBlob);
+
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: form
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error((errJson.error && errJson.error.message) || `Drive error (${res.status})`);
+      }
+      return await res.json();
+    } else {
+      // Resumable upload for files > 5MB
+      const initRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json; charset=UTF-8',
+          'X-Upload-Content-Type': mimeType || 'application/octet-stream',
+          'X-Upload-Content-Length': fileSize.toString()
+        },
+        body: JSON.stringify({ name: fileName, mimeType: mimeType || 'application/octet-stream' })
+      });
+
+      if (!initRes.ok) {
+        const errJson = await initRes.json().catch(() => ({}));
+        throw new Error((errJson.error && errJson.error.message) || `Resumable init failed (${initRes.status})`);
+      }
+
+      const uploadUrl = initRes.headers.get('Location');
+      if (!uploadUrl) throw new Error('Google Drive did not return resumable upload Location header');
+
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': mimeType || 'application/octet-stream'
+        },
+        body: fileBlob
+      });
+
+      if (!uploadRes.ok) {
+        const errJson = await uploadRes.json().catch(() => ({}));
+        throw new Error((errJson.error && errJson.error.message) || `Drive transfer failed (${uploadRes.status})`);
+      }
+      return await uploadRes.json();
+    }
+  }
+
   window.moveStagedFileToDrive = async function(id) {
+    // SYNCHRONOUS TOKEN CHECK - MUST BE BEFORE ANY AWAIT TO PRESERVE USER GESTURE POPUP
     const directToken = getDirectDriveToken();
     if (!directToken) {
       sessionStorage.setItem('pending_drive_upload_id', id);
@@ -3317,14 +3404,10 @@
     showToast(`Transferring "${f.name}" to Google Drive...`, 'info');
     try {
       let fileBlob = f.blob;
-      if (!fileBlob && f.cloudUrl) {
-        const { key } = getSupabaseConfig();
-        const res = await fetch(f.cloudUrl, {
-          headers: key ? { 'apikey': key, 'Authorization': `Bearer ${key}` } : {}
-        });
-        if (res.ok) {
-          fileBlob = await res.blob();
-        }
+      if (!fileBlob && f.rawName) {
+        const signedUrl = await getSupabaseSignedUrl(f.rawName);
+        const res = await fetch(signedUrl);
+        if (res.ok) fileBlob = await res.blob();
       }
 
       if (!fileBlob) {
@@ -3332,46 +3415,43 @@
         return;
       }
 
-      const metadata = {
-        name: f.name,
-        mimeType: f.type || 'application/octet-stream'
-      };
-      const form = new FormData();
-      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', fileBlob);
+      // Upload to Google Drive
+      await uploadBinaryToGoogleDrive(directToken, f.name, f.type, fileBlob);
 
-      const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${directToken}` },
-        body: form
-      });
-
-      if (uploadRes.ok) {
-        showToast(`Successfully moved "${f.name}" to Google Drive!`, 'success');
-        await window.deleteStagedFile(id);
-        await renderStagedFiles();
-        await loadDirectDriveFiles();
-      } else {
-        const err = await uploadRes.json().catch(() => ({}));
-        showToast('Google Drive upload error: ' + (err.error ? err.error.message : uploadRes.statusText), 'error');
+      // Only delete from Supabase and local IDB AFTER Google Drive returns 2xx success
+      if (f.rawName) {
+        const { bucket } = getSupabaseConfig();
+        const bucketName = bucket || 'temp_vault';
+        await supa(`/storage/v1/object/${bucketName}`, {
+          method: 'DELETE',
+          body: JSON.stringify({ prefixes: [f.rawName] })
+        }).catch(err => console.warn('Supabase cleanup notice:', err));
       }
+
+      await idbDeleteStagedFile(id);
+      await renderStagedFiles();
+      await loadDirectDriveFiles();
+      showToast(`Successfully moved "${f.name}" to Google Drive!`, 'success');
     } catch (err) {
+      console.error('Transfer error:', err);
       showToast('Transfer error: ' + err.message, 'error');
     }
   };
 
   if (tempMoveAllBtn) {
     tempMoveAllBtn.addEventListener('click', async () => {
-      const files = await getCombinedStagedFiles();
-      if (files.length === 0) {
-        showToast('No staged files to transfer', 'info');
-        return;
-      }
+      // SYNCHRONOUS TOKEN CHECK - PRESERVE POPUP GESTURE
       const directToken = getDirectDriveToken();
       if (!directToken) {
         sessionStorage.setItem('pending_drive_upload_all', 'true');
         showToast('Connecting to Google Drive authorization to complete transfer...', 'info');
         triggerGoogleSignIn();
+        return;
+      }
+
+      const files = await getCombinedStagedFiles();
+      if (files.length === 0) {
+        showToast('No staged files to transfer', 'info');
         return;
       }
 
@@ -3382,48 +3462,59 @@
       for (const f of files) {
         try {
           let fileBlob = f.blob;
-          if (!fileBlob && f.cloudUrl) {
-            const { key } = getSupabaseConfig();
-            const res = await fetch(f.cloudUrl, {
-              headers: key ? { 'apikey': key, 'Authorization': `Bearer ${key}` } : {}
-            });
+          if (!fileBlob && f.rawName) {
+            const signedUrl = await getSupabaseSignedUrl(f.rawName);
+            const res = await fetch(signedUrl);
             if (res.ok) fileBlob = await res.blob();
           }
 
           if (!fileBlob) continue;
 
-          const metadata = { name: f.name, mimeType: f.type || 'application/octet-stream' };
-          const form = new FormData();
-          form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-          form.append('file', fileBlob);
+          await uploadBinaryToGoogleDrive(directToken, f.name, f.type, fileBlob);
 
-          const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${directToken}` },
-            body: form
-          });
-
-          if (uploadRes.ok) {
-            await window.deleteStagedFile(f.id);
-            successCount++;
+          if (f.rawName) {
+            const { bucket } = getSupabaseConfig();
+            const bucketName = bucket || 'temp_vault';
+            await supa(`/storage/v1/object/${bucketName}`, {
+              method: 'DELETE',
+              body: JSON.stringify({ prefixes: [f.rawName] })
+            }).catch(e => {});
           }
-        } catch (e) {}
+
+          await idbDeleteStagedFile(f.id);
+          successCount++;
+        } catch (e) {
+          console.warn('Batch transfer item error:', e);
+        }
       }
 
       tempMoveAllBtn.disabled = false;
       tempMoveAllBtn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg><span>Move All to Google Drive</span>';
       await renderStagedFiles();
       await loadDirectDriveFiles();
-      showToast(`Successfully transferred ${successCount} file(s) into your Google Drive!`, 'success');
+      showToast(`Successfully transferred ${successCount} file(s) into Google Drive!`, 'success');
     });
   }
 
   if (tempClearAllBtn) {
     tempClearAllBtn.addEventListener('click', async () => {
-      if (confirm('Clear all staged files from this staging vault?')) {
+      if (!confirm('Clear all staged files from Temp Cloud Storage Vault?')) return;
+      try {
+        const files = await getCombinedStagedFiles();
+        const rawNames = files.map(f => f.rawName).filter(Boolean);
+        if (rawNames.length > 0) {
+          const { bucket } = getSupabaseConfig();
+          const bucketName = bucket || 'temp_vault';
+          await supa(`/storage/v1/object/${bucketName}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ prefixes: rawNames })
+          });
+        }
         await idbClearStagedFiles();
         await renderStagedFiles();
-        showToast('Staging vault cleared', 'info');
+        showToast('Staging vault cleared completely', 'info');
+      } catch (err) {
+        showToast('Clear failed: ' + err.message, 'error');
       }
     });
   }
@@ -3432,12 +3523,13 @@
   const tempRefreshBtn = document.getElementById('temp-refresh-btn');
   if (tempRefreshBtn) {
     tempRefreshBtn.addEventListener('click', async () => {
-      showToast('Refreshing Cloud Vault files...', 'info');
+      showToast('Syncing Temp Cloud Storage Vault...', 'info');
       await renderStagedFiles();
       showToast('Cloud Vault files synced!', 'success');
     });
   }
 
+  // Drag and Drop & File Input Staging
   if (tempDropZone && tempFileInput) {
     tempDropZone.addEventListener('click', () => tempFileInput.click());
     tempDropZone.addEventListener('dragover', (e) => {
@@ -3459,56 +3551,76 @@
   async function handleFilesStaging(fileList) {
     if (!fileList || fileList.length === 0) return;
     const items = Array.from(fileList);
-    const { url, key } = getSupabaseConfig();
+    const token = getSupabaseUserToken();
+    const progressEl = document.getElementById('staging-upload-progress');
+    const nameEl = document.getElementById('staging-upload-filename');
+    const percentEl = document.getElementById('staging-upload-percent');
+    const barEl = document.getElementById('staging-upload-bar');
 
-    for (const file of items) {
-      const fileId = 'stg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-      const stagedObj = {
-        id: fileId,
-        name: file.name,
-        size: file.size,
-        sizeFormatted: formatBytes(file.size),
-        type: file.type || 'application/octet-stream',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        device: url && key ? 'Supabase Cloud Vault' : 'Local Drop',
-        blob: file
-      };
+    for (let i = 0; i < items.length; i++) {
+      const file = items[i];
+      const uuid = Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const rawName = `${uuid}__${safeName}`;
 
-      await idbSaveStagedFile(stagedObj);
-      if (url && key) {
-        showToast(`Uploading "${file.name}" to Supabase Cloud Vault...`, 'info');
-        await uploadToSupabaseBucket(file);
+      if (progressEl) {
+        progressEl.style.display = 'block';
+        if (nameEl) nameEl.textContent = `Uploading (${i + 1}/${items.length}): ${file.name}`;
+        if (percentEl) percentEl.textContent = '0%';
+        if (barEl) barEl.style.width = '0%';
       }
+
+      try {
+        if (token) {
+          await uploadToSupabaseBucketWithProgress(file, rawName, (percent) => {
+            if (percentEl) percentEl.textContent = `${percent}%`;
+            if (barEl) barEl.style.width = `${percent}%`;
+          });
+        }
+
+        // Save local copy only if NOT in Public PC mode
+        if (!isPublicComputerMode()) {
+          const stagedObj = {
+            id: 'supa_' + rawName,
+            name: file.name,
+            rawName: rawName,
+            size: file.size,
+            sizeFormatted: formatBytes(file.size),
+            type: file.type || 'application/octet-stream',
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            device: token ? 'Temp Cloud Storage Vault (Supabase)' : 'Local Drop',
+            blob: file,
+            isCloud: !!token
+          };
+          await idbSaveStagedFile(stagedObj);
+        }
+      } catch (err) {
+        console.error('File staging error:', err);
+        showToast(`Failed to upload "${file.name}": ${err.message}`, 'error');
+      }
+    }
+
+    if (progressEl) {
+      setTimeout(() => { progressEl.style.display = 'none'; }, 800);
     }
 
     await renderStagedFiles();
-    showToast(`Staged ${items.length} file(s) in Temp Drop Vault!`, 'success');
+    showToast(`Staged ${items.length} file(s) in Temp Cloud Storage Vault!`, 'success');
   }
 
-  // =========================================================================
-  // CLIPBOARD PASTE ENGINE & SUPABASE CLOUD VAULT HANDLERS
-  // =========================================================================
-  async function pasteFromClipboard(targetInput) {
-    if (!targetInput) return;
-    try {
-      if (navigator.clipboard && navigator.clipboard.readText) {
-        const text = await navigator.clipboard.readText();
-        if (text && text.trim()) {
-          targetInput.value = text.trim();
-          targetInput.dispatchEvent(new Event('input', { bubbles: true }));
-          showToast('Pasted from clipboard!', 'success');
-          return;
-        }
-      }
-    } catch (err) {}
-
-    const manual = prompt('Paste your copied link / key here:');
-    if (manual && manual.trim()) {
-      targetInput.value = manual.trim();
-      targetInput.dispatchEvent(new Event('input', { bubbles: true }));
-      showToast('Pasted successfully!', 'success');
+  // Staging Auto-refresh every 30s when visible
+  if (stagingPollInterval) clearInterval(stagingPollInterval);
+  stagingPollInterval = setInterval(() => {
+    if (document.visibilityState === 'visible' && getSupabaseUserToken()) {
+      renderStagedFiles();
     }
-  }
+  }, 30000);
+
+  window.addEventListener('focus', () => {
+    if (getSupabaseUserToken()) {
+      renderStagedFiles();
+    }
+  });
 
   // Supabase Settings UI & Diagnostics
   const settingsSupaUrl = document.getElementById('settings-supa-url');

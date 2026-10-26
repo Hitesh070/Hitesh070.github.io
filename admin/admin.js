@@ -728,6 +728,7 @@
       if (storageRes.ok) {
         const q = await storageRes.json();
         applyStorageMetrics(q);
+        if (getApiBaseUrl()) updateBackendStatusUI(true);
       } else {
         applyStorageMetrics(STATIC_CLOUD_DATA.storage);
       }
@@ -2096,6 +2097,22 @@
         backendStatusPill.className = 'status-pill green';
         backendStatusPill.title = `Connected to private backend: ${currentUrl || 'Localhost'}`;
       }
+      const authBox = document.getElementById('backend-auth-prompt');
+      if (authBox) authBox.classList.add('hidden');
+    } else if (isLive === 'needs_auth') {
+      if (remoteBackendStatusBadge) {
+        remoteBackendStatusBadge.className = 'badge-amber';
+        remoteBackendStatusBadge.textContent = '● Authentication Required';
+      }
+      if (backendStatusLabel) {
+        backendStatusLabel.textContent = 'Auth Required';
+      }
+      if (backendStatusPill) {
+        backendStatusPill.className = 'status-pill amber';
+        backendStatusPill.title = 'Backend online - Enter password to authenticate session';
+      }
+      const authBox = document.getElementById('backend-auth-prompt');
+      if (authBox) authBox.classList.remove('hidden');
     } else if (currentUrl) {
       if (remoteBackendStatusBadge) {
         remoteBackendStatusBadge.className = 'badge-blue';
@@ -2131,24 +2148,112 @@
   }
 
   if (saveBackendBtn) {
-    saveBackendBtn.addEventListener('click', () => {
+    saveBackendBtn.addEventListener('click', async () => {
       let val = (remoteBackendInput ? remoteBackendInput.value : '').trim();
       if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
         val = 'https://' + val;
         if (remoteBackendInput) remoteBackendInput.value = val;
       }
       val = val.replace(/\/+$/, '');
-      if (val) {
-        localStorage.setItem(REMOTE_API_STORAGE_KEY, val);
-        showToast(`Backend endpoint set to: ${val}`, 'success');
-      } else {
+      if (!val) {
         localStorage.removeItem(REMOTE_API_STORAGE_KEY);
+        setAuthToken(null);
         showToast('Reset to default / demo mode', 'info');
+        updateBackendStatusUI(false);
+        loadLiveDriveData();
+        return;
       }
-      updateBackendStatusUI();
-      loadLiveDriveData();
-      loadAccessLogs();
-      loadDetailedVisitors();
+
+      localStorage.setItem(REMOTE_API_STORAGE_KEY, val);
+      showToast(`Backend endpoint set to: ${val}`, 'success');
+
+      // Check if session is already authenticated on this backend
+      try {
+        const meRes = await apiFetch('/api/auth/me');
+        const meData = await meRes.json().catch(() => ({}));
+        if (meData.authenticated) {
+          showToast(`Connected & authenticated as ${meData.user}!`, 'success');
+          updateBackendStatusUI(true);
+          loadLiveDriveData();
+          loadAccessLogs();
+          loadDetailedVisitors();
+          return;
+        }
+      } catch (e) {}
+
+      // Prompt for password
+      updateBackendStatusUI('needs_auth');
+      const inlinePwd = document.getElementById('inline-backend-pwd');
+      if (inlinePwd) inlinePwd.focus();
+    });
+  }
+
+  // INLINE BACKEND LOGIN HANDLER
+  const inlineBackendLoginBtn = document.getElementById('inline-backend-login-btn');
+  const inlineBackendPwd = document.getElementById('inline-backend-pwd');
+  const inlineBackendError = document.getElementById('inline-backend-error');
+
+  async function handleInlineBackendLogin() {
+    if (!inlineBackendPwd) return;
+    const pwd = inlineBackendPwd.value.trim();
+    if (!pwd) {
+      if (inlineBackendError) {
+        inlineBackendError.textContent = 'Please enter your admin password.';
+        inlineBackendError.classList.remove('hidden');
+      }
+      return;
+    }
+
+    if (inlineBackendLoginBtn) {
+      inlineBackendLoginBtn.disabled = true;
+      inlineBackendLoginBtn.textContent = 'Authenticating...';
+    }
+    if (inlineBackendError) inlineBackendError.classList.add('hidden');
+
+    try {
+      const res = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser || 'Hitesh', password: pwd })
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        if (data.token) setAuthToken(data.token);
+        inlineBackendPwd.value = '';
+        showToast('Authenticated! Live Google Drive files unlocked.', 'success');
+        updateBackendStatusUI(true);
+        loadLiveDriveData();
+        loadAccessLogs();
+        loadDetailedVisitors();
+      } else {
+        if (inlineBackendError) {
+          inlineBackendError.textContent = data.error || 'Invalid admin password.';
+          inlineBackendError.classList.remove('hidden');
+        }
+      }
+    } catch (err) {
+      if (inlineBackendError) {
+        inlineBackendError.textContent = 'Could not authenticate with backend. Error: ' + err.message;
+        inlineBackendError.classList.remove('hidden');
+      }
+    } finally {
+      if (inlineBackendLoginBtn) {
+        inlineBackendLoginBtn.disabled = false;
+        inlineBackendLoginBtn.textContent = 'Authenticate & Load Drive';
+      }
+    }
+  }
+
+  if (inlineBackendLoginBtn) {
+    inlineBackendLoginBtn.addEventListener('click', handleInlineBackendLogin);
+  }
+  if (inlineBackendPwd) {
+    inlineBackendPwd.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleInlineBackendLogin();
+      }
     });
   }
 

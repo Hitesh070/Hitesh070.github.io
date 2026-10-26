@@ -450,24 +450,33 @@ body.dashboard-body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  width: calc(100% - 74px);
+  max-width: calc(100% - 74px);
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .app-topbar {
-  height: 64px;
+  min-height: 64px;
+  height: auto;
   background: #ffffff;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
+  padding: 10px 24px;
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 100;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-sizing: border-box;
 }
 
 .topbar-search-wrapper {
   flex: 1;
-  max-width: 480px;
+  min-width: 180px;
+  max-width: 340px;
 }
 .search-box {
   display: flex;
@@ -537,7 +546,9 @@ body.dashboard-body {
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .status-pill {
@@ -591,8 +602,12 @@ body.dashboard-body {
    CONTENT BODY & TABS
    ========================================================================== */
 .content-body {
-  padding: 28px 32px;
+  padding: 24px;
   flex: 1;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .view-tab {
@@ -684,9 +699,11 @@ body.dashboard-body {
 /* METRICS ROW (COMBINED PALETTE + STORAGE CARDS) */
 .metrics-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* COMBINED RECTANGULAR PALETTE: CLOCK & ANIMATED WEATHER */
@@ -1110,7 +1127,14 @@ body.dashboard-body {
 
 /* CLEAN TABLE */
 .table-container {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  box-sizing: border-box;
 }
 
 .overview-table-scroll {
@@ -1145,6 +1169,7 @@ body.dashboard-body {
 }
 .clean-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
   font-size: 13px;
 }

@@ -2044,7 +2044,7 @@
     } else if (target.webViewLink) {
       window.open(target.webViewLink, '_blank');
     } else {
-      window.open(`https://drive.google.com/uc?export=download&id=${target.id}`, '_blank');
+      window.downloadDriveFile(target.id, target.name, target.mimeType);
     }
   });
 
@@ -2079,7 +2079,7 @@
       window.open(target.webViewLink, '_blank');
       showToast('Opening folder in Google Drive to download as ZIP...', 'success');
     } else {
-      window.open(`/api/drive/download/${target.id}`, '_blank');
+      window.downloadDriveFile(target.id, target.name, target.mimeType);
     }
   });
 
@@ -2163,7 +2163,7 @@
         } else if (file.webViewLink) {
           window.open(file.webViewLink, '_blank');
         } else {
-          window.open(`/api/drive/download/${file.id}`, '_blank');
+          window.downloadDriveFile(file.id, file.name, file.mimeType);
         }
       });
 
@@ -2286,9 +2286,9 @@
           <td style="text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
               ${!isFolder ? `
-                <a href="/api/drive/download/${fileId}" class="table-btn" title="Download" download>
+                <button type="button" class="table-btn" title="Download from Google Drive" onclick="event.stopPropagation(); downloadDriveFile('${fileId}', '${escapeHtml(file.name)}', '${file.mimeType || ''}')">
                   &darr; Download
-                </a>
+                </button>
               ` : ''}
               ${file.webViewLink ? `
                 <a href="${file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`}" target="_blank" class="table-btn" title="Open in Google Drive">
@@ -2595,7 +2595,8 @@
     try {
       await ensureSupabaseBucket(url, key);
 
-      const uploadUrl = `${url}/storage/v1/object/temp_vault/admin_scratchpad.txt`;
+      const bucketName = getSupabaseConfig().bucket || 'temp_vault';
+      const uploadUrl = `${url}/storage/v1/object/${bucketName}/admin_scratchpad.txt`;
       let res = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
@@ -2636,7 +2637,8 @@
     const { url, key } = getSupabaseConfig();
     if (url && key) {
       try {
-        const fetchUrl = `${url}/storage/v1/object/public/temp_vault/admin_scratchpad.txt?t=${Date.now()}`;
+        const bucketName = getSupabaseConfig().bucket || 'temp_vault';
+        const fetchUrl = `${url}/storage/v1/object/public/${bucketName}/admin_scratchpad.txt?t=${Date.now()}`;
         let res = await fetch(fetchUrl, {
           headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
         });
@@ -3712,7 +3714,8 @@
   async function fetchSupabaseStagedFiles(url, key) {
     if (!url || !key) return [];
     try {
-      const res = await fetch(`${url}/storage/v1/object/list/temp_vault`, {
+      const bucketName = getSupabaseConfig().bucket || 'temp_vault';
+      const res = await fetch(`${url}/storage/v1/object/list/${bucketName}`, {
         method: 'POST',
         headers: {
           'apikey': key,
@@ -3844,7 +3847,8 @@
     try {
       await ensureSupabaseBucket(url, key);
       const cleanFileName = encodeURIComponent(file.name.replace(/[^a-zA-Z0-9._-]/g, '_'));
-      const uploadUrl = `${url}/storage/v1/object/temp_vault/${Date.now()}_${cleanFileName}`;
+      const bucketName = getSupabaseConfig().bucket || 'temp_vault';
+      const uploadUrl = `${url}/storage/v1/object/${bucketName}/${Date.now()}_${cleanFileName}`;
       const res = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
@@ -4232,28 +4236,65 @@
       saveSupabaseBtn.disabled = true;
       saveSupabaseBtn.textContent = 'Connecting...';
 
-      // Test connection against Supabase Storage REST API
+      let discoveredBucket = 'temp_vault';
+
+      // 1. Inspect Supabase project for buckets
       try {
-        const testRes = await fetch(`${url}/storage/v1/bucket`, {
+        const bucketRes = await fetch(`${url}/storage/v1/bucket`, {
           headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
         });
-        if (testRes.ok || testRes.status === 200 || testRes.status === 401) {
-          console.log('Supabase bucket test reachable');
+        if (bucketRes.ok) {
+          const buckets = await bucketRes.json();
+          if (Array.isArray(buckets) && buckets.length > 0) {
+            const hasTempVault = buckets.find(b => b.id === 'temp_vault' || b.name === 'temp_vault');
+            if (hasTempVault) {
+              discoveredBucket = 'temp_vault';
+            } else {
+              discoveredBucket = buckets[0].id || buckets[0].name || 'temp_vault';
+              showToast(`Connected to bucket: "${discoveredBucket}"`, 'info');
+            }
+          } else {
+            showToast('Note: No bucket found yet. Click "📋 Copy 1-Click SQL" below to set up your bucket in 5s.', 'warning');
+          }
         }
       } catch (e) {
-        console.warn('Supabase test ping notice:', e);
+        console.warn('Bucket discovery note:', e);
       }
 
       localStorage.setItem('admin_supabase_url', url);
       localStorage.setItem('admin_supabase_key', key);
+      localStorage.setItem('admin_supabase_bucket', discoveredBucket);
       updateSupabaseStatusUI();
+
+      // 2. Test upload ping
+      try {
+        const testRes = await fetch(`${url}/storage/v1/object/${discoveredBucket}/_vault_ping.txt`, {
+          method: 'POST',
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'text/plain',
+            'x-upsert': 'true'
+          },
+          body: 'ping'
+        });
+
+        if (testRes.ok) {
+          showToast('Supabase Cloud Vault verified and active!', 'success');
+        } else if (testRes.status === 404) {
+          showToast('Bucket "' + discoveredBucket + '" not found. Create it in Supabase Storage or run 1-Click SQL.', 'warning');
+        } else if (testRes.status === 403) {
+          showToast('Storage RLS is blocking upload. Run 1-Click SQL in Supabase SQL editor to allow uploads.', 'warning');
+        }
+      } catch (err) {
+        console.warn('Ping test note:', err);
+      }
 
       saveSupabaseBtn.disabled = false;
       saveSupabaseBtn.textContent = 'Connected ✓';
       saveSupabaseBtn.className = 'btn btn-primary-soft';
-      showToast('Supabase Cloud Vault connected successfully!', 'success');
 
-      // Auto-sync existing notes to cloud immediately
+      // Auto-sync notes
       const notes = (adminScratchpad ? adminScratchpad.value : '') || localStorage.getItem('portfolio_admin_notes') || '';
       if (notes) syncScratchpadToCloud(notes);
 

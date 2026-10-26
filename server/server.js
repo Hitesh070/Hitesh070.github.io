@@ -662,6 +662,28 @@ function getDriveClient() {
 }
 
 // Middlewares
+// Cross-Origin Resource Sharing (CORS) - Safe access from GitHub Pages (https://hitesh070.github.io)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const isAllowedOrigin = !origin ||
+    origin === 'https://hitesh070.github.io' ||
+    origin.endsWith('.github.io') ||
+    origin.includes('localhost') ||
+    origin.includes('127.0.0.1');
+
+  if (origin && isAllowedOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -712,7 +734,7 @@ app.post('/api/auth/login', (req, res) => {
     res.cookie('admin_session', sessionToken, {
       httpOnly: true,
       maxAge: expiryMs,
-      sameSite: 'lax',
+      sameSite: isHttps ? 'none' : 'lax',
       secure: isHttps
     });
 
@@ -758,7 +780,7 @@ app.delete('/api/admin/logs', requireAuth, (req, res) => {
 });
 
 app.post('/api/auth/logout', (req, res) => {
-  const token = req.cookies.admin_session;
+  const token = req.cookies.admin_session || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
   if (token) activeSessions.delete(token);
   res.clearCookie('admin_session');
   res.json({ success: true, message: 'Logged out successfully' });

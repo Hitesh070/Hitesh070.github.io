@@ -1932,3 +1932,41 @@ body.dashboard-body {
   .launchpad-grid { grid-template-columns: 1fr; }
   .photos-shortcuts-grid { grid-template-columns: 1fr; }
 }
+
+/* Remote Backend & Status UI additions */
+.status-pill.blue {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+.status-pill.blue .status-dot {
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+}
+.status-pill.green .status-dot {
+  background: #16a34a;
+  box-shadow: 0 0 6px rgba(22, 163, 74, 0.6);
+}
+.btn-danger-soft {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+.btn-danger-soft:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.badge-red {
+  background: #fef2f2;
+  color: #dc2626;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}

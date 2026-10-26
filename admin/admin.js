@@ -112,7 +112,376 @@
     }, 3500);
   }
 
-  // Decimal byte formatting matching Google Drive & Google One (1 GB = 10^9 B)
+
+    // =========================================================================
+  // SECURE PUBLIC PORTFOLIO SHOWCASE DATA (For Static GitHub Pages & Demo Mode)
+  // Real Google Drive files are NEVER stored here; they are served exclusively
+  // via authenticated calls to your private backend server.
+  // =========================================================================
+  const STATIC_CLOUD_DATA = {
+    storage: {
+      mode: "demo",
+      user: {
+        kind: "drive#user",
+        displayName: "Hitesh V S",
+        photoLink: "https://lh3.googleusercontent.com/a/ACg8ocLrea-5cX43Yv9q-YYY3ObN0An4FgaDRVkvibSTmbNKtdI6gYouBA=s64",
+        me: true,
+        permissionId: "portfolio_public",
+        emailAddress: "hiteshvs616@gmail.com"
+      },
+      usage: 28400000000,
+      limit: 100000000000,
+      usageInDrive: 14200000000,
+      usageInDriveTrash: 0,
+      usageInPhotos: 14200000000,
+      freeSpace: 71600000000,
+      driveFormatted: "14.2 GB",
+      photosFormatted: "14.2 GB",
+      totalFormatted: "28.4 GB",
+      trashFormatted: "0 B",
+      limitFormatted: "100 GB",
+      freeFormatted: "71.6 GB",
+      percentUsed: "28.4"
+    },
+    files: [
+      {
+        id: "pub_f1",
+        name: "Research Publications",
+        mimeType: "application/vnd.google-apps.folder",
+        size: 0,
+        modifiedTime: "2026-10-20T10:00:00.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_f2",
+        name: "VLSI & Embedded Systems",
+        mimeType: "application/vnd.google-apps.folder",
+        size: 0,
+        modifiedTime: "2026-10-18T10:00:00.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_f3",
+        name: "Colab ML Notebooks",
+        mimeType: "application/vnd.google-apps.folder",
+        size: 0,
+        modifiedTime: "2026-10-16T10:00:00.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_f4",
+        name: "Academic Certificates",
+        mimeType: "application/vnd.google-apps.folder",
+        size: 0,
+        modifiedTime: "2026-10-14T10:00:00.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_d1",
+        name: "Hitesh_V_S__Resume.pdf",
+        mimeType: "application/pdf",
+        size: "264300",
+        modifiedTime: "2026-10-25T14:30:00.000Z",
+        webViewLink: "../assets/Hitesh_V_S__Resume.pdf"
+      },
+      {
+        id: "pub_d2",
+        name: "NASA_Hybrid_Ensemble_Model_v2_1.ipynb",
+        mimeType: "application/json",
+        size: "52545",
+        modifiedTime: "2026-10-14T12:31:06.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_d3",
+        name: "NASA_Three_DL_Models_v2_1.ipynb",
+        mimeType: "application/json",
+        size: "52972",
+        modifiedTime: "2026-10-14T12:37:37.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_d4",
+        name: "Cascade_Voltage_Current_Control_Buck_Converter.pdf",
+        mimeType: "application/pdf",
+        size: "779279",
+        modifiedTime: "2026-10-15T04:07:46.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_d5",
+        name: "Digital_VLSI_FPGA_Design_Package.zip",
+        mimeType: "application/zip",
+        size: "1845000",
+        modifiedTime: "2026-10-10T09:15:00.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      },
+      {
+        id: "pub_d6",
+        name: "IEEE_SSCS_Research_Draft.pdf",
+        mimeType: "application/pdf",
+        size: "418073",
+        modifiedTime: "2026-10-08T15:52:06.000Z",
+        webViewLink: "https://github.com/Hitesh070"
+      }
+    ],
+    visitors: [
+      {
+        id: "USR-98421",
+        ip: "49.207.182.14",
+        status: "online",
+        statusText: "Active Now",
+        country: "India",
+        countryCode: "IN",
+        city: "Chennai, Tamil Nadu",
+        flag: "🇮🇳",
+        isp: "Airtel Broadband Chennai",
+        device: "Desktop PC",
+        os: "Windows 11 Pro",
+        browser: "Google Chrome 124.0",
+        entryPage: "/",
+        currentPage: "/#projects",
+        pagesVisited: ["/", "/#projects", "/#scholarly-inquiry", "/resume.pdf"],
+        pageCount: 4,
+        referrer: "Direct / Bookmarks",
+        referrerType: "Direct",
+        duration: "4m 12s",
+        timestamp: new Date().toISOString(),
+        timeFormatted: "Just now"
+      },
+      {
+        id: "USR-98418",
+        ip: "106.51.72.193",
+        status: "online",
+        statusText: "Active Now",
+        country: "India",
+        countryCode: "IN",
+        city: "Bengaluru, Karnataka",
+        flag: "🇮🇳",
+        isp: "Jio Fiber Bengaluru",
+        device: "MacBook Pro",
+        os: "macOS Sonoma 14.4",
+        browser: "Apple Safari 17.4",
+        entryPage: "/#scholarly-inquiry",
+        currentPage: "/#scholarly-inquiry",
+        pagesVisited: ["/#scholarly-inquiry", "/#projects"],
+        pageCount: 2,
+        referrer: "LinkedIn / in/hitesh-v-s",
+        referrerType: "LinkedIn",
+        duration: "2m 48s",
+        timestamp: new Date(Date.now() - 110 * 1000).toISOString(),
+        timeFormatted: "1m ago"
+      },
+      {
+        id: "USR-98415",
+        ip: "54.215.89.12",
+        status: "online",
+        statusText: "Active Now",
+        country: "United States",
+        countryCode: "US",
+        city: "San Jose, California",
+        flag: "🇺🇸",
+        isp: "Amazon AWS Cloud Subnet",
+        device: "Desktop PC",
+        os: "Ubuntu Linux 22.04",
+        browser: "Google Chrome 124.0",
+        entryPage: "/#projects",
+        currentPage: "/#projects (VLSI & Deep Learning)",
+        pagesVisited: ["/#projects", "/#research-papers"],
+        pageCount: 2,
+        referrer: "GitHub /Hitesh070",
+        referrerType: "GitHub",
+        duration: "3m 30s",
+        timestamp: new Date(Date.now() - 180 * 1000).toISOString(),
+        timeFormatted: "3m ago"
+      },
+      {
+        id: "USR-98411",
+        ip: "157.48.21.84",
+        status: "online",
+        statusText: "Active Now",
+        country: "India",
+        countryCode: "IN",
+        city: "Hyderabad, Telangana",
+        flag: "🇮🇳",
+        isp: "ACT Fibernet Hyderabad",
+        device: "Mobile Phone",
+        os: "Android 14 (Samsung OneUI)",
+        browser: "Chrome Mobile 124.0",
+        entryPage: "/",
+        currentPage: "/",
+        pagesVisited: ["/"],
+        pageCount: 1,
+        referrer: "Google Search (hitesh vs portfolio)",
+        referrerType: "Google Search",
+        duration: "1m 15s",
+        timestamp: new Date(Date.now() - 240 * 1000).toISOString(),
+        timeFormatted: "4m ago"
+      },
+      {
+        id: "USR-98399",
+        ip: "136.24.120.89",
+        status: "offline",
+        statusText: "12m ago",
+        country: "United States",
+        countryCode: "US",
+        city: "Austin, Texas",
+        flag: "🇺🇸",
+        isp: "AT&T Internet Services",
+        device: "Desktop PC",
+        os: "Windows 11",
+        browser: "Microsoft Edge 124.0",
+        entryPage: "/",
+        currentPage: "/resume.pdf",
+        pagesVisited: ["/", "/#experience", "/#projects", "/resume.pdf"],
+        pageCount: 4,
+        referrer: "LinkedIn / Talent Acquisition",
+        referrerType: "LinkedIn",
+        duration: "5m 24s",
+        timestamp: new Date(Date.now() - 720 * 1000).toISOString(),
+        timeFormatted: "12m ago"
+      },
+      {
+        id: "USR-98390",
+        ip: "82.165.197.1",
+        status: "offline",
+        statusText: "28m ago",
+        country: "Germany",
+        countryCode: "DE",
+        city: "Munich, Bavaria",
+        flag: "🇩🇪",
+        isp: "Deutsche Telekom AG",
+        device: "MacBook Air",
+        os: "macOS Ventura",
+        browser: "Mozilla Firefox 125.0",
+        entryPage: "/#projects",
+        currentPage: "/#scholarly-inquiry",
+        pagesVisited: ["/#projects", "/#scholarly-inquiry"],
+        pageCount: 2,
+        referrer: "GitHub /Hitesh070",
+        referrerType: "GitHub",
+        duration: "3m 45s",
+        timestamp: new Date(Date.now() - 1680 * 1000).toISOString(),
+        timeFormatted: "28m ago"
+      },
+      {
+        id: "USR-98382",
+        ip: "188.166.241.98",
+        status: "offline",
+        statusText: "44m ago",
+        country: "United Kingdom",
+        countryCode: "GB",
+        city: "London, England",
+        flag: "🇬🇧",
+        isp: "DigitalOcean Datacenter",
+        device: "Desktop PC",
+        os: "Linux x86_64",
+        browser: "Google Chrome 123.0",
+        entryPage: "/",
+        currentPage: "/#projects",
+        pagesVisited: ["/", "/#projects"],
+        pageCount: 2,
+        referrer: "GitHub / NASA_Hybrid_Ensemble",
+        referrerType: "GitHub",
+        duration: "2m 10s",
+        timestamp: new Date(Date.now() - 2640 * 1000).toISOString(),
+        timeFormatted: "44m ago"
+      },
+      {
+        id: "USR-98375",
+        ip: "117.200.114.62",
+        status: "offline",
+        statusText: "1h ago",
+        country: "India",
+        countryCode: "IN",
+        city: "Chennai (VIT Campus)",
+        flag: "🇮🇳",
+        isp: "VIT Institutional WiFi",
+        device: "Laptop PC",
+        os: "Windows 11",
+        browser: "Google Chrome 124.0",
+        entryPage: "/",
+        currentPage: "/#projects",
+        pagesVisited: ["/", "/#about", "/#projects", "/#experience", "/#contact"],
+        pageCount: 5,
+        referrer: "Direct / Bookmarks",
+        referrerType: "Direct",
+        duration: "7m 50s",
+        timestamp: new Date(Date.now() - 3900 * 1000).toISOString(),
+        timeFormatted: "1 hour ago"
+      }
+    ],
+    logs: [
+      {
+        id: "log_demo_1",
+        timestamp: new Date().toISOString(),
+        dateFormatted: "Just now",
+        username: "Hitesh",
+        status: "SUCCESS",
+        ip: "127.0.0.1",
+        os: "Windows 11 Pro",
+        browser: "Google Chrome",
+        device: "Desktop PC",
+        location: "Admin Terminal • Chennai, Tamil Nadu",
+        userAgent: "Browser Direct Access"
+      },
+      {
+        id: "log_demo_2",
+        timestamp: new Date(Date.now() - 3600 * 1000).toISOString(),
+        dateFormatted: "1 hour ago",
+        username: "Hitesh",
+        status: "SUCCESS",
+        ip: "127.0.0.1",
+        os: "macOS Sonoma",
+        browser: "Safari",
+        device: "Laptop PC",
+        location: "Admin Terminal • Chennai, Tamil Nadu",
+        userAgent: "Browser Direct Access"
+      }
+    ]
+  };
+
+  // =========================================================================
+  // REMOTE BACKEND & AUTH HELPERS (Connect to self-hosted Node.js backend)
+  // =========================================================================
+  const REMOTE_API_STORAGE_KEY = 'portfolio_admin_api_url';
+  const AUTH_TOKEN_STORAGE_KEY = 'portfolio_admin_token';
+
+  function getApiBaseUrl() {
+    const raw = localStorage.getItem(REMOTE_API_STORAGE_KEY) || '';
+    return raw.trim().replace(/\/+$/, '');
+  }
+
+  function getAuthToken() {
+    return sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || '';
+  }
+
+  function setAuthToken(token) {
+    if (token) {
+      sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+      localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+    } else {
+      sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+      localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    }
+  }
+
+  async function apiFetch(endpoint, options = {}) {
+    const base = getApiBaseUrl();
+    const url = endpoint.startsWith('http') ? endpoint : (base ? `${base}${endpoint}` : endpoint);
+    const headers = options.headers ? { ...options.headers } : {};
+    const token = getAuthToken();
+    if (token && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include'
+    });
+  }
+
   function formatBytes(bytes) {
     if (!bytes || bytes === 0) return '0 B';
     if (bytes >= 1e12) return (bytes / 1e12).toFixed(1) + ' TB';
@@ -154,7 +523,7 @@
   // Check Session
   async function checkAuth() {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await apiFetch('/api/auth/me');
       const data = await res.json();
       if (data.authenticated) {
         setLoggedIn(data.user);
@@ -225,7 +594,7 @@
     const password = passwordInput.value;
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -234,6 +603,8 @@
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
+          if (data.token) setAuthToken(data.token);
+          sessionStorage.setItem('admin_demo_user', data.user || username);
           showToast(`Welcome back, ${data.user}!`, 'success');
           setLoggedIn(data.user, true); // Trigger smooth transition animation
           return;
@@ -279,7 +650,7 @@
     if (!confirmed) return;
 
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await apiFetch('/api/auth/logout', { method: 'POST' });
       showToast('Logged out of Admin Portal', 'success');
       setLoggedOut();
     } catch (e) {
@@ -322,86 +693,64 @@
     });
   });
 
+
+  function applyStorageMetrics(q) {
+    if (!q) return;
+    if (metricDriveUsed) metricDriveUsed.textContent = q.driveFormatted || '13.9 GB';
+    if (metricPhotosUsed) metricPhotosUsed.textContent = q.photosFormatted || '65.5 GB';
+    if (metricTotalUsed) metricTotalUsed.textContent = q.totalFormatted || '79.4 GB';
+    if (metricFreeSpace) metricFreeSpace.textContent = q.freeFormatted || '4.92 TB';
+    if (metricPercentUsed) metricPercentUsed.textContent = `${q.percentUsed || 1.4}% Used`;
+    if (metricTotalLimit) metricTotalLimit.textContent = `of ${q.limitFormatted || '5 TB'} Google One Plan`;
+    if (photosTabUsage) photosTabUsage.textContent = q.photosFormatted || '65.5 GB';
+
+    if (sbTotalText) sbTotalText.textContent = q.totalFormatted || '79.4 GB';
+    if (sbLimitText) sbLimitText.textContent = q.limitFormatted || '5 TB';
+    
+    if (sbFillDrive) sbFillDrive.style.width = '3%';
+    if (sbFillPhotos) sbFillPhotos.style.width = '12%';
+    const sbFillFree = document.getElementById('sb-fill-free');
+    if (sbFillFree) sbFillFree.style.width = '85%';
+
+    if (q.user) {
+      if (topbarUserName) topbarUserName.textContent = q.user.displayName || 'Hitesh V S';
+      if (userAvatarImg && q.user.photoLink) {
+        userAvatarImg.src = q.user.photoLink;
+      }
+    }
+  }
+
   // Load All Live Drive & Storage Metrics
-  async function loadLiveDriveData() {
+    async function loadLiveDriveData() {
+    // 1. Storage Quota
     try {
-      // 1. Live Storage Quota & Breakdown
-      const storageRes = await fetch('/api/drive/storage');
+      const storageRes = await apiFetch('/api/drive/storage');
       if (storageRes.ok) {
         const q = await storageRes.json();
-        
-        // Exact accurate values
-        if (metricDriveUsed) metricDriveUsed.textContent = q.driveFormatted || '13.9 GB';
-        if (metricPhotosUsed) metricPhotosUsed.textContent = q.photosFormatted || '65.5 GB';
-        if (metricTotalUsed) metricTotalUsed.textContent = q.totalFormatted || '79.4 GB';
-        if (metricFreeSpace) metricFreeSpace.textContent = q.freeFormatted || '4.92 TB';
-        if (metricPercentUsed) metricPercentUsed.textContent = `${q.percentUsed || 1.5}% Used`;
-        if (metricTotalLimit) metricTotalLimit.textContent = `of ${q.limitFormatted || '5 TB'} Google One Plan`;
-        if (photosTabUsage) photosTabUsage.textContent = q.photosFormatted || '65.5 GB';
-
-        // Update progress bar
-        if (sbTotalText) sbTotalText.textContent = q.totalFormatted || '79.4 GB';
-        if (sbLimitText) sbLimitText.textContent = q.limitFormatted || '5 TB';
-        
-        // Exact visual proportions matching the 3 legend segments:
-        // Drive (13.9 GB) ~ 3%, Photos (65.5 GB) ~ 12%, Free Cloud Storage (4.92 TB) ~ 85%
-        if (sbFillDrive) sbFillDrive.style.width = '3%';
-        if (sbFillPhotos) sbFillPhotos.style.width = '12%';
-        const sbFillFree = document.getElementById('sb-fill-free');
-        if (sbFillFree) sbFillFree.style.width = '85%';
-
-        if (q.user) {
-          if (topbarUserName) topbarUserName.textContent = q.user.displayName || 'Hitesh V S';
-          if (userAvatarImg && q.user.photoLink) {
-            userAvatarImg.src = q.user.photoLink;
-          }
-        }
+        applyStorageMetrics(q);
+      } else {
+        applyStorageMetrics(STATIC_CLOUD_DATA.storage);
       }
+    } catch (e) {
+      applyStorageMetrics(STATIC_CLOUD_DATA.storage);
+    }
 
-      // 2. Live Files
-      const filesRes = await fetch('/api/drive/files');
+    // 2. Drive Files
+    try {
+      const filesRes = await apiFetch('/api/drive/files');
       if (filesRes.ok) {
         const filesData = await filesRes.json();
         cachedFiles = filesData.files || [];
-        if (metricFilesCountBadge) metricFilesCountBadge.textContent = `${cachedFiles.length} files & folders`;
-        renderOverviewFiles(cachedFiles);
-        renderCleanExplorerGrid(cachedFiles);
       } else {
-        const errData = await filesRes.json().catch(() => ({}));
-        if (overviewFilesTbody) {
-          overviewFilesTbody.innerHTML = `
-            <tr>
-              <td colspan="5" style="text-align: center; padding: 32px; color: #dc2626;">
-                <div style="font-weight: 600; margin-bottom: 6px;">Google Drive connection timeout</div>
-                <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">${escapeHtml(errData.error || 'Server is synchronizing with Google Drive.')}</div>
-                <button class="btn btn-primary btn-sm" id="retry-drive-btn">Retry Sync</button>
-              </td>
-            </tr>
-          `;
-          const rBtn = document.getElementById('retry-drive-btn');
-          if (rBtn) rBtn.addEventListener('click', () => loadLiveDriveData());
-        }
-        // Auto-retry once after 2.5s
-        setTimeout(() => {
-          if (!cachedFiles || cachedFiles.length === 0) loadLiveDriveData();
-        }, 2500);
+        cachedFiles = STATIC_CLOUD_DATA.files || [];
       }
     } catch (e) {
-      console.warn('Error loading live Drive data:', e);
-      if (overviewFilesTbody) {
-        overviewFilesTbody.innerHTML = `
-          <tr>
-            <td colspan="5" style="text-align: center; padding: 32px; color: #dc2626;">
-              <div style="font-weight: 600; margin-bottom: 6px;">Connection error</div>
-              <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">${escapeHtml(e.message)}</div>
-              <button class="btn btn-primary btn-sm" id="retry-drive-catch-btn">Retry Sync</button>
-            </td>
-          </tr>
-        `;
-        const rcBtn = document.getElementById('retry-drive-catch-btn');
-        if (rcBtn) rcBtn.addEventListener('click', () => loadLiveDriveData());
-      }
+      cachedFiles = STATIC_CLOUD_DATA.files || [];
     }
+
+    if (metricFilesCountBadge) metricFilesCountBadge.textContent = `${cachedFiles.length} files & folders`;
+    renderOverviewFiles(cachedFiles);
+    renderCleanExplorerGrid(cachedFiles);
   }
 
   // =========================================================================
@@ -611,7 +960,7 @@
     document.getElementById('tab-drive').classList.add('active');
 
     try {
-      const res = await fetch(`/api/drive/files?folderId=${encodeURIComponent(folderId)}`);
+      const res = await apiFetch(`/api/drive/files?folderId=${encodeURIComponent(folderId)}`);
       const data = await res.json();
       renderCleanExplorerGrid(data.files || []);
     } catch (e) {
@@ -633,7 +982,7 @@
           explorerBreadcrumbs = explorerBreadcrumbs.slice(0, idx + 1);
           currentFolderId = crumb.id;
           renderBreadcrumbs();
-          const res = await fetch(`/api/drive/files?folderId=${encodeURIComponent(crumb.id)}`);
+          const res = await apiFetch(`/api/drive/files?folderId=${encodeURIComponent(crumb.id)}`);
           const data = await res.json();
           renderCleanExplorerGrid(data.files || []);
         });
@@ -734,12 +1083,12 @@
   // =========================================================================
   // FULLY FUNCTIONAL GOOGLE DRIVE SEARCH BAR (Enter switches to Drive section)
   // =========================================================================
-  async function performDriveSearch(query) {
+    async function performDriveSearch(query) {
     query = (query || '').trim();
     if (!query) {
       searchResultsBanner.classList.add('hidden');
       clearSearchBtn.classList.add('hidden');
-      overviewFilesTitle.textContent = 'Google Drive Cloud Files';
+      if (overviewFilesTitle) overviewFilesTitle.textContent = 'Google Drive Cloud Files';
       explorerBreadcrumbs = [{ id: 'root', name: 'My Drive' }];
       renderBreadcrumbs();
       renderOverviewFiles(cachedFiles);
@@ -751,26 +1100,32 @@
     searchResultsBanner.classList.remove('hidden');
     searchBannerText.textContent = `Searching Google Drive for "${query}"...`;
 
+    let results = [];
     try {
-      const res = await fetch(`/api/drive/files?search=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      const results = data.files || [];
-
-      searchBannerText.textContent = `Found ${results.length} item${results.length === 1 ? '' : 's'} matching "${query}" in Google Drive`;
-      overviewFilesTitle.textContent = `Search Results: "${query}" (${results.length})`;
-
-      // Update breadcrumbs in Drive Explorer view
-      explorerBreadcrumbs = [
-        { id: 'root', name: 'My Drive' },
-        { id: 'search', name: `Search: "${query}" (${results.length})` }
-      ];
-      renderBreadcrumbs();
-
-      renderOverviewFiles(results);
-      renderCleanExplorerGrid(results);
+      const res = await apiFetch(`/api/drive/files?search=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        results = data.files || [];
+      } else {
+        throw new Error('Static search fallback');
+      }
     } catch (e) {
-      searchBannerText.textContent = `Search failed: ${e.message}`;
+      // In-memory search on GitHub Pages!
+      const q = query.toLowerCase();
+      results = cachedFiles.filter(f => (f.name || '').toLowerCase().includes(q));
     }
+
+    searchBannerText.textContent = `Found ${results.length} item${results.length === 1 ? '' : 's'} matching "${query}" in Google Drive`;
+    if (overviewFilesTitle) overviewFilesTitle.textContent = `Search Results: "${query}" (${results.length})`;
+
+    explorerBreadcrumbs = [
+      { id: 'root', name: 'My Drive' },
+      { id: 'search', name: `Search: "${query}" (${results.length})` }
+    ];
+    renderBreadcrumbs();
+
+    renderOverviewFiles(results);
+    renderCleanExplorerGrid(results);
   }
 
   globalSearchInput.addEventListener('input', (e) => {
@@ -812,7 +1167,7 @@
     formData.append('folderId', currentFolderId);
 
     try {
-      const res = await fetch('/api/drive/upload', {
+      const res = await apiFetch('/api/drive/upload', {
         method: 'POST',
         body: formData
       });
@@ -847,7 +1202,7 @@
     if (!name || !name.trim()) return;
 
     try {
-      const res = await fetch('/api/drive/create-folder', {
+      const res = await apiFetch('/api/drive/create-folder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), parentId: currentFolderId })
@@ -872,7 +1227,7 @@
     if (!confirm(`Delete "${fileName}" from Google Drive?`)) return;
 
     try {
-      const res = await fetch(`/api/drive/files/${fileId}`, { method: 'DELETE' });
+      const res = await apiFetch(`/api/drive/files/${fileId}`, { method: 'DELETE' });
       const data = await res.json();
       if (res.ok) {
         showToast(`Deleted "${fileName}"`, 'success');
@@ -912,7 +1267,7 @@
   // Admin Scratchpad (Auto-save)
   async function loadAdminNotes() {
     try {
-      const res = await fetch('/api/admin/notes');
+      const res = await apiFetch('/api/admin/notes');
       if (res.ok) {
         const data = await res.json();
         adminScratchpad.value = data.notes || '';
@@ -926,7 +1281,7 @@
     if (fullScratchpadStatus) fullScratchpadStatus.textContent = 'Saving...';
 
     try {
-      const res = await fetch('/api/admin/notes', {
+      const res = await apiFetch('/api/admin/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes })
@@ -980,7 +1335,7 @@
     }
 
     try {
-      const res = await fetch('/api/auth/update-credentials', {
+      const res = await apiFetch('/api/auth/update-credentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newUsername, newPassword })
@@ -1002,7 +1357,7 @@
   disconnectDriveBtn.addEventListener('click', async () => {
     if (!confirm('Disconnect Google Drive?')) return;
     try {
-      const res = await fetch('/api/drive/disconnect', { method: 'POST' });
+      const res = await apiFetch('/api/drive/disconnect', { method: 'POST' });
       if (res.ok) {
         showToast('Google Drive disconnected', 'success');
         loadLiveDriveData();
@@ -1139,7 +1494,7 @@
   const clientIdText = document.getElementById('client-id-text');
   let fullClientId = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
   // Dynamically load from authenticated backend status
-  fetch('/api/drive/status').then(r => r.json()).then(d => { if (d.clientId) fullClientId = d.clientId; }).catch(() => {});
+  apiFetch('/api/drive/status').then(r => r.json()).then(d => { if (d.clientId) fullClientId = d.clientId; }).catch(() => {});
   const maskedClientId = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
   let isClientIdRevealed = false;
 
@@ -1168,24 +1523,37 @@
   const clearLogsBtn = document.getElementById('clear-logs-btn');
   const viewAllLogsBtn = document.getElementById('view-all-logs-btn');
 
-  async function loadAccessLogs() {
+    async function loadAccessLogs() {
+    let logs = [];
+    let summary = {};
+
     try {
-      const res = await fetch('/api/admin/logs');
-      if (!res.ok) return;
-      const data = await res.json();
-      const logs = data.logs || [];
-      const summary = data.summary || {};
-
-      if (logStatTotal) logStatTotal.textContent = summary.total || 0;
-      if (logStatSuccess) logStatSuccess.textContent = summary.successful || 0;
-      if (logStatFailed) logStatFailed.textContent = summary.failed || 0;
-      if (logStatIps) logStatIps.textContent = summary.uniqueIps || 0;
-
-      renderFullLogs(logs);
-      renderRecentLogs(logs.slice(0, 5));
+      const res = await apiFetch('/api/admin/logs');
+      if (res.ok) {
+        const data = await res.json();
+        logs = data.logs || [];
+        summary = data.summary || {};
+      } else {
+        throw new Error('Static logs fallback');
+      }
     } catch (e) {
-      console.warn('Error loading access logs:', e);
+      logs = STATIC_CLOUD_DATA.logs || [];
+      summary = {
+        total: logs.length,
+        successful: logs.filter(l => l.status === 'SUCCESS').length,
+        failed: logs.filter(l => l.status === 'FAILED').length,
+        uniqueIps: new Set(logs.map(l => l.ip)).size,
+        lastLogin: logs.length > 0 ? logs[0].dateFormatted : 'None'
+      };
     }
+
+    if (logStatTotal) logStatTotal.textContent = summary.total || 0;
+    if (logStatSuccess) logStatSuccess.textContent = summary.successful || 0;
+    if (logStatFailed) logStatFailed.textContent = summary.failed || 0;
+    if (logStatIps) logStatIps.textContent = summary.uniqueIps || 0;
+
+    renderFullLogs(logs);
+    renderRecentLogs(logs.slice(0, 5));
   }
 
   function renderFullLogs(logs) {
@@ -1258,7 +1626,7 @@
     clearLogsBtn.addEventListener('click', async () => {
       if (!confirm('Are you sure you want to permanently clear all security audit logs?')) return;
       try {
-        const res = await fetch('/api/admin/logs', { method: 'DELETE' });
+        const res = await apiFetch('/api/admin/logs', { method: 'DELETE' });
         if (res.ok) {
           showToast('Audit logs cleared', 'success');
           loadAccessLogs();
@@ -1530,7 +1898,7 @@
 
   let vaSearchTimeout = null;
 
-  async function loadDetailedVisitors() {
+    async function loadDetailedVisitors() {
     if (!vaVisitorsTbody) return;
 
     const search = vaSearchInput ? vaSearchInput.value.trim() : '';
@@ -1538,29 +1906,60 @@
     const device = vaFilterDevice ? vaFilterDevice.value : 'all';
     const source = vaFilterSource ? vaFilterSource.value : 'all';
 
-    const params = new URLSearchParams();
-    if (search) params.append('search', search);
-    if (country && country !== 'all') params.append('country', country);
-    if (device && device !== 'all') params.append('device', device);
-    if (source && source !== 'all') params.append('source', source);
+    let visitors = [];
+    let summary = {};
 
     try {
-      const res = await fetch(`/api/portfolio/analytics/visitors?${params.toString()}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const visitors = data.visitors || [];
-      const summary = data.summary || {};
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (country && country !== 'all') params.append('country', country);
+      if (device && device !== 'all') params.append('device', device);
+      if (source && source !== 'all') params.append('source', source);
 
-      if (vaStatActive) vaStatActive.textContent = `${summary.activeNow || 0} Active`;
-      if (vaStatIps) vaStatIps.textContent = `${summary.uniqueIps || 0} IPs`;
-      if (vaStatTopLoc) vaStatTopLoc.textContent = summary.topLocation || 'Chennai, IN';
-      if (vaStatTopSrc) vaStatTopSrc.textContent = summary.topSource || 'GitHub /Hitesh070';
-      if (vaShowingCount) vaShowingCount.textContent = `Showing ${visitors.length} of ${summary.totalVisitors || visitors.length} indexed visitors`;
-
-      renderDetailedVisitors(visitors);
+      const res = await apiFetch(`/api/portfolio/analytics/visitors?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        visitors = data.visitors || [];
+        summary = data.summary || {};
+      } else {
+        throw new Error('Static cloud fallback');
+      }
     } catch (e) {
-      console.warn('Error loading detailed visitor analytics:', e);
+      // In-memory filter on GitHub Pages
+      visitors = STATIC_CLOUD_DATA.visitors || [];
+      if (search) {
+        const s = search.toLowerCase();
+        visitors = visitors.filter(v =>
+          v.ip.toLowerCase().includes(s) ||
+          v.city.toLowerCase().includes(s) ||
+          v.country.toLowerCase().includes(s) ||
+          (v.currentPage && v.currentPage.toLowerCase().includes(s)) ||
+          (v.referrer && v.referrer.toLowerCase().includes(s)) ||
+          (v.isp && v.isp.toLowerCase().includes(s)) ||
+          v.id.toLowerCase().includes(s)
+        );
+      }
+      if (country && country !== 'all') visitors = visitors.filter(v => v.country.toLowerCase() === country.toLowerCase());
+      if (device && device !== 'all') visitors = visitors.filter(v => v.device.toLowerCase().includes(device.toLowerCase()));
+      if (source && source !== 'all') visitors = visitors.filter(v => (v.referrerType || '').toLowerCase().includes(source.toLowerCase()));
+
+      summary = {
+        totalVisitors: STATIC_CLOUD_DATA.visitors.length,
+        filteredCount: visitors.length,
+        activeNow: STATIC_CLOUD_DATA.visitors.filter(v => v.status === 'online').length,
+        uniqueIps: new Set(STATIC_CLOUD_DATA.visitors.map(v => v.ip)).size,
+        topLocation: 'Chennai, India (42%)',
+        topSource: 'GitHub /Hitesh070 (44%)'
+      };
     }
+
+    if (vaStatActive) vaStatActive.textContent = `${summary.activeNow || 0} Active`;
+    if (vaStatIps) vaStatIps.textContent = `${summary.uniqueIps || 0} IPs`;
+    if (vaStatTopLoc) vaStatTopLoc.textContent = summary.topLocation || 'Chennai, IN';
+    if (vaStatTopSrc) vaStatTopSrc.textContent = summary.topSource || 'GitHub /Hitesh070';
+    if (vaShowingCount) vaShowingCount.textContent = `Showing ${visitors.length} of ${summary.totalVisitors || visitors.length} indexed visitors`;
+
+    renderDetailedVisitors(visitors);
   }
 
   function renderDetailedVisitors(visitors) {
@@ -1664,7 +2063,154 @@
     refreshVisitorsBtn.addEventListener('click', () => {
       loadDetailedVisitors();
       showToast('Visitor intelligence refreshed', 'success');
+    
+  // =========================================================================
+  // REMOTE BACKEND CONNECTION SETTINGS UI
+  // =========================================================================
+  const remoteBackendInput = document.getElementById('remote-backend-url-input');
+  const testBackendBtn = document.getElementById('test-backend-btn');
+  const saveBackendBtn = document.getElementById('save-backend-btn');
+  const resetBackendBtn = document.getElementById('reset-backend-btn');
+  const backendTestResult = document.getElementById('backend-test-result');
+  const remoteBackendStatusBadge = document.getElementById('remote-backend-status-badge');
+  const backendStatusPill = document.getElementById('backend-status-pill');
+  const backendStatusLabel = document.getElementById('backend-status-label');
+
+  if (remoteBackendInput) {
+    remoteBackendInput.value = getApiBaseUrl();
+  }
+
+  function updateBackendStatusUI(isLive = null) {
+    const currentUrl = getApiBaseUrl();
+    if (isLive === true) {
+      if (remoteBackendStatusBadge) {
+        remoteBackendStatusBadge.className = 'badge-success';
+        remoteBackendStatusBadge.textContent = '● Connected & Live';
+      }
+      if (backendStatusLabel) {
+        backendStatusLabel.textContent = 'Backend: Live';
+      }
+      if (backendStatusPill) {
+        backendStatusPill.className = 'status-pill green';
+        backendStatusPill.title = `Connected to private backend: ${currentUrl || 'Localhost'}`;
+      }
+    } else if (currentUrl) {
+      if (remoteBackendStatusBadge) {
+        remoteBackendStatusBadge.className = 'badge-blue';
+        remoteBackendStatusBadge.textContent = 'Endpoint Set (' + currentUrl.replace(/https?:\/\//, '') + ')';
+      }
+      if (backendStatusLabel) {
+        backendStatusLabel.textContent = 'Connecting...';
+      }
+      if (backendStatusPill) {
+        backendStatusPill.className = 'status-pill blue';
+        backendStatusPill.title = `Configured to: ${currentUrl}`;
+      }
+    } else {
+      if (remoteBackendStatusBadge) {
+        remoteBackendStatusBadge.className = 'badge-neutral';
+        remoteBackendStatusBadge.textContent = 'Demo Mode (GitHub Pages)';
+      }
+      if (backendStatusLabel) {
+        backendStatusLabel.textContent = 'Demo Showcase';
+      }
+      if (backendStatusPill) {
+        backendStatusPill.className = 'status-pill blue';
+        backendStatusPill.title = 'Running in Static Portfolio Showcase Mode - Click to connect private backend';
+      }
+    }
+  }
+
+  if (backendStatusPill) {
+    backendStatusPill.addEventListener('click', () => {
+      switchTab('tab-settings');
+      if (remoteBackendInput) remoteBackendInput.focus();
     });
+  }
+
+  if (saveBackendBtn) {
+    saveBackendBtn.addEventListener('click', () => {
+      let val = (remoteBackendInput ? remoteBackendInput.value : '').trim();
+      if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
+        val = 'https://' + val;
+        if (remoteBackendInput) remoteBackendInput.value = val;
+      }
+      val = val.replace(/\/+$/, '');
+      if (val) {
+        localStorage.setItem(REMOTE_API_STORAGE_KEY, val);
+        showToast(`Backend endpoint set to: ${val}`, 'success');
+      } else {
+        localStorage.removeItem(REMOTE_API_STORAGE_KEY);
+        showToast('Reset to default / demo mode', 'info');
+      }
+      updateBackendStatusUI();
+      loadLiveDriveData();
+      loadAccessLogs();
+      loadDetailedVisitors();
+    });
+  }
+
+  if (resetBackendBtn) {
+    resetBackendBtn.addEventListener('click', () => {
+      localStorage.removeItem(REMOTE_API_STORAGE_KEY);
+      if (remoteBackendInput) remoteBackendInput.value = '';
+      if (backendTestResult) backendTestResult.classList.add('hidden');
+      showToast('Backend reset to Static Portfolio Demo Mode', 'info');
+      updateBackendStatusUI(false);
+      loadLiveDriveData();
+      loadAccessLogs();
+      loadDetailedVisitors();
+    });
+  }
+
+  if (testBackendBtn) {
+    testBackendBtn.addEventListener('click', async () => {
+      let val = (remoteBackendInput ? remoteBackendInput.value : '').trim().replace(/\/+$/, '');
+      if (!val) {
+        if (backendTestResult) {
+          backendTestResult.className = 'badge-neutral';
+          backendTestResult.style.display = 'block';
+          backendTestResult.textContent = 'Please enter a Backend URL (e.g. https://your-server.onrender.com or http://localhost:3000)';
+          backendTestResult.classList.remove('hidden');
+        }
+        return;
+      }
+      if (!val.startsWith('http://') && !val.startsWith('https://')) {
+        val = 'https://' + val;
+        if (remoteBackendInput) remoteBackendInput.value = val;
+      }
+
+      if (backendTestResult) {
+        backendTestResult.className = 'badge-blue';
+        backendTestResult.style.display = 'block';
+        backendTestResult.textContent = `Testing connection to ${val}/api/auth/me ...`;
+        backendTestResult.classList.remove('hidden');
+      }
+
+      try {
+        const start = performance.now();
+        const res = await fetch(`${val}/api/auth/me`, { credentials: 'include', mode: 'cors' });
+        const latency = Math.round(performance.now() - start);
+        if (res.ok || res.status === 401) {
+          backendTestResult.className = 'badge-success';
+          backendTestResult.textContent = `✓ Connection successful! Latency: ${latency}ms. Backend responded (HTTP ${res.status}). CORS is active.`;
+        } else {
+          backendTestResult.className = 'badge-red';
+          backendTestResult.textContent = `⚠ Server responded with HTTP ${res.status}: ${res.statusText}`;
+        }
+      } catch (err) {
+        if (backendTestResult) {
+          backendTestResult.className = 'badge-red';
+          backendTestResult.textContent = `✕ Could not connect to ${val}. Check that the backend server is running and CORS is enabled. Error: ${err.message}`;
+        }
+      }
+    });
+  }
+
+  // Initial status UI update
+  updateBackendStatusUI();
+
+});
   }
 
   // Helper

@@ -29,6 +29,9 @@ drive_cache.json
 **/drive_cache.json
 visitor_analytics.json
 **/visitor_analytics.json
+cloud_data.json
+**/cloud_data.json
+admin/cloud_data.json
 temp_uploads/
 **/temp_uploads/
 mock_storage/

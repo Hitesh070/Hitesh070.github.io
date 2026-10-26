@@ -822,12 +822,10 @@
         const q = await storageRes.json();
         applyStorageMetrics(q);
         liveSuccess = true;
-        if (getApiBaseUrl()) updateBackendStatusUI(true);
+        updateLiveModeUI(true);
       } else {
         applyStorageMetrics(STATIC_CLOUD_DATA.storage);
-        if (getApiBaseUrl() && storageRes.status === 401) {
-          updateBackendStatusUI('needs_auth');
-        }
+        
       }
     } catch (e) {
       applyStorageMetrics(STATIC_CLOUD_DATA.storage);
@@ -1643,17 +1641,7 @@
   const maskedClientId = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
   let isClientIdRevealed = false;
 
-  if (toggleClientIdBtn && clientIdText) {
-    toggleClientIdBtn.addEventListener('click', () => {
-      isClientIdRevealed = !isClientIdRevealed;
-      clientIdText.textContent = isClientIdRevealed ? fullClientId : maskedClientId;
-      const eyeOpen = toggleClientIdBtn.querySelector('.eye-open-icon');
-      const eyeClosed = toggleClientIdBtn.querySelector('.eye-closed-icon');
-      if (eyeOpen) eyeOpen.classList.toggle('hidden', isClientIdRevealed);
-      if (eyeClosed) eyeClosed.classList.toggle('hidden', !isClientIdRevealed);
-      toggleClientIdBtn.title = isClientIdRevealed ? 'Hide Client ID' : 'Reveal Client ID';
-    });
-  }
+  // Toggle Client ID removed
 
   // =========================================================================
   // SECURITY & ACCESS AUDIT LOGS
@@ -2231,300 +2219,39 @@
   }
 
   // =========================================================================
-  // REMOTE BACKEND CONNECTION SETTINGS UI
+  // LIVE MODE INDICATOR & STATUS MANAGEMENT
   // =========================================================================
-  const remoteBackendInput = document.getElementById('remote-backend-url-input');
-  const testBackendBtn = document.getElementById('test-backend-btn');
-  const saveBackendBtn = document.getElementById('save-backend-btn');
-  const resetBackendBtn = document.getElementById('reset-backend-btn');
-  const backendTestResult = document.getElementById('backend-test-result');
-  const remoteBackendStatusBadge = document.getElementById('remote-backend-status-badge');
-  const backendStatusPill = document.getElementById('backend-status-pill');
-  const backendStatusLabel = document.getElementById('backend-status-label');
+  const liveModePill = document.getElementById('live-mode-pill');
+  const liveModeLabel = document.getElementById('live-mode-label');
 
-  if (remoteBackendInput) {
-    remoteBackendInput.value = getApiBaseUrl();
-  }
-
-  function updateBackendStatusUI(isLive = null) {
-    const currentUrl = getApiBaseUrl();
-    if (isLive === true) {
-      if (remoteBackendStatusBadge) {
-        remoteBackendStatusBadge.className = 'badge-success';
-        remoteBackendStatusBadge.textContent = '● Connected & Live';
-      }
-      if (backendStatusLabel) {
-        backendStatusLabel.textContent = 'Backend: Live';
-      }
-      if (backendStatusPill) {
-        backendStatusPill.className = 'status-pill green';
-        backendStatusPill.title = `Connected to private backend: ${currentUrl || 'Localhost'}`;
-      }
-      const authBox = document.getElementById('backend-auth-prompt');
-      if (authBox) authBox.classList.add('hidden');
-    } else if (isLive === 'needs_auth') {
-      if (remoteBackendStatusBadge) {
-        remoteBackendStatusBadge.className = 'badge-amber';
-        remoteBackendStatusBadge.textContent = '● Authentication Required';
-      }
-      if (backendStatusLabel) {
-        backendStatusLabel.textContent = 'Auth Required';
-      }
-      if (backendStatusPill) {
-        backendStatusPill.className = 'status-pill amber';
-        backendStatusPill.title = 'Backend online - Enter password to authenticate session';
-      }
-      const authBox = document.getElementById('backend-auth-prompt');
-      if (authBox) authBox.classList.remove('hidden');
-    } else if (currentUrl) {
-      if (remoteBackendStatusBadge) {
-        remoteBackendStatusBadge.className = 'badge-blue';
-        remoteBackendStatusBadge.textContent = 'Endpoint Set (' + currentUrl.replace(/https?:\/\//, '') + ')';
-      }
-      if (backendStatusLabel) {
-        backendStatusLabel.textContent = 'Connecting...';
-      }
-      if (backendStatusPill) {
-        backendStatusPill.className = 'status-pill blue';
-        backendStatusPill.title = `Configured to: ${currentUrl}`;
-      }
+  function updateLiveModeUI(isConnected = false) {
+    if (!liveModePill) return;
+    if (isConnected || getDirectDriveToken()) {
+      liveModePill.className = 'status-pill green';
+      if (liveModeLabel) liveModeLabel.textContent = 'Live Mode • Google Drive';
     } else {
-      if (remoteBackendStatusBadge) {
-        remoteBackendStatusBadge.className = 'badge-neutral';
-        remoteBackendStatusBadge.textContent = 'Demo Mode (GitHub Pages)';
-      }
-      if (backendStatusLabel) {
-        backendStatusLabel.textContent = 'Demo Showcase';
-      }
-      if (backendStatusPill) {
-        backendStatusPill.className = 'status-pill blue';
-        backendStatusPill.title = 'Running in Static Portfolio Showcase Mode - Click to connect private backend';
-      }
+      liveModePill.className = 'status-pill green';
+      if (liveModeLabel) liveModeLabel.textContent = 'Live Mode';
     }
   }
 
-  async function checkBackendStatusLive() {
-    const currentUrl = getApiBaseUrl();
-    if (!currentUrl) {
-      updateBackendStatusUI(false);
-      return;
-    }
-
-    try {
-      const res = await apiFetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.authenticated) {
-          updateBackendStatusUI(true);
-          await loadLiveDriveData();
-          return;
-        }
-      }
-      // Reached backend, but requires password auth
-      updateBackendStatusUI('needs_auth');
-    } catch (err) {
-      if (backendStatusLabel) backendStatusLabel.textContent = 'Backend Offline';
-      if (backendStatusPill) {
-        backendStatusPill.className = 'status-pill gray';
-        backendStatusPill.title = `Backend unreachable: ${currentUrl}`;
-      }
-    }
-  }
-
-  if (backendStatusPill) {
-    backendStatusPill.addEventListener('click', () => {
-      switchTab('tab-settings');
-      setTimeout(() => {
-        const authBox = document.getElementById('backend-auth-prompt');
-        const inlinePwd = document.getElementById('inline-backend-pwd');
-        if (authBox && !authBox.classList.contains('hidden')) {
-          authBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          if (inlinePwd) inlinePwd.focus();
-        } else if (remoteBackendInput) {
-          remoteBackendInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          remoteBackendInput.focus();
-        }
-      }, 120);
+  if (liveModePill) {
+    liveModePill.addEventListener('click', async () => {
+      showToast('Refreshing live Google Drive cloud data...', 'info');
+      await loadLiveDriveData();
+      updateLiveModeUI(true);
     });
   }
 
-  if (saveBackendBtn) {
-    saveBackendBtn.addEventListener('click', async () => {
-      let val = (remoteBackendInput ? remoteBackendInput.value : '').trim();
-      if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
-        val = 'https://' + val;
-        if (remoteBackendInput) remoteBackendInput.value = val;
-      }
-      val = val.replace(/\/+$/, '');
-      if (!val) {
-        localStorage.removeItem(REMOTE_API_STORAGE_KEY);
-        setAuthToken(null);
-        showToast('Reset to default / demo mode', 'info');
-        updateBackendStatusUI(false);
-        loadLiveDriveData();
-        return;
-      }
-
-      localStorage.setItem(REMOTE_API_STORAGE_KEY, val);
-      showToast(`Backend endpoint set to: ${val}`, 'success');
-
-      // Check if session is already authenticated on this backend
-      try {
-        const meRes = await apiFetch('/api/auth/me');
-        const meData = await meRes.json().catch(() => ({}));
-        if (meData.authenticated) {
-          showToast(`Connected & authenticated as ${meData.user}!`, 'success');
-          updateBackendStatusUI(true);
-          loadLiveDriveData();
-          loadAccessLogs();
-          loadDetailedVisitors();
-          return;
-        }
-      } catch (e) {}
-
-      // Prompt for password
-      updateBackendStatusUI('needs_auth');
-      const inlinePwd = document.getElementById('inline-backend-pwd');
-      if (inlinePwd) inlinePwd.focus();
-    });
-  }
-
-  // INLINE BACKEND LOGIN HANDLER
-  const inlineBackendLoginBtn = document.getElementById('inline-backend-login-btn');
-  const inlineBackendPwd = document.getElementById('inline-backend-pwd');
-  const inlineBackendError = document.getElementById('inline-backend-error');
-
-  async function handleInlineBackendLogin() {
-    if (!inlineBackendPwd) return;
-    const pwd = inlineBackendPwd.value.trim();
-    if (!pwd) {
-      if (inlineBackendError) {
-        inlineBackendError.textContent = 'Please enter your admin password.';
-        inlineBackendError.classList.remove('hidden');
-      }
-      return;
-    }
-
-    if (inlineBackendLoginBtn) {
-      inlineBackendLoginBtn.disabled = true;
-      inlineBackendLoginBtn.textContent = 'Authenticating...';
-    }
-    if (inlineBackendError) inlineBackendError.classList.add('hidden');
-
-    try {
-      const res = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: currentUser || 'Hitesh', password: pwd })
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
-        if (data.token) setAuthToken(data.token);
-        inlineBackendPwd.value = '';
-        showToast('Authenticated! Live Google Drive files unlocked.', 'success');
-        updateBackendStatusUI(true);
-        loadLiveDriveData();
-        loadAccessLogs();
-        loadDetailedVisitors();
-      } else {
-        if (inlineBackendError) {
-          inlineBackendError.textContent = data.error || 'Invalid admin password.';
-          inlineBackendError.classList.remove('hidden');
-        }
-      }
-    } catch (err) {
-      if (inlineBackendError) {
-        inlineBackendError.textContent = 'Could not authenticate with backend. Error: ' + err.message;
-        inlineBackendError.classList.remove('hidden');
-      }
-    } finally {
-      if (inlineBackendLoginBtn) {
-        inlineBackendLoginBtn.disabled = false;
-        inlineBackendLoginBtn.textContent = 'Authenticate & Load Drive';
-      }
-    }
-  }
-
-  if (inlineBackendLoginBtn) {
-    inlineBackendLoginBtn.addEventListener('click', handleInlineBackendLogin);
-  }
-  if (inlineBackendPwd) {
-    inlineBackendPwd.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleInlineBackendLogin();
-      }
-    });
-  }
-
-  if (resetBackendBtn) {
-    resetBackendBtn.addEventListener('click', () => {
-      localStorage.removeItem(REMOTE_API_STORAGE_KEY);
-      if (remoteBackendInput) remoteBackendInput.value = '';
-      if (backendTestResult) backendTestResult.classList.add('hidden');
-      showToast('Backend reset to Static Portfolio Demo Mode', 'info');
-      updateBackendStatusUI(false);
-      loadLiveDriveData();
-      loadAccessLogs();
-      loadDetailedVisitors();
-    });
-  }
-
-  if (testBackendBtn) {
-    testBackendBtn.addEventListener('click', async () => {
-      let val = (remoteBackendInput ? remoteBackendInput.value : '').trim().replace(/\/+$/, '');
-      if (!val) {
-        if (backendTestResult) {
-          backendTestResult.className = 'badge-neutral';
-          backendTestResult.style.display = 'block';
-          backendTestResult.textContent = 'Please enter a Backend URL (e.g. https://your-server.onrender.com or http://localhost:3000)';
-          backendTestResult.classList.remove('hidden');
-        }
-        return;
-      }
-      if (!val.startsWith('http://') && !val.startsWith('https://')) {
-        val = 'https://' + val;
-        if (remoteBackendInput) remoteBackendInput.value = val;
-      }
-
-      if (backendTestResult) {
-        backendTestResult.className = 'badge-blue';
-        backendTestResult.style.display = 'block';
-        backendTestResult.textContent = `Testing connection to ${val}/api/auth/me ...`;
-        backendTestResult.classList.remove('hidden');
-      }
-
-      try {
-        const start = performance.now();
-        const res = await fetch(`${val}/api/auth/me`, { credentials: 'include', mode: 'cors' });
-        const latency = Math.round(performance.now() - start);
-        if (res.ok || res.status === 401) {
-          backendTestResult.className = 'badge-success';
-          backendTestResult.textContent = `✓ Connection successful! Latency: ${latency}ms. Backend responded (HTTP ${res.status}). CORS is active.`;
-        } else {
-          backendTestResult.className = 'badge-red';
-          backendTestResult.textContent = `⚠ Server responded with HTTP ${res.status}: ${res.statusText}`;
-        }
-      } catch (err) {
-        if (backendTestResult) {
-          backendTestResult.className = 'badge-red';
-          backendTestResult.textContent = `✕ Could not connect to ${val}. Check that the backend server is running and CORS is enabled. Error: ${err.message}`;
-        }
-      }
-    });
-  }
-
-  // Initial status UI update
-  checkBackendStatusLive();
+  // Initial UI updates
+  updateLiveModeUI();
   updateSupabaseStatusUI();
   initGoogleIdentityServices();
   renderStagedFiles();
 
 
   // =========================================================================
-  // ZONE 1: DIRECT GOOGLE DRIVE OAUTH 24/7 (Client-Side GIS • Laptop OFF)
-  // =========================================================================
+  // ZONE 1: DIRECT GOOGLE DRIVE OAUTH 24/7 (Client-Side GIS & OAuth Web Redirect Fallback)
   const GOOGLE_CLIENT_ID = '216288105966-av9qgm44ubfpg1l3374ldqg4m4uaif9u.apps.googleusercontent.com';
   let gdriveTokenClient = null;
   const connectGdriveDirectBtn = document.getElementById('connect-gdrive-direct-btn');
@@ -2538,56 +2265,89 @@
     if (token) {
       sessionStorage.setItem('gdrive_direct_token', token);
       localStorage.setItem('gdrive_direct_token', token);
-      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Drive: Live 24/7';
+      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Drive: Live';
       if (connectGdriveDirectBtn) connectGdriveDirectBtn.className = 'btn btn-primary-soft btn-sm';
+      updateLiveModeUI(true);
     } else {
       sessionStorage.removeItem('gdrive_direct_token');
       localStorage.removeItem('gdrive_direct_token');
-      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Google Drive 24/7';
+      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Google Drive';
       if (connectGdriveDirectBtn) connectGdriveDirectBtn.className = 'btn btn-secondary btn-sm';
     }
   }
 
+  // Check URL hash for OAuth return (Implicit Grant)
+  if (window.location.hash && window.location.hash.includes('access_token=')) {
+    try {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      if (accessToken) {
+        setDirectDriveToken(accessToken);
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+        showToast('Connected to Google Drive Live!', 'success');
+        setTimeout(() => loadDirectDriveFiles(), 300);
+      }
+    } catch (e) {}
+  }
+
   function initGoogleIdentityServices() {
-    if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) {
-      setTimeout(initGoogleIdentityServices, 500);
-      return;
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+      try {
+        gdriveTokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email',
+          callback: async (response) => {
+            if (response.error) {
+              console.warn('GIS callback note:', response.error);
+              showToast('Google Sign-In notice: ' + response.error, 'info');
+              return;
+            }
+            if (response.access_token) {
+              setDirectDriveToken(response.access_token);
+              showToast('Connected to Google Drive 24/7 Live!', 'success');
+              await loadDirectDriveFiles();
+            }
+          }
+        });
+      } catch (err) {
+        console.warn('GIS init:', err);
+      }
+    }
+  }
+
+  function triggerGoogleSignIn() {
+    showToast('Connecting to Google Drive...', 'info');
+
+    // Method 1: Google Identity Services popup
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+      if (!gdriveTokenClient) initGoogleIdentityServices();
+      if (gdriveTokenClient) {
+        try {
+          gdriveTokenClient.requestAccessToken({ prompt: 'consent' });
+          return;
+        } catch (e) {
+          console.warn('GIS prompt error:', e);
+        }
+      }
     }
 
-    try {
-      gdriveTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email',
-        callback: async (response) => {
-          if (response.error) {
-            showToast('Google Sign-In: ' + response.error, 'error');
-            return;
-          }
-          if (response.access_token) {
-            setDirectDriveToken(response.access_token);
-            showToast('Connected to Google Drive 24/7 (Laptop Off Mode)!', 'success');
-            await loadDirectDriveFiles();
-          }
-        }
-      });
-    } catch (err) {
-      console.warn('GIS initialization error:', err);
+    // Method 2: Direct OAuth 2.0 Web Redirect / Popup (Unblockable standard OAuth flow)
+    const redirectUri = window.location.origin + window.location.pathname;
+    const oauthUrl = 'https://accounts.google.com/o/oauth2/v2/auth' +
+      '?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) +
+      '&redirect_uri=' + encodeURIComponent(redirectUri) +
+      '&response_type=token' +
+      '&scope=' + encodeURIComponent('https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email') +
+      '&prompt=consent';
+
+    const popup = window.open(oauthUrl, 'GoogleDriveOAuth', 'width=540,height=660,menubar=no,toolbar=no');
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      window.location.href = oauthUrl;
     }
   }
 
   if (connectGdriveDirectBtn) {
-    connectGdriveDirectBtn.addEventListener('click', () => {
-      const existing = getDirectDriveToken();
-      if (existing) {
-        showToast('Refreshing Google Drive authorization...', 'info');
-      }
-      if (!gdriveTokenClient) initGoogleIdentityServices();
-      if (gdriveTokenClient) {
-        gdriveTokenClient.requestAccessToken({ prompt: '' });
-      } else {
-        showToast('Initializing Google Sign-In... Please click again in 2 seconds.', 'info');
-      }
-    });
+    connectGdriveDirectBtn.addEventListener('click', triggerGoogleSignIn);
   }
 
   async function loadDirectDriveFiles(folderId = null) {
@@ -2991,22 +2751,38 @@
     if (supabaseStatusBadge) {
       if (url && key) {
         supabaseStatusBadge.className = 'badge-success';
-        supabaseStatusBadge.textContent = '● Supabase 24/7 Cloud Vault Linked';
+        supabaseStatusBadge.textContent = '● Cloud Vault Linked (Active)';
       } else {
         supabaseStatusBadge.className = 'badge-amber';
-        supabaseStatusBadge.textContent = '● High-Capacity IndexedDB Vault (Local)';
+        supabaseStatusBadge.textContent = '● Staging Vault (Local Active)';
       }
     }
   }
 
   if (saveSupabaseBtn) {
     saveSupabaseBtn.addEventListener('click', () => {
-      const url = (supabaseUrlInput ? supabaseUrlInput.value : '').trim();
+      const url = (supabaseUrlInput ? supabaseUrlInput.value : '').trim().replace(/\/+$/, '');
       const key = (supabaseKeyInput ? supabaseKeyInput.value : '').trim();
+
+      if (!url && !key) {
+        showToast('Please enter your Supabase Project URL and Key', 'warning');
+        if (supabaseUrlInput) supabaseUrlInput.focus();
+        return;
+      }
+
       localStorage.setItem('admin_supabase_url', url);
       localStorage.setItem('admin_supabase_key', key);
       updateSupabaseStatusUI();
-      showToast('Supabase Cloud Vault settings saved!', 'success');
+      showToast('Cloud Storage Vault linked successfully!', 'success');
+
+      saveSupabaseBtn.textContent = 'Linked ✓';
+      saveSupabaseBtn.classList.remove('btn-primary');
+      saveSupabaseBtn.classList.add('btn-primary-soft');
+      setTimeout(() => {
+        saveSupabaseBtn.textContent = 'Save & Link';
+        saveSupabaseBtn.classList.remove('btn-primary-soft');
+        saveSupabaseBtn.classList.add('btn-primary');
+      }, 2200);
     });
   }
 

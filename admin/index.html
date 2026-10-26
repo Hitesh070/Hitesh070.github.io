@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin.css?v=20261026_live2">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="dashboard-body">
@@ -204,9 +204,9 @@
 
         <!-- TOPBAR STATUS PILLS & ACTIONS -->
         <div class="topbar-right">
-          <div id="backend-status-pill" class="status-pill blue" style="cursor: pointer;" title="Remote Backend Status - Click to Configure in Settings">
+          <div id="live-mode-pill" class="status-pill green" title="Google Drive Live Cloud Active">
             <span class="status-dot"></span>
-            <span id="backend-status-label">Demo Showcase</span>
+            <span id="live-mode-label">Live Mode &bull; Google Drive</span>
           </div>
           <div class="status-pill green" title="Google One Storage Connected">
             <span class="status-dot"></span>
@@ -564,8 +564,8 @@
               <div class="title-with-icon">
                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                 <div>
-                  <h3 style="font-size: 15px;">Temp Staging Vault &bull; Public / Lab PC Buffer</h3>
-                  <span class="sub-text">Working on a public or college lab computer without your phone? Upload files here without signing into Google, then move them to Drive when home.</span>
+                  <h3 style="font-size: 15px;">Temp Staging Vault </h3>
+                  <span class="sub-text">Temporary upload staging before transfer to Google Drive.</span>
                 </div>
               </div>
               <button type="button" class="btn btn-secondary btn-sm" onclick="switchTab('tab-temp-drop')">Open Staging Vault &rarr;</button>
@@ -1109,8 +1109,8 @@
               <div class="title-with-icon">
                 <svg viewBox="0 0 24 24" width="22" height="22" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                 <div>
-                  <h2>Temp Cloud Drop &bull; Public / Lab Staging Vault</h2>
-                  <span class="sub-text">Temporary staging buffer for files uploaded from college or public computers without needing Google account login.</span>
+                  <h2>Temp Cloud Drop Vault</h2>
+                  <span class="sub-text">Temporary upload staging before transfer to Google Drive.</span>
                 </div>
               </div>
               <div class="table-actions">
@@ -1128,7 +1128,7 @@
               <div class="dropzone-inner">
                 <svg viewBox="0 0 24 24" width="40" height="40" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <div class="drop-title">Drag &amp; Drop files here, or <span class="drop-browse">Browse</span></div>
-                <div class="drop-sub">Upload assignments, code files, PDFs, or research notes from this computer (Zero Google Login required).</div>
+                <div class="drop-sub">Upload assignments, code files, PDFs, or research notes from this computer .</div>
               </div>
             </div>
 
@@ -1207,16 +1207,7 @@
                 <span class="s-label">OAuth Connection:</span>
                 <span class="badge-success">🟢 Connected &bull; Active</span>
               </div>
-              <div class="setting-item">
-                <span class="s-label">Client ID:</span>
-                <div class="masked-client-wrapper">
-                  <span class="s-val font-mono" id="client-id-text">••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••</span>
-                  <button type="button" id="toggle-client-id-btn" class="id-eye-btn" title="Reveal Client ID">
-                    <svg class="eye-open-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg class="eye-closed-icon hidden" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  </button>
-                </div>
-              </div>
+
               <div class="setting-item">
                 <span class="s-label">Storage Quota:</span>
                 <span class="s-val">13.9 GB in Drive &bull; 65.5 GB Photos &bull; 5 TB Google One</span>
@@ -1249,58 +1240,14 @@
             </div>
           </div>
         
-            <!-- SECURE REMOTE BACKEND CONNECTION (ACCESS FROM ANYWHERE) -->
-            <div class="section-card" style="margin-top: 24px;">
-              <div class="card-title-bar">
-                <div class="title-with-icon">
-                  <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-                  <div>
-                    <h3>Secure Remote Backend Connection (Access From Anywhere)</h3>
-                    <span class="sub-text">Connect this GitHub Pages portal to your private Node.js backend to access your real Google Drive files, server logs, and live visitor analytics from anywhere.</span>
-                  </div>
-                </div>
-                <span id="remote-backend-status-badge" class="badge-neutral">Demo Mode (GitHub Pages)</span>
-              </div>
-
-              <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end;">
-                <div class="input-group" style="margin-bottom: 0;">
-                  <label for="remote-backend-url-input">Private Backend API Endpoint URL</label>
-                  <input type="url" id="remote-backend-url-input" class="clean-input" placeholder="e.g. https://my-portfolio-backend.onrender.com or http://localhost:3000">
-                </div>
-                <div style="display: flex; gap: 8px;">
-                  <button type="button" id="test-backend-btn" class="btn btn-secondary">Test Connection</button>
-                  <button type="button" id="save-backend-btn" class="btn btn-primary">Save &amp; Connect</button>
-                  <button type="button" id="reset-backend-btn" class="btn btn-danger-soft">Reset to Demo</button>
-                </div>
-              </div>
-
-              <div id="backend-test-result" class="hidden" style="margin-top: 12px; font-size: 13px; padding: 10px 14px; border-radius: 8px;"></div>
-              <!-- INLINE AUTHENTICATION CARD -->
-              <div id="backend-auth-prompt" class="hidden" style="margin-top: 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px 16px;">
-                <div style="font-weight: 600; color: #b45309; font-size: 13.5px; margin-bottom: 4px;">
-                  🔒 Backend Connected! Please Authenticate to Load Live Google Drive
-                </div>
-                <div style="font-size: 12.5px; color: #78350f; margin-bottom: 10px;">
-                  Your private backend is responding. Enter your admin password below to activate your live session and load your personal files.
-                </div>
-                <div style="display: flex; gap: 10px; max-width: 440px;">
-                  <input type="password" id="inline-backend-pwd" class="clean-input" placeholder="Enter Admin Password" style="background: #ffffff;">
-                  <button type="button" id="inline-backend-login-btn" class="btn btn-primary" style="white-space: nowrap;">Authenticate &amp; Load Drive</button>
-                </div>
-                <div id="inline-backend-error" class="hidden" style="color: #dc2626; font-size: 12px; margin-top: 6px; font-weight: 500;"></div>
-              </div>
-
-
-              
-
             <!-- TEMP CLOUD VAULT SETTINGS (SUPABASE - 100% FREE FOREVER • NO CARD) -->
             <div class="section-card" style="margin-top: 24px; border-left: 4px solid #f59e0b;">
               <div class="card-title-bar">
                 <div class="title-with-icon">
                   <svg viewBox="0 0 24 24" width="22" height="22" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                   <div>
-                    <h3>Temp Cloud Storage Vault (Supabase &bull; 100% Free Forever &bull; Zero Card)</h3>
-                    <span class="sub-text">Allows college lab &amp; public computers to drop files into a 24/7 cloud buffer without signing into Google, ready to move into Google Drive when home.</span>
+                    <h3>Temp Cloud Storage Vault (Cloud Sync)</h3>
+                    
                   </div>
                 </div>
                 <span id="supabase-status-badge" class="badge-amber">IndexedDB Active (Local)</span>
@@ -1320,9 +1267,7 @@
                   <button type="button" id="reset-supabase-btn" class="btn btn-secondary">Clear</button>
                 </div>
               </div>
-              <div id="supabase-note" style="margin-top: 10px; font-size: 12px; color: #64748b;">
-                <strong>Free Setup (30 seconds):</strong> Go to <a href="https://supabase.com" target="_blank" style="color: #2563eb; text-decoration: underline;">supabase.com</a> &rarr; Sign in with GitHub (Free, no credit card) &rarr; Create project &rarr; Create bucket named <code>temp_vault</code> (Public) &rarr; Copy URL &amp; anon key here.
-              </div>
+              
             </div>
           </div>
         </section>
@@ -1399,6 +1344,6 @@
     </div>
   </div>
 
-  <script src="admin.js"></script>
+  <script src="admin.js?v=20261026_live2"></script>
 </body>
 </html>

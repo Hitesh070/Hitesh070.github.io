@@ -1293,122 +1293,242 @@
     }
   });
 
-  // Admin Scratchpad (Automatic Real-Time Cloud Sync with Supabase + Persistent Backup)
-  let cloudSaveTimeout = null;
+  // ============================================================================
+  // ADMIN SCRATCHPAD - REAL-TIME SUPABASE public.admin_notes SYNC
+  // ============================================================================
+  let scratchpadDebounceTimer = null;
+  let scratchpadPollInterval = null;
+  let lastKnownCloudUpdatedAt = null;
+  let lastSyncedContent = null;
+  let isSavingScratchpad = false;
+
+  function isPublicComputerMode() {
+    return sessionStorage.getItem('admin_public_pc_mode') === 'true' || localStorage.getItem('admin_public_pc_mode') === 'true';
+  }
+
+  function setScratchpadBadge(html) {
+    if (scratchpadStatus) scratchpadStatus.innerHTML = html;
+    if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = html;
+  }
+
+  function setScratchpadValues(val) {
+    if (adminScratchpad && adminScratchpad.value !== val) adminScratchpad.value = val;
+    if (fullAdminScratchpad && fullAdminScratchpad.value !== val) fullAdminScratchpad.value = val;
+  }
+
+  function getCurrentScratchpadValue() {
+    return (adminScratchpad ? adminScratchpad.value : (fullAdminScratchpad ? fullAdminScratchpad.value : '')) || '';
+  }
+
+  // Conflict Resolution Modal
+  function showConflictModal({ cloudUpdatedAt, cloudContent, localContent, onResolve }) {
+    const existing = document.getElementById('scratchpad-conflict-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'scratchpad-conflict-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px);';
+    const timeFormatted = new Date(cloudUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    modal.innerHTML = `
+      <div style="background:#181b22;border:1px solid rgba(255,255,255,0.15);border-radius:14px;max-width:520px;width:100%;padding:1.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);color:#f1f5f9;font-family:inherit;">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;color:#f59e0b;font-size:1.1rem;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h3 style="margin:0;font-size:1.1rem;font-weight:700;">Scratchpad Conflict Detected</h3>
+        </div>
+        <p style="font-size:0.875rem;color:#94a3b8;line-height:1.5;margin-bottom:1.25rem;">
+          Cloud has newer edits (<strong>${timeFormatted}</strong> by another device). How would you like to resolve this conflict?
+        </p>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <button id="modal-btn-load-cloud" class="btn btn-secondary" style="display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:0.65rem 1rem;background:#242938;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:8px;cursor:pointer;">
+            <span style="font-weight:600;color:#38bdf8;"><i class="fas fa-cloud-download-alt"></i> Load Cloud Version</span>
+            <span style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">Discard local edits and pull latest changes from cloud</span>
+          </button>
+          <button id="modal-btn-keep-local" class="btn btn-secondary" style="display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:0.65rem 1rem;background:#242938;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:8px;cursor:pointer;">
+            <span style="font-weight:600;color:#f59e0b;"><i class="fas fa-desktop"></i> Keep Local Version</span>
+            <span style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">Overwrite cloud notes with your current device edits</span>
+          </button>
+          <button id="modal-btn-append-both" class="btn btn-primary" style="display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:0.65rem 1rem;border-radius:8px;cursor:pointer;">
+            <span style="font-weight:600;"><i class="fas fa-columns"></i> Append Both</span>
+            <span style="font-size:0.75rem;opacity:0.85;margin-top:2px;">Keep both local and cloud content separated by a timestamp divider</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('modal-btn-load-cloud').onclick = () => {
+      modal.remove();
+      onResolve(cloudContent, false);
+    };
+    document.getElementById('modal-btn-keep-local').onclick = () => {
+      modal.remove();
+      onResolve(localContent, true);
+    };
+    document.getElementById('modal-btn-append-both').onclick = () => {
+      modal.remove();
+      const combined = `${localContent.trim()}\n\n--- [Cloud Edits (${timeFormatted})] ---\n${cloudContent.trim()}`;
+      onResolve(combined, true);
+    };
+  }
 
   async function syncScratchpadToCloud(text) {
-    const { url, key } = getSupabaseConfig();
-    const setStatus = (msg, isErr = false) => {
-      const cls = isErr ? 'amber' : 'green';
-      if (scratchpadStatus) scratchpadStatus.innerHTML = `<span class="badge-${cls}">${msg}</span>`;
-      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = `<span class="badge-${cls}">${msg}</span>`;
-    };
-
-    if (!url || !key) {
-      setStatus('Saved Locally (Link Supabase in Settings for Cloud Sync)');
+    if (isSavingScratchpad) return;
+    const token = getSupabaseUserToken();
+    if (!token) {
+      if (!isPublicComputerMode()) {
+        localStorage.setItem('portfolio_admin_notes', text);
+      }
+      setScratchpadBadge('<span class="badge-amber">Offline (Login required for cloud sync)</span>');
       return;
     }
 
-    setStatus('Saving to Cloud...');
+    setScratchpadBadge('<span class="badge-amber"><i class="fas fa-spinner fa-spin"></i> Saving...</span>');
+    isSavingScratchpad = true;
+
     try {
-      const bucketName = getSupabaseConfig().bucket || 'temp_vault';
-      const uploadUrl = `${url}/storage/v1/object/${bucketName}/admin_scratchpad.txt`;
-      let res = await fetch(uploadUrl, {
+      const nowIso = new Date().toISOString();
+      const res = await supa('/rest/v1/admin_notes?on_conflict=id', {
         method: 'POST',
         headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'text/plain; charset=utf-8',
-          'x-upsert': 'true'
+          'Prefer': 'resolution=merge-duplicates,return=representation'
         },
-        body: text
+        body: JSON.stringify({
+          id: 'main',
+          content: text,
+          updated_at: nowIso
+        })
       });
 
-      if (!res.ok) {
-        res = await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: {
-            'apikey': key,
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'text/plain; charset=utf-8'
-          },
-          body: text
-        });
+      const data = await res.json();
+      lastKnownCloudUpdatedAt = (Array.isArray(data) && data[0]?.updated_at) ? data[0].updated_at : nowIso;
+      lastSyncedContent = text;
+
+      if (!isPublicComputerMode()) {
+        localStorage.setItem('portfolio_admin_notes', text);
+        localStorage.setItem('portfolio_admin_notes_updated', lastKnownCloudUpdatedAt);
       }
 
-      if (res.ok) {
-        setStatus('Saved to Cloud (Supabase)');
-      } else {
-        const errText = await res.text().catch(() => '');
-        console.warn('Supabase scratchpad error response:', res.status, errText);
-        if (res.status === 401 || res.status === 403) {
-          setStatus('Cloud Sync Error (Check Supabase RLS / Policy)', true);
-        } else if (res.status === 404) {
-          setStatus(`Bucket "${bucketName}" not found in Supabase`, true);
-        } else {
-          setStatus(`Cloud Sync Failed (${res.status}) - Saved Locally`, true);
-        }
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setScratchpadBadge(`<span class="badge-success"><i class="fas fa-check-circle"></i> Saved to cloud ${timeStr}</span>`);
+    } catch (err) {
+      console.error('Scratchpad cloud save error:', err);
+      const statusNum = err.status || 500;
+      const statusMsg = err.message || 'Network error';
+      setScratchpadBadge(`<span class="badge-danger" style="color:var(--accent-red,#ef4444);font-weight:600;"><i class="fas fa-times-circle"></i> Failed (${statusNum}: ${escapeHtml(statusMsg)}) - <a href="javascript:void(0)" id="retry-scratchpad-action" style="text-decoration:underline;color:var(--accent-red,#ef4444);margin-left:4px;">Retry</a></span>`);
+      const retryBtn = document.getElementById('retry-scratchpad-action');
+      if (retryBtn) {
+        retryBtn.onclick = () => syncScratchpadToCloud(getCurrentScratchpadValue());
       }
-    } catch (e) {
-      console.warn('Scratchpad cloud sync error:', e);
-      setStatus('Saved Locally (Offline)', true);
+    } finally {
+      isSavingScratchpad = false;
     }
   }
 
-  async function loadAdminNotes() {
-    const { url, key } = getSupabaseConfig();
-    if (url && key) {
-      try {
-        const bucketName = getSupabaseConfig().bucket || 'temp_vault';
-        const fetchUrl = `${url}/storage/v1/object/public/${bucketName}/admin_scratchpad.txt?t=${Date.now()}`;
-        let res = await fetch(fetchUrl, {
-          headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-        });
-        if (!res.ok) {
-          res = await fetch(`${url}/storage/v1/object/authenticated/temp_vault/admin_scratchpad.txt?t=${Date.now()}`, {
-            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-          });
-        }
-        if (res.ok) {
-          const cloudText = await res.text();
-          if (cloudText && !cloudText.includes('"statusCode":404')) {
-            localStorage.setItem('portfolio_admin_notes', cloudText);
-            if (adminScratchpad) adminScratchpad.value = cloudText;
-            if (fullAdminScratchpad) fullAdminScratchpad.value = cloudText;
-            if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-success">Synced with Cloud (Supabase)</span>';
-            if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-success">Synced with Cloud (Supabase)</span>';
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('Error loading notes from Supabase:', e);
-      }
+  async function loadAdminNotes(force = false) {
+    const token = getSupabaseUserToken();
+    if (!token) {
+      const localFallback = !isPublicComputerMode() ? (localStorage.getItem('portfolio_admin_notes') || '') : '';
+      setScratchpadValues(localFallback);
+      setScratchpadBadge('<span class="badge-neutral">Ready</span>');
+      return;
     }
 
-    const savedNotes = localStorage.getItem('portfolio_admin_notes') || '';
-    if (adminScratchpad) adminScratchpad.value = savedNotes;
-    if (fullAdminScratchpad) fullAdminScratchpad.value = savedNotes;
-    if (url && key) {
-      if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-success">Cloud Sync Ready (Supabase)</span>';
-      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-success">Cloud Sync Ready (Supabase)</span>';
-    } else {
-      if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
-      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
+    // If user is actively typing right now and this isn't a forced load, skip auto-refresh
+    const activeEl = document.activeElement;
+    const isTypingNow = activeEl === adminScratchpad || activeEl === fullAdminScratchpad;
+    if (isTypingNow && !force) {
+      return;
+    }
+
+    try {
+      const res = await supa('/rest/v1/admin_notes?id=eq.main&select=id,content,updated_at');
+      const rows = await res.json();
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        // Table row doesn't exist yet; if local has content, seed it to cloud
+        const localContent = !isPublicComputerMode() ? (localStorage.getItem('portfolio_admin_notes') || '') : '';
+        if (localContent) {
+          syncScratchpadToCloud(localContent);
+        } else {
+          setScratchpadBadge('<span class="badge-neutral">Ready</span>');
+        }
+        return;
+      }
+
+      const cloudRow = rows[0];
+      const cloudUpdatedAt = cloudRow.updated_at;
+      const cloudContent = cloudRow.content || '';
+      const currentVal = getCurrentScratchpadValue();
+
+      // Check conflict: cloud has newer edits, but local was edited and not yet synced
+      const cloudIsNewer = lastKnownCloudUpdatedAt ? (new Date(cloudUpdatedAt) > new Date(lastKnownCloudUpdatedAt)) : true;
+      const localHasUnsavedEdits = lastSyncedContent !== null && currentVal !== lastSyncedContent && currentVal !== cloudContent;
+
+      if (cloudIsNewer && localHasUnsavedEdits && lastKnownCloudUpdatedAt) {
+        showConflictModal({
+          cloudUpdatedAt,
+          cloudContent,
+          localContent: currentVal,
+          onResolve: (resolvedText, shouldPush) => {
+            setScratchpadValues(resolvedText);
+            if (shouldPush) {
+              syncScratchpadToCloud(resolvedText);
+            } else {
+              lastKnownCloudUpdatedAt = cloudUpdatedAt;
+              lastSyncedContent = cloudContent;
+              if (!isPublicComputerMode()) {
+                localStorage.setItem('portfolio_admin_notes', cloudContent);
+                localStorage.setItem('portfolio_admin_notes_updated', cloudUpdatedAt);
+              }
+              const timeStr = new Date(cloudUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              setScratchpadBadge(`<span class="badge-success"><i class="fas fa-check-circle"></i> Synced with cloud ${timeStr}</span>`);
+            }
+          }
+        });
+        return;
+      }
+
+      // Normal load / update
+      if (!lastKnownCloudUpdatedAt || new Date(cloudUpdatedAt) > new Date(lastKnownCloudUpdatedAt) || force) {
+        lastKnownCloudUpdatedAt = cloudUpdatedAt;
+        lastSyncedContent = cloudContent;
+        setScratchpadValues(cloudContent);
+        if (!isPublicComputerMode()) {
+          localStorage.setItem('portfolio_admin_notes', cloudContent);
+          localStorage.setItem('portfolio_admin_notes_updated', cloudUpdatedAt);
+        }
+        const timeStr = new Date(cloudUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        setScratchpadBadge(`<span class="badge-success"><i class="fas fa-check-circle"></i> Synced with cloud ${timeStr}</span>`);
+      }
+    } catch (err) {
+      console.warn('Failed to load notes from Supabase:', err);
+      // Offline fallback: load from localStorage if allowed
+      if (!isPublicComputerMode()) {
+        const localSaved = localStorage.getItem('portfolio_admin_notes') || '';
+        setScratchpadValues(localSaved);
+      }
+      setScratchpadBadge(`<span class="badge-amber">Offline (${escapeHtml(err.message || 'Network error')})</span>`);
     }
   }
 
   function handleScratchpadInput(sourceEl, targetEl) {
     const val = sourceEl.value;
     if (targetEl && targetEl.value !== val) targetEl.value = val;
-    localStorage.setItem('portfolio_admin_notes', val);
 
-    if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-amber">Syncing...</span>';
-    if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-amber">Syncing...</span>';
+    if (!isPublicComputerMode()) {
+      localStorage.setItem('portfolio_admin_notes', val);
+    }
 
-    clearTimeout(cloudSaveTimeout);
-    cloudSaveTimeout = setTimeout(() => {
+    setScratchpadBadge('<span class="badge-amber"><i class="fas fa-pencil-alt"></i> Saving...</span>');
+
+    clearTimeout(scratchpadDebounceTimer);
+    scratchpadDebounceTimer = setTimeout(() => {
       syncScratchpadToCloud(val);
-    }, 600);
+    }, 800);
   }
 
   if (adminScratchpad) {
@@ -1420,16 +1540,36 @@
 
   if (saveScratchpadBtn) {
     saveScratchpadBtn.addEventListener('click', () => {
-      syncScratchpadToCloud(adminScratchpad ? adminScratchpad.value : '');
-      showToast('Scratchpad synced to Cloud!', 'success');
+      syncScratchpadToCloud(getCurrentScratchpadValue());
+      showToast('Saving scratchpad to Supabase...', 'info');
     });
   }
   if (fullSaveScratchpadBtn) {
     fullSaveScratchpadBtn.addEventListener('click', () => {
-      syncScratchpadToCloud(fullAdminScratchpad ? fullAdminScratchpad.value : '');
-      showToast('Scratchpad synced to Cloud!', 'success');
+      syncScratchpadToCloud(getCurrentScratchpadValue());
+      showToast('Saving scratchpad to Supabase...', 'info');
     });
   }
+
+  // Auto-poll every 20s when visible
+  if (scratchpadPollInterval) clearInterval(scratchpadPollInterval);
+  scratchpadPollInterval = setInterval(() => {
+    if (document.visibilityState === 'visible' && getSupabaseUserToken()) {
+      loadAdminNotes(false);
+    }
+  }, 20000);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && getSupabaseUserToken()) {
+      loadAdminNotes(false);
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    if (getSupabaseUserToken()) {
+      loadAdminNotes(false);
+    }
+  });
 
   // Update Credentials
   updateAuthForm.addEventListener('submit', async (e) => {

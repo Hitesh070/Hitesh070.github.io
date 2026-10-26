@@ -216,8 +216,7 @@
     loadLiveDriveData();
     loadAdminNotes();
     loadAccessLogs();
-    initAnalyticsChart();
-    loadDetailedVisitors();
+    initGoogleAnalyticsDashboard();
   }
 
   function setLoggedOut() {
@@ -532,8 +531,7 @@
     } else if (targetTab === 'tab-logs') {
       loadAccessLogs();
     } else if (targetTab === 'tab-portfolio') {
-      renderAnalyticsChart();
-      loadDetailedVisitors();
+      initGoogleAnalyticsDashboard();
     }
   }
 
@@ -1758,9 +1756,35 @@
   }
 
   // =========================================================================
-  // INTERACTIVE GOOGLE ANALYTICS LIVE PERFORMANCE CHART
+  // REAL GOOGLE ANALYTICS 4 (GA4) INTEGRATION & METRICS SUITE
+  // Scope: https://www.googleapis.com/auth/analytics.readonly
+  // Client APIs: Analytics Data API v1beta & Analytics Admin API v1beta
   // =========================================================================
-  const svgChart = document.getElementById('ga-svg-chart');
+
+  let gaTokenClient = null;
+  let activeGaRange = 30; // 7, 14, 30, 90 days
+  let gaRealtimeTimer = null;
+  let currentGaPropertyId = '';
+
+  // Elements
+  const gaEmptyState = document.getElementById('ga-empty-state');
+  const gaDashboardView = document.getElementById('ga-dashboard-view');
+  const gaStatusPill = document.getElementById('ga-status-pill');
+  const gaStreamPill = document.getElementById('ga-stream-pill');
+  const gaPropertySelect = document.getElementById('ga-property-select');
+  const connectGaBtn = document.getElementById('connect-ga-btn');
+  const emptyConnectGaBtn = document.getElementById('empty-connect-ga-btn');
+  const disconnectGaBtn = document.getElementById('disconnect-ga-btn');
+  const refreshGaBtn = document.getElementById('refresh-ga-btn');
+  const gaLoadingIndicator = document.getElementById('ga-loading-indicator');
+  const gaErrorBanner = document.getElementById('ga-error-banner');
+  const gaErrorMsg = document.getElementById('ga-error-msg');
+  const gaComparisonLabel = document.getElementById('ga-comparison-label');
+  const gaRealtimeCount = document.getElementById('ga-realtime-count');
+  const gaInsightsList = document.getElementById('ga-insights-list');
+
+  // Chart Elements
+  const gaSvgChart = document.getElementById('ga-svg-chart');
   const chartGrid = document.getElementById('chart-grid');
   const chartViewsArea = document.getElementById('chart-views-area');
   const chartVisitorsArea = document.getElementById('chart-visitors-area');
@@ -1771,433 +1795,828 @@
   const ctDate = document.getElementById('ct-date');
   const ctVisitors = document.getElementById('ct-visitors');
   const ctViews = document.getElementById('ct-views');
-  const chartFilterBtns = document.querySelectorAll('.chart-filter-btn');
-  const gaRealtimeUsers = document.getElementById('ga-realtime-users');
 
-  let activeChartRange = 14;
-
-  // Realistic traffic dataset for the past 30 days
-  const analyticsData30 = (() => {
-    const data = [];
-    const today = new Date();
-    const visitorBase = [
-      88, 94, 112, 126, 118, 85, 76,
-      92, 105, 134, 142, 128, 89, 82,
-      98, 115, 148, 162, 155, 96, 91,
-      110, 132, 168, 184, 172, 104, 98,
-      142, 218
-    ];
-
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const visitors = visitorBase[29 - i] || 100;
-      const multiplier = 2.45 + ((i % 5) * 0.08);
-      const views = Math.round(visitors * multiplier);
-      data.push({ date: dateLabel, visitors, views, fullDate: d.toDateString() });
+  function getGaToken() {
+    const token = sessionStorage.getItem('ga_access_token');
+    const exp = parseInt(sessionStorage.getItem('ga_token_expires') || '0', 10);
+    if (!token || (exp && Date.now() > exp)) {
+      sessionStorage.removeItem('ga_access_token');
+      sessionStorage.removeItem('ga_token_expires');
+      return '';
     }
-    return data;
-  })();
-
-  function initAnalyticsChart() {
-    chartFilterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        chartFilterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeChartRange = parseInt(btn.dataset.range, 10) || 14;
-        renderAnalyticsChart();
-      });
-    });
-
-    renderAnalyticsChart();
-
-
+    return token;
   }
 
-  function renderAnalyticsChart() {
-    if (!svgChart || !chartGrid) return;
+  function setGaToken(token, expiresIn = 3600) {
+    if (token) {
+      sessionStorage.setItem('ga_access_token', token);
+      sessionStorage.setItem('ga_token_expires', (Date.now() + expiresIn * 1000).toString());
+    } else {
+      sessionStorage.removeItem('ga_access_token');
+      sessionStorage.removeItem('ga_token_expires');
+    }
+    updateGaAuthUI();
+  }
 
-    const data = analyticsData30.slice(-activeChartRange);
+  function updateGaAuthUI() {
+    const hasToken = !!getGaToken();
+    if (gaStatusPill) {
+      if (hasToken) {
+        gaStatusPill.className = 'status-pill green';
+        gaStatusPill.innerHTML = '<span class="status-dot"></span>GA4 Connected';
+      } else {
+        gaStatusPill.className = 'status-pill amber';
+        gaStatusPill.innerHTML = '<span class="status-dot"></span>Disconnected';
+      }
+    }
+    if (connectGaBtn) connectGaBtn.style.display = hasToken ? 'none' : 'inline-flex';
+    if (disconnectGaBtn) disconnectGaBtn.style.display = hasToken ? 'inline-flex' : 'none';
+    if (refreshGaBtn) refreshGaBtn.style.display = hasToken ? 'inline-flex' : 'none';
+    if (gaPropertySelect) gaPropertySelect.style.display = hasToken ? 'inline-block' : 'none';
+
+    if (gaEmptyState && gaDashboardView) {
+      if (hasToken) {
+        gaEmptyState.style.display = 'none';
+        gaDashboardView.style.display = 'block';
+      } else {
+        gaEmptyState.style.display = 'block';
+        gaDashboardView.style.display = 'none';
+      }
+    }
+  }
+
+  function initGoogleAnalyticsAuth() {
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) return;
+    const cfg = window.ADMIN_CONFIG || {};
+    const clientId = cfg.GOOGLE_CLIENT_ID || '216288105966-av9qgm44ubfpg1l3374ldqg4m4uaif9u.apps.googleusercontent.com';
+
+    try {
+      gaTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/analytics.readonly',
+        callback: async (resp) => {
+          if (resp.error) {
+            showToast('Google Analytics authorization notice: ' + resp.error, 'info');
+            return;
+          }
+          if (resp.access_token) {
+            setGaToken(resp.access_token, resp.expires_in || 3600);
+            showToast('Connected to Google Analytics (GA4)!', 'success');
+            await initGoogleAnalyticsDashboard();
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('GIS GA init error:', e);
+    }
+  }
+
+  function triggerGaAuth() {
+    if (!gaTokenClient) initGoogleAnalyticsAuth();
+    if (gaTokenClient) {
+      gaTokenClient.requestAccessToken({ prompt: 'consent' });
+    } else {
+      showToast('Google Identity Services client loading. Please try in a moment.', 'info');
+    }
+  }
+
+  if (connectGaBtn) connectGaBtn.addEventListener('click', triggerGaAuth);
+  if (emptyConnectGaBtn) emptyConnectGaBtn.addEventListener('click', triggerGaAuth);
+
+  if (disconnectGaBtn) {
+    disconnectGaBtn.addEventListener('click', () => {
+      const token = getGaToken();
+      if (token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+        try { google.accounts.oauth2.revoke(token, () => {}); } catch (_) {}
+      }
+      setGaToken('');
+      if (gaRealtimeTimer) clearInterval(gaRealtimeTimer);
+      showToast('Google Analytics disconnected', 'info');
+    });
+  }
+
+  if (refreshGaBtn) {
+    refreshGaBtn.addEventListener('click', () => {
+      loadAllGaReports();
+      showToast('Refreshing GA4 reports...', 'info');
+    });
+  }
+
+  // Fetch Available GA4 Properties
+  async function fetchGaProperties() {
+    const token = getGaToken();
+    if (!token) return [];
+    try {
+      const res = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.status === 401) {
+        setGaToken('');
+        showToast('GA4 session expired. Please reconnect.', 'warning');
+        return [];
+      }
+      if (!res.ok) throw new Error('Failed to fetch accounts (' + res.status + ')');
+      const data = await res.json();
+      const properties = [];
+      if (Array.isArray(data.accountSummaries)) {
+        data.accountSummaries.forEach(acc => {
+          if (Array.isArray(acc.propertySummaries)) {
+            acc.propertySummaries.forEach(p => {
+              const numericId = p.property ? p.property.replace('properties/', '') : '';
+              properties.push({
+                id: numericId,
+                name: p.displayName || ('Property ' + numericId),
+                raw: p.property
+              });
+            });
+          }
+        });
+      }
+      return properties;
+    } catch (err) {
+      console.warn('Fetch GA properties note:', err);
+      return [];
+    }
+  }
+
+  async function initGoogleAnalyticsDashboard() {
+    updateGaAuthUI();
+    const token = getGaToken();
+    if (!token) return;
+
+    // Load properties
+    const properties = await fetchGaProperties();
+    const savedProp = localStorage.getItem('ga_property_id') || (window.ADMIN_CONFIG && window.ADMIN_CONFIG.GA_PROPERTY_ID) || '';
+
+    if (gaPropertySelect) {
+      gaPropertySelect.innerHTML = '';
+      if (properties.length > 0) {
+        properties.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = p.name + ' (' + p.id + ')';
+          if (p.id === savedProp || (!savedProp && p.name.toLowerCase().includes('portfolio'))) {
+            opt.selected = true;
+          }
+          gaPropertySelect.appendChild(opt);
+        });
+        currentGaPropertyId = gaPropertySelect.value || properties[0].id;
+        gaPropertySelect.style.display = 'inline-block';
+      } else {
+        const opt = document.createElement('option');
+        opt.value = savedProp || '478426021';
+        opt.textContent = savedProp ? ('Property ' + savedProp) : 'Portfolio Website';
+        gaPropertySelect.appendChild(opt);
+        currentGaPropertyId = opt.value;
+      }
+
+      gaPropertySelect.onchange = () => {
+        currentGaPropertyId = gaPropertySelect.value;
+        localStorage.setItem('ga_property_id', currentGaPropertyId);
+        loadAllGaReports();
+      };
+    } else {
+      currentGaPropertyId = savedProp || '478426021';
+    }
+
+    await loadAllGaReports();
+
+    if (gaRealtimeTimer) clearInterval(gaRealtimeTimer);
+    gaRealtimeTimer = setInterval(() => {
+      const activeTab = document.querySelector('.view-tab.active');
+      if (activeTab && activeTab.id === 'tab-portfolio' && getGaToken()) {
+        loadGaRealtimeReport();
+      }
+    }, 30000);
+  }
+
+  // GA API Call Wrapper
+  async function gaDataFetch(endpoint, body) {
+    const token = getGaToken();
+    if (!token) throw new Error('Not authenticated with Google Analytics');
+    const propertyId = currentGaPropertyId || localStorage.getItem('ga_property_id') || '478426021';
+    const url = 'https://analyticsdata.googleapis.com/v1beta/properties/' + propertyId + ':' + endpoint;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (res.status === 401) {
+      setGaToken('');
+      showToast('Google Analytics session expired. Please reconnect.', 'warning');
+      throw new Error('GA session expired');
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = (err.error && err.error.message) || ('GA API error ' + res.status);
+      throw new Error(msg);
+    }
+    return await res.json();
+  }
+
+  // Load All Reports
+  async function loadAllGaReports() {
+    const token = getGaToken();
+    if (!token) return;
+
+    if (gaLoadingIndicator) gaLoadingIndicator.classList.remove('hidden');
+    if (gaErrorBanner) gaErrorBanner.classList.add('hidden');
+
+    try {
+      await Promise.all([
+        loadGaKpisAndComparison(),
+        loadGaTimeline(),
+        loadGaChannels(),
+        loadGaGeography(),
+        loadGaTech(),
+        loadGaPages(),
+        loadGaLandingPages(),
+        loadGaLoyalty(),
+        loadGaHeatmap(),
+        loadGaEvents(),
+        loadGaRealtimeReport()
+      ]);
+    } catch (err) {
+      if (gaErrorBanner && gaErrorMsg) {
+        gaErrorMsg.textContent = err.message || 'Error fetching Google Analytics data';
+        gaErrorBanner.classList.remove('hidden');
+      }
+    } finally {
+      if (gaLoadingIndicator) gaLoadingIndicator.classList.add('hidden');
+    }
+  }
+
+  // 1. KPIs & Comparison
+  async function loadGaKpisAndComparison() {
+    const range = activeGaRange;
+    const body = {
+      dateRanges: [
+        { startDate: range + 'daysAgo', endDate: 'today', name: 'current' },
+        { startDate: (range * 2) + 'daysAgo', endDate: (range + 1) + 'daysAgo', name: 'previous' }
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'newUsers' },
+        { name: 'sessions' },
+        { name: 'screenPageViews' },
+        { name: 'averageSessionDuration' },
+        { name: 'engagementRate' },
+        { name: 'bounceRate' }
+      ]
+    };
+
+    if (gaComparisonLabel) {
+      gaComparisonLabel.textContent = 'Comparing vs previous ' + range + ' days';
+    }
+
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    const currentRow = rows.find(r => (r.dimensionValues && r.dimensionValues[0] && r.dimensionValues[0].value === 'current') || rows.indexOf(r) === 0);
+    const prevRow = rows.find(r => (r.dimensionValues && r.dimensionValues[0] && r.dimensionValues[0].value === 'previous') || rows.indexOf(r) === 1);
+
+    const getVal = (row, idx) => (row && row.metricValues && row.metricValues[idx]) ? parseFloat(row.metricValues[idx].value) : 0;
+
+    const cur = {
+      activeUsers: getVal(currentRow, 0),
+      newUsers: getVal(currentRow, 1),
+      sessions: getVal(currentRow, 2),
+      views: getVal(currentRow, 3),
+      duration: getVal(currentRow, 4),
+      engagement: getVal(currentRow, 5),
+      bounce: getVal(currentRow, 6)
+    };
+
+    const prev = {
+      activeUsers: getVal(prevRow, 0),
+      newUsers: getVal(prevRow, 1),
+      sessions: getVal(prevRow, 2),
+      views: getVal(prevRow, 3),
+      duration: getVal(prevRow, 4),
+      engagement: getVal(prevRow, 5),
+      bounce: getVal(prevRow, 6)
+    };
+
+    const calcChange = (c, p) => {
+      if (!p || p === 0) return c > 0 ? '+100%' : '0%';
+      const diff = ((c - p) / p) * 100;
+      return (diff >= 0 ? '+' : '') + diff.toFixed(1) + '%';
+    };
+
+    const formatDur = (secs) => {
+      const m = Math.floor(secs / 60);
+      const s = Math.round(secs % 60);
+      return m + 'm ' + (s < 10 ? '0' : '') + s + 's';
+    };
+
+    const applyKpi = (id, val, changeId, changeStr) => {
+      const el = document.getElementById(id);
+      const chEl = document.getElementById(changeId);
+      if (el) el.textContent = val;
+      if (chEl) {
+        chEl.textContent = changeStr;
+        chEl.className = changeStr.startsWith('+') ? 'badge-blue' : (changeStr.startsWith('-') ? 'badge-amber' : 'badge-neutral');
+      }
+    };
+
+    applyKpi('ga-kpi-active-users', cur.activeUsers.toLocaleString(), 'ga-kpi-active-users-change', calcChange(cur.activeUsers, prev.activeUsers));
+    applyKpi('ga-kpi-new-users', cur.newUsers.toLocaleString(), 'ga-kpi-new-users-change', calcChange(cur.newUsers, prev.newUsers));
+    applyKpi('ga-kpi-sessions', cur.sessions.toLocaleString(), 'ga-kpi-sessions-change', calcChange(cur.sessions, prev.sessions));
+    applyKpi('ga-kpi-views', cur.views.toLocaleString(), 'ga-kpi-views-change', calcChange(cur.views, prev.views));
+    applyKpi('ga-kpi-duration', formatDur(cur.duration), 'ga-kpi-duration-change', calcChange(cur.duration, prev.duration));
+    applyKpi('ga-kpi-engagement', (cur.engagement * 100).toFixed(1) + '%', 'ga-kpi-engagement-change', calcChange(cur.engagement, prev.engagement));
+    applyKpi('ga-kpi-bounce', (cur.bounce * 100).toFixed(1) + '%', 'ga-kpi-bounce-change', calcChange(cur.bounce, prev.bounce));
+
+    generateGaInsights(cur, prev);
+  }
+
+  // 2. Timeline Chart (Daily Users & Views)
+  async function loadGaTimeline() {
+    const range = activeGaRange;
+    const body = {
+      dateRanges: [{ startDate: range + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'date' }],
+      metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }],
+      orderBys: [{ dimension: { dimensionName: 'date' } }]
+    };
+
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+
+    const timelineData = rows.map(r => {
+      const rawDate = r.dimensionValues[0].value;
+      const year = rawDate.substr(0, 4);
+      const month = rawDate.substr(4, 2);
+      const day = rawDate.substr(6, 2);
+      const d = new Date(year + '-' + month + '-' + day + 'T00:00:00');
+      const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return {
+        date: dateLabel,
+        visitors: parseInt(r.metricValues[0].value || 0, 10),
+        views: parseInt(r.metricValues[1].value || 0, 10),
+        fullDate: d.toDateString()
+      };
+    });
+
+    renderGaSvgTimeline(timelineData);
+  }
+
+  function renderGaSvgTimeline(data) {
+    if (!gaSvgChart || !chartGrid || !chartPoints) return;
     const n = data.length;
-    if (n < 2) return;
+    if (n === 0) {
+      chartGrid.innerHTML = '<text x="400" y="110" text-anchor="middle" fill="#94a3b8" font-size="13">No visitor activity recorded in this period.</text>';
+      if (chartViewsLine) chartViewsLine.setAttribute('d', '');
+      if (chartVisitorsLine) chartVisitorsLine.setAttribute('d', '');
+      if (chartViewsArea) chartViewsArea.setAttribute('d', '');
+      if (chartVisitorsArea) chartVisitorsArea.setAttribute('d', '');
+      chartPoints.innerHTML = '';
+      return;
+    }
 
-    const W = 800;
-    const H = 220;
-    const padL = 48;
-    const padR = 24;
-    const padT = 24;
-    const padB = 34;
-
+    const W = 800, H = 220, padL = 48, padR = 24, padT = 20, padB = 32;
     const plotW = W - padL - padR;
     const plotH = H - padT - padB;
     const yBottom = H - padB;
 
-    const maxVal = Math.ceil(Math.max(...data.map(d => Math.max(d.visitors, d.views))) * 1.15 / 50) * 50;
-
-    const getX = (i) => padL + (i / (n - 1)) * plotW;
+    const maxVal = Math.max(10, Math.ceil(Math.max(...data.map(d => Math.max(d.visitors, d.views))) * 1.2));
+    const getX = (i) => n === 1 ? padL + plotW / 2 : padL + (i / (n - 1)) * plotW;
     const getY = (val) => yBottom - (val / maxVal) * plotH;
 
-    // Build Grid lines and Y labels
     chartGrid.innerHTML = '';
-    const gridSteps = 4;
-    for (let s = 0; s <= gridSteps; s++) {
-      const v = Math.round((maxVal / gridSteps) * s);
-      const y = getY(v);
+    const steps = 4;
+    for (let s = 0; s <= steps; s++) {
+      const val = Math.round((maxVal / steps) * s);
+      const y = getY(val);
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', padL);
       line.setAttribute('y1', y);
       line.setAttribute('x2', W - padR);
       line.setAttribute('y2', y);
-      line.setAttribute('stroke', '#e2e8f0');
-      line.setAttribute('stroke-dasharray', s === 0 ? '0' : '4,4');
+      line.setAttribute('stroke', '#f1f5f9');
       line.setAttribute('stroke-width', '1');
       chartGrid.appendChild(line);
 
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', padL - 8);
-      text.setAttribute('y', y + 4);
-      text.setAttribute('text-anchor', 'end');
-      text.setAttribute('font-size', '10');
-      text.setAttribute('fill', '#94a3b8');
-      text.textContent = v;
-      chartGrid.appendChild(text);
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', padL - 8);
+      label.setAttribute('y', y + 3.5);
+      label.setAttribute('text-anchor', 'end');
+      label.setAttribute('fill', '#94a3b8');
+      label.setAttribute('font-size', '10.5');
+      label.setAttribute('font-family', 'Plus Jakarta Sans, sans-serif');
+      label.textContent = val;
+      chartGrid.appendChild(label);
     }
 
-    // X Date labels
-    const labelStep = n <= 7 ? 1 : n <= 14 ? 2 : 5;
-    for (let i = 0; i < n; i += labelStep) {
-      const x = getX(i);
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', x);
-      text.setAttribute('y', H - 10);
-      text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('font-size', '10.5');
-      text.setAttribute('fill', '#64748b');
-      text.setAttribute('font-weight', '500');
-      text.textContent = data[i].date;
-      chartGrid.appendChild(text);
-    }
-    if ((n - 1) % labelStep !== 0) {
-      const x = getX(n - 1);
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', x);
-      text.setAttribute('y', H - 10);
-      text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('font-size', '10.5');
-      text.setAttribute('fill', '#64748b');
-      text.setAttribute('font-weight', '500');
-      text.textContent = data[n - 1].date;
-      chartGrid.appendChild(text);
-    }
-
-    // Smooth curve generator
-    function buildPath(pts) {
-      if (pts.length < 2) return '';
-      let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
-      for (let i = 0; i < pts.length - 1; i++) {
-        const p0 = pts[i === 0 ? 0 : i - 1];
-        const p1 = pts[i];
-        const p2 = pts[i + 1];
-        const p3 = pts[i + 2] || p2;
-
-        const cp1x = p1.x + (p2.x - p0.x) / 6;
-        const cp1y = p1.y + (p2.y - p0.y) / 6;
-        const cp2x = p2.x - (p3.x - p1.x) / 6;
-        const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-        d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    const labelStep = Math.max(1, Math.floor(n / 6));
+    data.forEach((d, i) => {
+      if (i % labelStep === 0 || i === n - 1) {
+        const x = getX(i);
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', x);
+        label.setAttribute('y', H - 10);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('fill', '#94a3b8');
+        label.setAttribute('font-size', '10.5');
+        label.setAttribute('font-family', 'Plus Jakarta Sans, sans-serif');
+        label.textContent = d.date;
+        chartGrid.appendChild(label);
       }
-      return d;
-    }
+    });
+
+    if (n < 2) return;
+
+    const buildPath = (pts) => pts.map((p, i) => (i === 0 ? ('M ' + p.x.toFixed(1) + ' ' + p.y.toFixed(1)) : ('L ' + p.x.toFixed(1) + ' ' + p.y.toFixed(1)))).join(' ');
 
     const visitorsPts = data.map((d, i) => ({ x: getX(i), y: getY(d.visitors) }));
     const viewsPts = data.map((d, i) => ({ x: getX(i), y: getY(d.views) }));
 
     const visitorsLinePath = buildPath(visitorsPts);
     const viewsLinePath = buildPath(viewsPts);
-
     const firstX = visitorsPts[0].x.toFixed(1);
     const lastX = visitorsPts[visitorsPts.length - 1].x.toFixed(1);
 
-    const visitorsAreaPath = `${visitorsLinePath} L ${lastX} ${yBottom} L ${firstX} ${yBottom} Z`;
-    const viewsAreaPath = `${viewsLinePath} L ${lastX} ${yBottom} L ${firstX} ${yBottom} Z`;
+    const visitorsAreaPath = visitorsLinePath + ' L ' + lastX + ' ' + yBottom + ' L ' + firstX + ' ' + yBottom + ' Z';
+    const viewsAreaPath = viewsLinePath + ' L ' + lastX + ' ' + yBottom + ' L ' + firstX + ' ' + yBottom + ' Z';
 
     if (chartViewsLine) chartViewsLine.setAttribute('d', viewsLinePath);
     if (chartVisitorsLine) chartVisitorsLine.setAttribute('d', visitorsLinePath);
     if (chartViewsArea) chartViewsArea.setAttribute('d', viewsAreaPath);
     if (chartVisitorsArea) chartVisitorsArea.setAttribute('d', visitorsAreaPath);
 
-    // Build interactive hover points
     chartPoints.innerHTML = '';
     data.forEach((d, i) => {
       const vx = getX(i);
       const vyVisitors = getY(d.visitors);
       const vyViews = getY(d.views);
 
-      const cViews = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      cViews.setAttribute('cx', vx);
-      cViews.setAttribute('cy', vyViews);
-      cViews.setAttribute('r', '4');
-      cViews.setAttribute('fill', '#ffffff');
-      cViews.setAttribute('stroke', '#8b5cf6');
-      cViews.setAttribute('stroke-width', '2.5');
-      cViews.style.cursor = 'pointer';
-      chartPoints.appendChild(cViews);
+      const makeDot = (x, y, color) => {
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', x);
+        dot.setAttribute('cy', y);
+        dot.setAttribute('r', '3.5');
+        dot.setAttribute('fill', color);
+        dot.setAttribute('stroke', '#ffffff');
+        dot.setAttribute('stroke-width', '1.5');
+        return dot;
+      };
 
-      const cVisitors = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      cVisitors.setAttribute('cx', vx);
-      cVisitors.setAttribute('cy', vyVisitors);
-      cVisitors.setAttribute('r', '4');
-      cVisitors.setAttribute('fill', '#ffffff');
-      cVisitors.setAttribute('stroke', '#2563eb');
-      cVisitors.setAttribute('stroke-width', '2.5');
-      cVisitors.style.cursor = 'pointer';
-      chartPoints.appendChild(cVisitors);
+      const dotViews = makeDot(vx, vyViews, '#8b5cf6');
+      const dotVisitors = makeDot(vx, vyVisitors, '#2563eb');
+      chartPoints.appendChild(dotViews);
+      chartPoints.appendChild(dotVisitors);
 
-      const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      const colWidth = plotW / (n - 1);
-      hitArea.setAttribute('x', vx - colWidth / 2);
-      hitArea.setAttribute('y', padT);
-      hitArea.setAttribute('width', colWidth);
-      hitArea.setAttribute('height', plotH);
-      hitArea.setAttribute('fill', 'transparent');
-      hitArea.style.cursor = 'pointer';
+      const hit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      hit.setAttribute('x', vx - 12);
+      hit.setAttribute('y', padT);
+      hit.setAttribute('width', 24);
+      hit.setAttribute('height', plotH);
+      hit.setAttribute('fill', 'transparent');
+      hit.style.cursor = 'pointer';
 
-      hitArea.addEventListener('mouseenter', () => {
-        cVisitors.setAttribute('r', '6');
-        cViews.setAttribute('r', '6');
-        if (ctDate) ctDate.textContent = d.fullDate;
-        if (ctVisitors) ctVisitors.textContent = d.visitors.toLocaleString();
-        if (ctViews) ctViews.textContent = d.views.toLocaleString();
-        if (chartTooltip) chartTooltip.classList.remove('hidden');
+      hit.addEventListener('mouseenter', () => {
+        dotViews.setAttribute('r', '5.5');
+        dotVisitors.setAttribute('r', '5.5');
+        if (chartTooltip) {
+          ctDate.textContent = d.fullDate || d.date;
+          ctVisitors.textContent = d.visitors;
+          ctViews.textContent = d.views;
+          chartTooltip.classList.remove('hidden');
+          const chartRect = gaSvgChart.getBoundingClientRect();
+          const tipX = (vx / W) * chartRect.width;
+          const tipY = (Math.min(vyViews, vyVisitors) / H) * chartRect.height - 50;
+          chartTooltip.style.left = Math.max(10, Math.min(chartRect.width - 150, tipX - 70)) + 'px';
+          chartTooltip.style.top = Math.max(5, tipY) + 'px';
+        }
       });
 
-      hitArea.addEventListener('mouseleave', () => {
-        cVisitors.setAttribute('r', '4');
-        cViews.setAttribute('r', '4');
-      });
-
-      chartPoints.appendChild(hitArea);
-    });
-
-    if (svgChart) {
-      svgChart.addEventListener('mouseleave', () => {
+      hit.addEventListener('mouseleave', () => {
+        dotViews.setAttribute('r', '3.5');
+        dotVisitors.setAttribute('r', '3.5');
         if (chartTooltip) chartTooltip.classList.add('hidden');
       });
-    }
+
+      chartPoints.appendChild(hit);
+    });
   }
 
-  // =========================================================================
-  // DETAILED VISITOR & IP INTELLIGENCE AUDIT
-  // =========================================================================
-  const vaVisitorsTbody = document.getElementById('va-visitors-tbody');
-  const vaSearchInput = document.getElementById('va-search-input');
-  const vaFilterCountry = document.getElementById('va-filter-country');
-  const vaFilterDevice = document.getElementById('va-filter-device');
-  const vaFilterSource = document.getElementById('va-filter-source');
-  const vaResetFiltersBtn = document.getElementById('va-reset-filters-btn');
-  const refreshVisitorsBtn = document.getElementById('refresh-visitors-btn');
-  const vaStatActive = document.getElementById('va-stat-active');
-  const vaStatIps = document.getElementById('va-stat-ips');
-  const vaStatTopLoc = document.getElementById('va-stat-top-loc');
-  const vaStatTopSrc = document.getElementById('va-stat-top-src');
-  const vaShowingCount = document.getElementById('va-showing-count');
-
-  let vaSearchTimeout = null;
-
-    async function loadDetailedVisitors() {
-    if (!vaVisitorsTbody) return;
-
-    const search = vaSearchInput ? vaSearchInput.value.trim() : '';
-    const country = vaFilterCountry ? vaFilterCountry.value : 'all';
-    const device = vaFilterDevice ? vaFilterDevice.value : 'all';
-    const source = vaFilterSource ? vaFilterSource.value : 'all';
-
-    let visitors = [];
-    let summary = {};
-
-    try {
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (country && country !== 'all') params.append('country', country);
-      if (device && device !== 'all') params.append('device', device);
-      if (source && source !== 'all') params.append('source', source);
-
-      const res = await apiFetch(`/api/portfolio/analytics/visitors?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        visitors = data.visitors || [];
-        summary = data.summary || {};
-      } else {
-        throw new Error('Static cloud fallback');
-      }
-    } catch (e) {
-      // In-memory filter on GitHub Pages
-      visitors = STATIC_CLOUD_DATA.visitors || [];
-      if (search) {
-        const s = search.toLowerCase();
-        visitors = visitors.filter(v =>
-          v.ip.toLowerCase().includes(s) ||
-          v.city.toLowerCase().includes(s) ||
-          v.country.toLowerCase().includes(s) ||
-          (v.currentPage && v.currentPage.toLowerCase().includes(s)) ||
-          (v.referrer && v.referrer.toLowerCase().includes(s)) ||
-          (v.isp && v.isp.toLowerCase().includes(s)) ||
-          v.id.toLowerCase().includes(s)
-        );
-      }
-      if (country && country !== 'all') visitors = visitors.filter(v => v.country.toLowerCase() === country.toLowerCase());
-      if (device && device !== 'all') visitors = visitors.filter(v => v.device.toLowerCase().includes(device.toLowerCase()));
-      if (source && source !== 'all') visitors = visitors.filter(v => (v.referrerType || '').toLowerCase().includes(source.toLowerCase()));
-
-      summary = {
-        totalVisitors: STATIC_CLOUD_DATA.visitors.length,
-        filteredCount: visitors.length,
-        activeNow: STATIC_CLOUD_DATA.visitors.filter(v => v.status === 'online').length,
-        uniqueIps: new Set(STATIC_CLOUD_DATA.visitors.map(v => v.ip)).size,
-        topLocation: 'Chennai, India (42%)',
-        topSource: 'GitHub /Hitesh070 (44%)'
-      };
-    }
-
-    const activeNowCount = summary.activeNow !== undefined ? summary.activeNow : visitors.filter(v => v.status === 'online').length;
-    if (vaStatActive) vaStatActive.textContent = `${activeNowCount} Active`;
-    if (gaRealtimeUsers) gaRealtimeUsers.textContent = activeNowCount;
-    if (vaStatIps) vaStatIps.textContent = `${summary.uniqueIps || 0} IPs`;
-    if (vaStatTopLoc) vaStatTopLoc.textContent = summary.topLocation || 'Chennai, IN';
-    if (vaStatTopSrc) vaStatTopSrc.textContent = summary.topSource || 'GitHub /Hitesh070';
-    if (vaShowingCount) vaShowingCount.textContent = `Showing ${visitors.length} of ${summary.totalVisitors || visitors.length} indexed visitors`;
-
-    // Synchronize Active Pages breakdown in Google Analytics tab
-    const gaActivePagesTbody = document.getElementById('ga-active-pages-tbody');
-    if (gaActivePagesTbody) {
-      const onlineList = visitors.filter(v => v.status === 'online');
-      if (onlineList.length > 0) {
-        const pageGroups = {};
-        onlineList.forEach(v => {
-          const pg = v.currentPage || '/';
-          if (!pageGroups[pg]) pageGroups[pg] = { count: 0, sample: v };
-          pageGroups[pg].count++;
-        });
-        gaActivePagesTbody.innerHTML = Object.entries(pageGroups).map(([pg, info]) => `
-          <tr>
-            <td><strong>${escapeHtml(pg)}</strong></td>
-            <td><span class="badge-success">${info.count} user${info.count > 1 ? 's' : ''}</span></td>
-            <td>${escapeHtml(info.sample.city || info.sample.country || 'India')} &bull; ${escapeHtml(info.sample.referrerType || 'Direct')}</td>
-            <td>${escapeHtml(info.sample.device || 'Desktop PC')}</td>
-            <td>${escapeHtml(info.sample.duration || '2m 15s')}</td>
-          </tr>
-        `).join('');
-      }
-    }
-
-    renderDetailedVisitors(visitors);
-  }
-
-  function renderDetailedVisitors(visitors) {
-    if (!vaVisitorsTbody) return;
-    vaVisitorsTbody.innerHTML = '';
-
-    if (!visitors || visitors.length === 0) {
-      vaVisitorsTbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #94a3b8;">No visitors match the selected filters or search query.</td></tr>';
+  // 3. Acquisition Channels Table
+  async function loadGaChannels() {
+    const tbody = document.getElementById('ga-channels-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'sessionDefaultChannelGroup' }, { name: 'sessionSourceMedium' }],
+      metrics: [{ name: 'sessions' }, { name: 'activeUsers' }, { name: 'engagementRate' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 10
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">No traffic channels recorded.</td></tr>';
       return;
     }
-
-    visitors.forEach(v => {
-      const isOnline = v.status === 'online';
-      const statusPill = isOnline
-        ? `<span class="va-status-pill online"><span class="live-pulse-dot"></span>Active Now</span>`
-        : `<span class="va-status-pill offline">${escapeHtml(v.statusText || 'offline')}</span>`;
-
-      const pages = v.pagesVisited && v.pagesVisited.length > 0 ? v.pagesVisited : [v.currentPage || '/'];
-      const flowHtml = pages.slice(0, 3).map(p => `<span class="va-flow-tag">${escapeHtml(p)}</span>`).join('<span class="va-flow-arrow">&rarr;</span>') + (pages.length > 3 ? `<span class="va-flow-tag">+${pages.length - 3}</span>` : '');
-
-      let srcClass = 'direct';
-      const refLow = (v.referrerType || '').toLowerCase();
-      if (refLow.includes('github')) srcClass = 'github';
-      else if (refLow.includes('linkedin')) srcClass = 'linkedin';
-      else if (refLow.includes('google')) srcClass = 'google';
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>
-          <div class="va-visitor-badge">
-            <span>👤</span>
-            <span>${escapeHtml(v.id)}</span>
-          </div>
-          ${statusPill}
-        </td>
-        <td>
-          <span class="va-ip-code">${escapeHtml(v.ip)}</span>
-          <div class="va-isp-sub" title="${escapeHtml(v.isp || 'Broadband')}">${escapeHtml(v.isp || 'Broadband Network')}</div>
-        </td>
-        <td>
-          <div class="va-loc-text">
-            <span>${v.flag || '🌐'}</span>
-            <span>${escapeHtml(v.city || v.country)}</span>
-          </div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${escapeHtml(v.country)}</div>
-        </td>
-        <td>
-          <div class="va-device-info">
-            <span class="va-device-main">${escapeHtml(v.device)}</span>
-            <span class="va-device-sub">${escapeHtml(v.os)} &bull; ${escapeHtml(v.browser)}</span>
-          </div>
-        </td>
-        <td>
-          <div class="va-flow-container">
-            ${flowHtml}
-          </div>
-        </td>
-        <td>
-          <span class="va-source-badge ${srcClass}">
-            ${escapeHtml(v.referrer || v.referrerType || 'Direct')}
-          </span>
-        </td>
-        <td>
-          <span style="font-weight: 600; font-size: 12px; color: var(--text-primary);">${escapeHtml(v.duration || '2m 15s')}</span>
-          <div style="font-size: 11px; color: #64748b;">${v.pageCount || 1} view(s)</div>
-        </td>
-        <td>
-          <span style="font-size: 11.5px; color: #64748b;">${escapeHtml(v.timeFormatted || 'Recent')}</span>
-        </td>
-      `;
-      vaVisitorsTbody.appendChild(tr);
-    });
+    tbody.innerHTML = rows.map(r => 
+      '<tr>' +
+        '<td><strong>' + escapeHtml(r.dimensionValues[0].value) + '</strong></td>' +
+        '<td><span style="font-size: 12px; color: #64748b;">' + escapeHtml(r.dimensionValues[1].value) + '</span></td>' +
+        '<td>' + parseInt(r.metricValues[1].value || 0, 10).toLocaleString() + '</td>' +
+        '<td><span class="badge-blue">' + (parseFloat(r.metricValues[2].value || 0) * 100).toFixed(1) + '%</span></td>' +
+      '</tr>'
+    ).join('');
   }
 
-  // Search & Filter event listeners
-  if (vaSearchInput) {
-    vaSearchInput.addEventListener('input', () => {
-      clearTimeout(vaSearchTimeout);
-      vaSearchTimeout = setTimeout(() => {
-        loadDetailedVisitors();
-      }, 250);
-    });
+  // 4. Geography Table
+  async function loadGaGeography() {
+    const tbody = document.getElementById('ga-geo-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'country' }, { name: 'city' }],
+      metrics: [{ name: 'activeUsers' }, { name: 'screenPageViews' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 10
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">No geographical visitors recorded.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => 
+      '<tr>' +
+        '<td><strong>' + escapeHtml(r.dimensionValues[0].value) + '</strong></td>' +
+        '<td>' + escapeHtml(r.dimensionValues[1].value || '(not set)') + '</td>' +
+        '<td>' + parseInt(r.metricValues[0].value || 0, 10).toLocaleString() + '</td>' +
+        '<td>' + parseInt(r.metricValues[1].value || 0, 10).toLocaleString() + '</td>' +
+      '</tr>'
+    ).join('');
   }
 
-  if (vaFilterCountry) vaFilterCountry.addEventListener('change', loadDetailedVisitors);
-  if (vaFilterDevice) vaFilterDevice.addEventListener('change', loadDetailedVisitors);
-  if (vaFilterSource) vaFilterSource.addEventListener('change', loadDetailedVisitors);
-
-  if (vaResetFiltersBtn) {
-    vaResetFiltersBtn.addEventListener('click', () => {
-      if (vaSearchInput) vaSearchInput.value = '';
-      if (vaFilterCountry) vaFilterCountry.value = 'all';
-      if (vaFilterDevice) vaFilterDevice.value = 'all';
-      if (vaFilterSource) vaFilterSource.value = 'all';
-      loadDetailedVisitors();
-      showToast('Filters reset', 'success');
-    });
+  // 5. Technology Table
+  async function loadGaTech() {
+    const tbody = document.getElementById('ga-tech-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'deviceCategory' }, { name: 'operatingSystem' }, { name: 'browser' }],
+      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 10
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">No technology data recorded.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => 
+      '<tr>' +
+        '<td><span class="badge-neutral">' + escapeHtml(r.dimensionValues[0].value) + '</span></td>' +
+        '<td>' + escapeHtml(r.dimensionValues[1].value) + '</td>' +
+        '<td>' + escapeHtml(r.dimensionValues[2].value) + '</td>' +
+        '<td>' + parseInt(r.metricValues[0].value || 0, 10).toLocaleString() + '</td>' +
+      '</tr>'
+    ).join('');
   }
 
-  if (refreshVisitorsBtn) {
-    refreshVisitorsBtn.addEventListener('click', () => {
-      loadDetailedVisitors();
-      showToast('Visitor intelligence refreshed', 'success');
-    });
+  // 6. Top Pages Table
+  async function loadGaPages() {
+    const tbody = document.getElementById('ga-pages-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'pagePath' }],
+      metrics: [{ name: 'screenPageViews' }, { name: 'userEngagementDuration' }, { name: 'bounceRate' }],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: 10
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">No page views recorded.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const views = parseInt(r.metricValues[0].value || 0, 10);
+      const totalDur = parseFloat(r.metricValues[1].value || 0);
+      const avgSec = views > 0 ? Math.round(totalDur / views) : 0;
+      const bounce = (parseFloat(r.metricValues[2].value || 0) * 100).toFixed(1);
+      return '<tr>' +
+        '<td><code class="font-mono" style="color: #2563eb;">' + escapeHtml(r.dimensionValues[0].value) + '</code></td>' +
+        '<td>' + views.toLocaleString() + '</td>' +
+        '<td>' + Math.floor(avgSec / 60) + 'm ' + (avgSec % 60) + 's</td>' +
+        '<td><span class="' + (parseFloat(bounce) > 60 ? 'badge-amber' : 'badge-neutral') + '">' + bounce + '%</span></td>' +
+      '</tr>';
+    }).join('');
   }
+
+  // 7. Landing Pages Table
+  async function loadGaLandingPages() {
+    const tbody = document.getElementById('ga-landing-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'landingPage' }],
+      metrics: [{ name: 'sessions' }, { name: 'engagementRate' }],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 6
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 18px;">No landing page data.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => 
+      '<tr>' +
+        '<td><code class="font-mono">' + escapeHtml(r.dimensionValues[0].value) + '</code></td>' +
+        '<td>' + parseInt(r.metricValues[0].value || 0, 10).toLocaleString() + '</td>' +
+        '<td><span class="badge-blue">' + (parseFloat(r.metricValues[1].value || 0) * 100).toFixed(1) + '%</span></td>' +
+      '</tr>'
+    ).join('');
+  }
+
+  // 8. Loyalty Table (New vs Returning)
+  async function loadGaLoyalty() {
+    const tbody = document.getElementById('ga-new-returning-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'newVsReturning' }],
+      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }]
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    const totalUsers = rows.reduce((acc, r) => acc + parseInt(r.metricValues[0].value || 0, 10), 0);
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">No audience data.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const u = parseInt(r.metricValues[0].value || 0, 10);
+      const s = parseInt(r.metricValues[1].value || 0, 10);
+      const share = totalUsers > 0 ? ((u / totalUsers) * 100).toFixed(1) : '0';
+      return '<tr>' +
+        '<td><strong>' + escapeHtml(r.dimensionValues[0].value === 'new' ? 'New Visitors' : 'Returning Visitors') + '</strong></td>' +
+        '<td>' + u.toLocaleString() + '</td>' +
+        '<td>' + s.toLocaleString() + '</td>' +
+        '<td><span class="badge-blue">' + share + '%</span></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  // 9. Day of Week & Hour Heatmap Table
+  async function loadGaHeatmap() {
+    const tbody = document.getElementById('ga-heatmap-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'dayOfWeek' }, { name: 'hour' }],
+      metrics: [{ name: 'activeUsers' }],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 6
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 18px;">No hourly data.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const dayIdx = parseInt(r.dimensionValues[0].value, 10);
+      const dayName = days[dayIdx] || ('Day ' + dayIdx);
+      const hour = parseInt(r.dimensionValues[1].value, 10);
+      const hourStr = hour + ':00 - ' + (hour + 1) + ':00';
+      return '<tr>' +
+        '<td><strong>' + dayName + '</strong></td>' +
+        '<td><span style="font-size: 12px; color: #64748b;">' + hourStr + '</span></td>' +
+        '<td><span class="badge-blue">' + parseInt(r.metricValues[0].value || 0, 10) + ' users</span></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  // 10. Custom Portfolio Events & Conversions
+  async function loadGaEvents() {
+    const tbody = document.getElementById('ga-events-tbody');
+    if (!tbody) return;
+    const body = {
+      dateRanges: [{ startDate: activeGaRange + 'daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'eventName' }],
+      metrics: [{ name: 'eventCount' }, { name: 'totalUsers' }],
+      orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+      limit: 10
+    };
+    const data = await gaDataFetch('runReport', body);
+    const rows = data.rows || [];
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 18px;">No custom events recorded.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => 
+      '<tr>' +
+        '<td><code class="font-mono">' + escapeHtml(r.dimensionValues[0].value) + '</code></td>' +
+        '<td><strong>' + parseInt(r.metricValues[0].value || 0, 10).toLocaleString() + '</strong></td>' +
+        '<td>' + parseInt(r.metricValues[1].value || 0, 10).toLocaleString() + '</td>' +
+      '</tr>'
+    ).join('');
+  }
+
+  // 11. Realtime Report (Last 30 Min)
+  async function loadGaRealtimeReport() {
+    const tbody = document.getElementById('ga-realtime-pages-tbody');
+    if (!tbody) return;
+    try {
+      const body = {
+        dimensions: [
+          { name: 'unifiedScreenName' },
+          { name: 'country' },
+          { name: 'deviceCategory' },
+          { name: 'minutesAgo' }
+        ],
+        metrics: [{ name: 'activeUsers' }]
+      };
+      const data = await gaDataFetch('runRealtimeReport', body);
+      const rows = data.rows || [];
+      const totalRealtime = rows.reduce((acc, r) => acc + parseInt(r.metricValues[0].value || 0, 10), 0);
+      if (gaRealtimeCount) gaRealtimeCount.textContent = totalRealtime.toString();
+
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 18px;">No active users browsing in the last 30 minutes.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.slice(0, 10).map(r => 
+        '<tr>' +
+          '<td><strong>' + escapeHtml(r.dimensionValues[0].value || '/') + '</strong></td>' +
+          '<td><span class="badge-success">' + r.metricValues[0].value + ' user(s)</span></td>' +
+          '<td>' + escapeHtml(r.dimensionValues[1].value || 'Unknown') + '</td>' +
+          '<td><span class="badge-neutral">' + escapeHtml(r.dimensionValues[2].value || 'desktop') + '</span></td>' +
+          '<td><span style="font-size: 12px; color: #64748b;">' + r.dimensionValues[3].value + 'm ago</span></td>' +
+        '</tr>'
+      ).join('');
+    } catch (e) {
+      console.warn('Realtime GA report error:', e);
+    }
+  }
+
+  // Dynamic Synthesis of Insights from Data
+  function generateGaInsights(cur, prev) {
+    if (!gaInsightsList) return;
+    const items = [];
+
+    // 1. User growth/decline
+    if (prev.activeUsers > 0) {
+      const diff = ((cur.activeUsers - prev.activeUsers) / prev.activeUsers) * 100;
+      const sign = diff >= 0 ? '+' : '';
+      const statusIcon = diff >= 0 ? '🟢' : '🟡';
+      items.push(statusIcon + ' <strong>Audience Trend:</strong> Active users changed by <strong>' + sign + diff.toFixed(1) + '%</strong> compared to previous period (' + cur.activeUsers.toLocaleString() + ' vs ' + prev.activeUsers.toLocaleString() + ').');
+    } else if (cur.activeUsers > 0) {
+      items.push('🟢 <strong>Audience Trend:</strong> Recorded <strong>' + cur.activeUsers.toLocaleString() + '</strong> active users in the current period.');
+    }
+
+    // 2. Engagement quality
+    const engPct = (cur.engagement * 100).toFixed(1);
+    if (cur.engagement >= 0.6) {
+      items.push('🎯 <strong>High Engagement:</strong> Audience engagement rate is <strong>' + engPct + '%</strong> (above industry average of 55%), indicating high retention on technical content.');
+    } else if (cur.engagement > 0) {
+      items.push('📊 <strong>Engagement:</strong> Current session engagement rate is <strong>' + engPct + '%</strong> with an average duration of ' + Math.floor(cur.duration / 60) + 'm ' + Math.round(cur.duration % 60) + 's.');
+    }
+
+    // 3. Bounce rate analysis
+    const bouncePct = (cur.bounce * 100).toFixed(1);
+    if (cur.bounce > 0.65) {
+      items.push('⚠️ <strong>Bounce Rate Alert:</strong> Bounce rate is elevated at <strong>' + bouncePct + '%</strong>. Consider improving above-the-fold links and project highlights.');
+    }
+
+    // 4. Sample size check
+    if (cur.sessions < 10) {
+      items.push('ℹ️ <strong>Sample Size Advisory:</strong> Small sample size (' + cur.sessions + ' total sessions in this period). Traffic percentages and rates will normalize as volume expands.');
+    }
+
+    if (items.length === 0) {
+      items.push('ℹ️ No conclusive insight data available for this date range yet.');
+    }
+
+    gaInsightsList.innerHTML = items.map(item => '<div style="display: flex; gap: 8px; align-items: flex-start; line-height: 1.4;"><span>' + item + '</span></div>').join('');
+  }
+
+  // Date Range Filter Button Click Handlers
+  document.querySelectorAll('.chart-time-filters .chart-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chart-time-filters .chart-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeGaRange = parseInt(btn.dataset.range, 10) || 30;
+      loadAllGaReports();
+    });
+  });
 
   // =========================================================================
   // LIVE MODE INDICATOR & STATUS MANAGEMENT

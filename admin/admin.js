@@ -1286,20 +1286,36 @@
     }
   });
 
-  // Admin Scratchpad (Auto-save)
+  // Admin Scratchpad (Instant Bi-directional Sync + Persistent Storage)
   async function loadAdminNotes() {
+    // 1. Immediately load local notes so nothing is ever blank
+    const localNotes = localStorage.getItem('portfolio_admin_notes') || '';
+    if (localNotes) {
+      if (adminScratchpad) adminScratchpad.value = localNotes;
+      if (fullAdminScratchpad) fullAdminScratchpad.value = localNotes;
+    }
+
     try {
       const res = await apiFetch('/api/admin/notes');
       if (res.ok) {
         const data = await res.json();
-        adminScratchpad.value = data.notes || '';
-        if (fullAdminScratchpad) fullAdminScratchpad.value = data.notes || '';
+        const serverNotes = data.notes || '';
+        if (serverNotes) {
+          localStorage.setItem('portfolio_admin_notes', serverNotes);
+          if (adminScratchpad) adminScratchpad.value = serverNotes;
+          if (fullAdminScratchpad) fullAdminScratchpad.value = serverNotes;
+        }
       }
     } catch (e) {}
   }
 
   async function saveAdminNotes(notes) {
-    scratchpadStatus.textContent = 'Saving...';
+    // Save locally first to guarantee zero data loss
+    localStorage.setItem('portfolio_admin_notes', notes);
+    if (adminScratchpad) adminScratchpad.value = notes;
+    if (fullAdminScratchpad) fullAdminScratchpad.value = notes;
+
+    if (scratchpadStatus) scratchpadStatus.textContent = 'Saving...';
     if (fullScratchpadStatus) fullScratchpadStatus.textContent = 'Saving...';
 
     try {
@@ -1309,39 +1325,54 @@
         body: JSON.stringify({ notes })
       });
       if (res.ok) {
-        scratchpadStatus.textContent = 'Auto-saved';
+        if (scratchpadStatus) scratchpadStatus.textContent = 'Auto-saved';
         if (fullScratchpadStatus) fullScratchpadStatus.textContent = 'Saved';
+        return;
       }
-    } catch (e) {
-      scratchpadStatus.textContent = 'Save failed';
-    }
+    } catch (e) {}
+
+    if (scratchpadStatus) scratchpadStatus.textContent = 'Saved locally';
+    if (fullScratchpadStatus) fullScratchpadStatus.textContent = 'Saved locally';
   }
 
-  adminScratchpad.addEventListener('input', () => {
-    scratchpadStatus.textContent = 'Unsaved changes...';
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(() => {
-      saveAdminNotes(adminScratchpad.value);
-    }, 1000);
-  });
+  if (adminScratchpad) {
+    adminScratchpad.addEventListener('input', () => {
+      // Instant real-time mirror to full scratchpad tab
+      if (fullAdminScratchpad) fullAdminScratchpad.value = adminScratchpad.value;
+      if (scratchpadStatus) scratchpadStatus.textContent = 'Unsaved changes...';
+      if (fullScratchpadStatus) fullScratchpadStatus.textContent = 'Unsaved changes...';
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        saveAdminNotes(adminScratchpad.value);
+      }, 600);
+    });
+  }
 
-  saveScratchpadBtn.addEventListener('click', () => {
-    saveAdminNotes(adminScratchpad.value);
-    showToast('Scratchpad saved!', 'success');
-  });
+  if (saveScratchpadBtn) {
+    saveScratchpadBtn.addEventListener('click', () => {
+      saveAdminNotes(adminScratchpad ? adminScratchpad.value : '');
+      showToast('Scratchpad saved!', 'success');
+    });
+  }
 
   if (fullAdminScratchpad) {
     fullAdminScratchpad.addEventListener('input', () => {
-      adminScratchpad.value = fullAdminScratchpad.value;
+      // Instant real-time mirror to home scratchpad
+      if (adminScratchpad) adminScratchpad.value = fullAdminScratchpad.value;
+      if (scratchpadStatus) scratchpadStatus.textContent = 'Unsaved changes...';
+      if (fullScratchpadStatus) fullScratchpadStatus.textContent = 'Unsaved changes...';
       clearTimeout(autoSaveTimeout);
       autoSaveTimeout = setTimeout(() => {
         saveAdminNotes(fullAdminScratchpad.value);
-      }, 1000);
+      }, 600);
     });
-    fullSaveScratchpadBtn.addEventListener('click', () => {
-      saveAdminNotes(fullAdminScratchpad.value);
-      showToast('Scratchpad saved!', 'success');
-    });
+
+    if (fullSaveScratchpadBtn) {
+      fullSaveScratchpadBtn.addEventListener('click', () => {
+        saveAdminNotes(fullAdminScratchpad.value);
+        showToast('Scratchpad saved!', 'success');
+      });
+    }
   }
 
   // Update Credentials
@@ -1720,13 +1751,7 @@
 
     renderAnalyticsChart();
 
-    // Occasional subtle fluctuation in realtime users to reflect live browsing
-    setInterval(() => {
-      if (gaRealtimeUsers) {
-        const rand = 3 + Math.floor(Math.random() * 3);
-        gaRealtimeUsers.textContent = rand;
-      }
-    }, 12000);
+
   }
 
   function renderAnalyticsChart() {
@@ -1975,11 +2000,36 @@
       };
     }
 
-    if (vaStatActive) vaStatActive.textContent = `${summary.activeNow || 0} Active`;
+    const activeNowCount = summary.activeNow !== undefined ? summary.activeNow : visitors.filter(v => v.status === 'online').length;
+    if (vaStatActive) vaStatActive.textContent = `${activeNowCount} Active`;
+    if (gaRealtimeUsers) gaRealtimeUsers.textContent = activeNowCount;
     if (vaStatIps) vaStatIps.textContent = `${summary.uniqueIps || 0} IPs`;
     if (vaStatTopLoc) vaStatTopLoc.textContent = summary.topLocation || 'Chennai, IN';
     if (vaStatTopSrc) vaStatTopSrc.textContent = summary.topSource || 'GitHub /Hitesh070';
     if (vaShowingCount) vaShowingCount.textContent = `Showing ${visitors.length} of ${summary.totalVisitors || visitors.length} indexed visitors`;
+
+    // Synchronize Active Pages breakdown in Google Analytics tab
+    const gaActivePagesTbody = document.getElementById('ga-active-pages-tbody');
+    if (gaActivePagesTbody) {
+      const onlineList = visitors.filter(v => v.status === 'online');
+      if (onlineList.length > 0) {
+        const pageGroups = {};
+        onlineList.forEach(v => {
+          const pg = v.currentPage || '/';
+          if (!pageGroups[pg]) pageGroups[pg] = { count: 0, sample: v };
+          pageGroups[pg].count++;
+        });
+        gaActivePagesTbody.innerHTML = Object.entries(pageGroups).map(([pg, info]) => `
+          <tr>
+            <td><strong>${escapeHtml(pg)}</strong></td>
+            <td><span class="badge-success">${info.count} user${info.count > 1 ? 's' : ''}</span></td>
+            <td>${escapeHtml(info.sample.city || info.sample.country || 'India')} &bull; ${escapeHtml(info.sample.referrerType || 'Direct')}</td>
+            <td>${escapeHtml(info.sample.device || 'Desktop PC')}</td>
+            <td>${escapeHtml(info.sample.duration || '2m 15s')}</td>
+          </tr>
+        `).join('');
+      }
+    }
 
     renderDetailedVisitors(visitors);
   }

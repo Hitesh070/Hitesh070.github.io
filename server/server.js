@@ -110,15 +110,21 @@ function loadAccessLogs() {
 function recordAccessLog({ req, username, status }) {
   const logs = loadAccessLogs();
 
-  let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1';
+  let ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1';
   if (ip.includes(',')) ip = ip.split(',')[0].trim();
   if (ip === '::1' || ip === '::ffff:127.0.0.1') ip = '127.0.0.1';
 
   const uaString = req.headers['user-agent'] || 'Unknown';
   const { os, browser, device } = parseUserAgent(uaString);
 
+  const cfCity = req.headers['cf-ipcity'];
+  const cfCountry = req.headers['cf-ipcountry'];
   let location = 'Localhost • Chennai, India';
-  if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+  if (cfCity && cfCountry) {
+    location = `${cfCity}, ${cfCountry} (Mobile Remote)`;
+  } else if (cfCountry) {
+    location = `Remote Access • ${cfCountry}`;
+  } else if (ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
     location = 'Admin Terminal • Chennai, Tamil Nadu (VIT Chennai)';
   } else {
     location = 'Remote Access • India';
@@ -525,7 +531,7 @@ function seedVisitorAnalytics() {
 }
 
 function recordPortfolioVisitor(req) {
-  let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1';
+  let ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '127.0.0.1';
   if (ip.includes(',')) ip = ip.split(',')[0].trim();
   if (ip === '::1' || ip === '::ffff:127.0.0.1') ip = '127.0.0.1';
 

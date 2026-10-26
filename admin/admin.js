@@ -722,15 +722,20 @@
 
   // Load All Live Drive & Storage Metrics
     async function loadLiveDriveData() {
+    let liveSuccess = false;
     // 1. Storage Quota
     try {
       const storageRes = await apiFetch('/api/drive/storage');
       if (storageRes.ok) {
         const q = await storageRes.json();
         applyStorageMetrics(q);
+        liveSuccess = true;
         if (getApiBaseUrl()) updateBackendStatusUI(true);
       } else {
         applyStorageMetrics(STATIC_CLOUD_DATA.storage);
+        if (getApiBaseUrl() && storageRes.status === 401) {
+          updateBackendStatusUI('needs_auth');
+        }
       }
     } catch (e) {
       applyStorageMetrics(STATIC_CLOUD_DATA.storage);
@@ -742,6 +747,7 @@
       if (filesRes.ok) {
         const filesData = await filesRes.json();
         cachedFiles = filesData.files || [];
+        liveSuccess = true;
       } else {
         cachedFiles = STATIC_CLOUD_DATA.files || [];
       }
@@ -752,6 +758,7 @@
     if (metricFilesCountBadge) metricFilesCountBadge.textContent = `${cachedFiles.length} files & folders`;
     renderOverviewFiles(cachedFiles);
     renderCleanExplorerGrid(cachedFiles);
+    return liveSuccess;
   }
 
   // =========================================================================
@@ -1244,8 +1251,22 @@
   // Refresh
   quickSyncBtn.addEventListener('click', async () => {
     quickSyncBtn.disabled = true;
-    await loadLiveDriveData();
-    showToast('Drive Synced!', 'success');
+    const isLive = await loadLiveDriveData();
+    if (getApiBaseUrl() && !isLive) {
+      showToast('Authentication required for live Google Drive', 'info');
+      switchTab('tab-settings');
+      setTimeout(() => {
+        const authBox = document.getElementById('backend-auth-prompt');
+        if (authBox) {
+          authBox.classList.remove('hidden');
+          authBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const pwd = document.getElementById('inline-backend-pwd');
+          if (pwd) pwd.focus();
+        }
+      }, 120);
+    } else {
+      showToast('Drive Synced!', 'success');
+    }
     quickSyncBtn.disabled = false;
   });
   overviewRefreshBtn.addEventListener('click', () => {
@@ -2140,10 +2161,48 @@
     }
   }
 
+  async function checkBackendStatusLive() {
+    const currentUrl = getApiBaseUrl();
+    if (!currentUrl) {
+      updateBackendStatusUI(false);
+      return;
+    }
+
+    try {
+      const res = await apiFetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated) {
+          updateBackendStatusUI(true);
+          await loadLiveDriveData();
+          return;
+        }
+      }
+      // Reached backend, but requires password auth
+      updateBackendStatusUI('needs_auth');
+    } catch (err) {
+      if (backendStatusLabel) backendStatusLabel.textContent = 'Backend Offline';
+      if (backendStatusPill) {
+        backendStatusPill.className = 'status-pill gray';
+        backendStatusPill.title = `Backend unreachable: ${currentUrl}`;
+      }
+    }
+  }
+
   if (backendStatusPill) {
     backendStatusPill.addEventListener('click', () => {
       switchTab('tab-settings');
-      if (remoteBackendInput) remoteBackendInput.focus();
+      setTimeout(() => {
+        const authBox = document.getElementById('backend-auth-prompt');
+        const inlinePwd = document.getElementById('inline-backend-pwd');
+        if (authBox && !authBox.classList.contains('hidden')) {
+          authBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (inlinePwd) inlinePwd.focus();
+        } else if (remoteBackendInput) {
+          remoteBackendInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          remoteBackendInput.focus();
+        }
+      }, 120);
     });
   }
 
@@ -2315,7 +2374,7 @@
   }
 
   // Initial status UI update
-  updateBackendStatusUI();
+  checkBackendStatusLive();
 
   // Helper
   function escapeHtml(text) {

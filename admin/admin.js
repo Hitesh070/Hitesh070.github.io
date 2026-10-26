@@ -240,152 +240,241 @@
     passwordInput.setAttribute('type', isPwd ? 'text' : 'password');
   });
 
-  // Cryptographic Authentication Engine & Session Manager
-  const AUTH_SALT = 'portfolio-admin-salt-2026';
-  const AUTHORIZED_DIGESTS = new Set([
-    '751c571b1b1f5df3c5b39ac152ed804bece4334e69180d57ee6d9df02762c23d',
-    '7ba89270808b06fb6660e1747343ed0234a84bbe3e180ae235f8a3a8be671d18',
-    'd2152a8de5990c6d4d7c9b23ec0be975480f8b5c681a0209510bd7946a7490f0'
-  ]);
-
-  async function computeSha256(str) {
-    if (window.crypto && window.crypto.subtle) {
-      const enc = new TextEncoder().encode(str);
-      const buf = await window.crypto.subtle.digest('SHA-256', enc);
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-    // Fallback simple 32-bit hash hex padding if subtle crypto is somehow blocked
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
-    }
-    return Math.abs(hash).toString(16).padStart(64, '0');
+  // =========================================================================
+  // SUPABASE CONFIGURATION, SESSION MANAGEMENT & SUITE API WRAPPER
+  // =========================================================================
+  function getSupabaseConfig() {
+    const cfg = window.ADMIN_CONFIG || {};
+    return {
+      url: (localStorage.getItem('admin_supabase_url') || cfg.SUPABASE_URL || '').trim().replace(/\/+$/, ''),
+      key: (localStorage.getItem('admin_supabase_key') || cfg.SUPABASE_ANON_KEY || '').trim(),
+      bucket: cfg.BUCKET || 'temp_vault',
+      adminEmail: cfg.ADMIN_EMAIL || 'hiteshvs616@gmail.com'
+    };
   }
 
-  function getCryptographicSession() {
+  function getStoredAuthSession() {
     try {
-      const raw = sessionStorage.getItem('admin_auth_session');
+      const raw = sessionStorage.getItem('supabase_auth_session') || localStorage.getItem('supabase_auth_session');
       if (!raw) return null;
       const sess = JSON.parse(raw);
-      if (sess && sess.expires && sess.expires > Date.now() && AUTHORIZED_DIGESTS.has(sess.digest)) {
-        return sess;
-      }
+      if (sess && sess.access_token) return sess;
     } catch (e) {}
     return null;
   }
 
-  function setCryptographicSession(user, digest) {
-    const sess = {
-      user: user || 'Hitesh',
-      digest,
-      expires: Date.now() + (24 * 60 * 60 * 1000) // 24-hour persistent tab session
+  function getSupabaseUserToken() {
+    const sess = getStoredAuthSession();
+    return sess ? sess.access_token : '';
+  }
+
+  function setSupabaseSession(sessionData, isPublicPc = false) {
+    if (!sessionData) {
+      sessionStorage.removeItem('supabase_auth_session');
+      localStorage.removeItem('supabase_auth_session');
+      return;
+    }
+    const payload = JSON.stringify(sessionData);
+    if (isPublicPc) {
+      sessionStorage.setItem('supabase_auth_session', payload);
+      localStorage.removeItem('supabase_auth_session');
+    } else {
+      localStorage.setItem('supabase_auth_session', payload);
+      sessionStorage.removeItem('supabase_auth_session');
+    }
+  }
+
+  async function refreshSupabaseToken() {
+    const sess = getStoredAuthSession();
+    if (!sess || !sess.refresh_token) return null;
+    const { url, key } = getSupabaseConfig();
+    if (!url || !key) return null;
+
+    try {
+      const res = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: {
+          'apikey': key,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refresh_token: sess.refresh_token })
+      });
+      if (res.ok) {
+        const fresh = await res.json();
+        const isPublicPc = sessionStorage.getItem('admin_public_pc_mode') === 'true';
+        setSupabaseSession(fresh, isPublicPc);
+        return fresh.access_token;
+      }
+    } catch (e) {
+      console.warn('Failed to refresh Supabase token:', e);
+    }
+    return null;
+  }
+
+  // Central supa(path, opts) wrapper - throws on non-2xx with real status+message
+  async function supa(path, opts = {}) {
+    const { url, key } = getSupabaseConfig();
+    if (!url || !key) {
+      const err = new Error('Supabase configuration missing (set SUPABASE_URL & SUPABASE_ANON_KEY in admin/config.js)');
+      showToast(err.message, 'error');
+      throw err;
+    }
+
+    const fullUrl = path.startsWith('http') ? path : `${url}${path.startsWith('/') ? '' : '/'}${path}`;
+    let token = getSupabaseUserToken();
+    const headers = {
+      'apikey': key,
+      'Authorization': `Bearer ${token || key}`,
+      ...(opts.headers || {})
     };
-    sessionStorage.setItem('admin_auth_session', JSON.stringify(sess));
-  }
 
-  function clearCryptographicSession() {
-    sessionStorage.removeItem('admin_auth_session');
-    sessionStorage.removeItem('admin_demo_user');
-  }
+    if (opts.body && !(opts.body instanceof FormData) && !(opts.body instanceof Blob) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
 
-  // Check Session
+    let res = await fetch(fullUrl, { ...opts, headers });
+
+    // Handle 401 token expiry: attempt refresh once
+    if (res.status === 401 && token) {
+      const freshToken = await refreshSupabaseToken();
+      if (freshToken) {
+        headers['Authorization'] = `Bearer ${freshToken}`;
+        res = await fetch(fullUrl, { ...opts, headers });
+      }
+    }
+
+    if (!res.ok) {
+      let errorMsg = `Supabase error (${res.status} ${res.statusText})`;
+      try {
+        const errJson = await res.json();
+        errorMsg = errJson.msg || errJson.message || errJson.error_description || errJson.error || errorMsg;
+      } catch (_) {
+        try {
+          const errText = await res.text();
+          if (errText) errorMsg = errText;
+        } catch (__) {}
+      }
+      const err = new Error(errorMsg);
+      err.status = res.status;
+      showToast(errorMsg, 'error');
+      throw err;
+    }
+    return res;
+  }
+  window.supa = supa;
+
+  // Session Check
   async function checkAuth() {
-    const localSess = getCryptographicSession();
-    if (localSess) {
-      setLoggedIn(localSess.user);
+    const sess = getStoredAuthSession();
+    if (!sess || !sess.access_token) {
+      setLoggedOut();
+      return;
+    }
+
+    const { url, key } = getSupabaseConfig();
+    if (!url || !key) {
+      setLoggedIn('Admin');
       return;
     }
 
     try {
-      const res = await apiFetch('/api/auth/me');
-      const data = await res.json();
-      if (data.authenticated) {
-        setLoggedIn(data.user);
+      const res = await fetch(`${url}/auth/v1/user`, {
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${sess.access_token}`
+        }
+      });
+      if (res.ok) {
+        const userData = await res.json();
+        setLoggedIn(userData.email || 'Admin');
         return;
+      } else if (res.status === 401) {
+        const fresh = await refreshSupabaseToken();
+        if (fresh) {
+          setLoggedIn('Admin');
+          return;
+        }
       }
-    } catch (e) {}
-
+    } catch (e) {
+      setLoggedIn('Admin');
+      return;
+    }
     setLoggedOut();
   }
 
-  // Login Submit with Real Cryptographic Verification & Brute-Force Rate Limiting
+  // Login Submit with Supabase Auth Password Grant
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.classList.add('hidden');
 
-    // 1. Check Brute-Force Lockout
-    const lockoutUntil = parseInt(sessionStorage.getItem('admin_lockout_until') || '0', 10);
-    if (Date.now() < lockoutUntil) {
-      const waitSec = Math.ceil((lockoutUntil - Date.now()) / 1000);
-      loginErrorMsg.textContent = `Security Lock: Too many failed attempts. Try again in ${waitSec} seconds.`;
-      loginError.classList.remove('hidden');
-      return;
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    const isPublicPc = publicPcCheckbox ? publicPcCheckbox.checked : false;
+
+    if (isPublicPc) {
+      sessionStorage.setItem('admin_public_pc_mode', 'true');
+      localStorage.removeItem('admin_public_pc_mode');
+    } else {
+      sessionStorage.removeItem('admin_public_pc_mode');
+      localStorage.setItem('admin_public_pc_mode', 'false');
     }
 
     loginBtn.disabled = true;
-    loginBtn.innerHTML = '<span>Verifying Cryptography...</span>';
+    loginBtn.innerHTML = '<span>Authenticating via Supabase...</span>';
 
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
+    const { url, key, adminEmail } = getSupabaseConfig();
+    if (!url || !key) {
+      loginErrorMsg.textContent = 'Supabase credentials missing in admin/config.js';
+      loginError.classList.remove('hidden');
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = '<span>Authenticate & Access</span>';
+      return;
+    }
 
-    // 2. Try connected backend first if reachable
-    let backendLoginSuccess = false;
+    // Resolve email: username can be 'admin', 'hitesh', or direct email
+    const email = username.includes('@') ? username : adminEmail;
+
     try {
-      const res = await apiFetch('/api/auth/login', {
+      const res = await fetch(`${url}/auth/v1/token?grant_type=password`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        headers: {
+          'apikey': key,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          if (data.token) setAuthToken(data.token);
-          sessionStorage.setItem('admin_demo_user', data.user || username);
-          sessionStorage.removeItem('admin_login_fails');
-          sessionStorage.removeItem('admin_lockout_until');
-          showToast(`Welcome back, ${data.user}!`, 'success');
-          setLoggedIn(data.user, true);
-          return;
+      const data = await res.json();
+
+      if (res.ok && data.access_token) {
+        setSupabaseSession(data, isPublicPc);
+        showToast(`Welcome back, ${username}!`, 'success');
+
+        if (typeof recordAuditLoginAttempt === 'function') {
+          recordAuditLoginAttempt('SUCCESS', username, isPublicPc);
+        }
+
+        setLoggedIn(username, true);
+        return;
+      } else {
+        const errMsg = data.error_description || data.msg || data.message || 'Invalid login credentials.';
+        loginErrorMsg.textContent = errMsg;
+        loginError.classList.remove('hidden');
+
+        if (typeof recordAuditLoginAttempt === 'function') {
+          recordAuditLoginAttempt('FAILED', username, isPublicPc);
         }
       }
     } catch (err) {
-      // Backend not running on this domain or offline; proceed to secure cryptographic standalone verification
-    }
-
-    // 3. Cryptographic Verification for Standalone / GitHub Pages Hosting (Zero Server Needed • 100% Unbypassable)
-    try {
-      const digestNormal = await computeSha256(`${username.toLowerCase()}:${password}:${AUTH_SALT}`);
-      const digestExact = await computeSha256(`${username}:${password}:${AUTH_SALT}`);
-
-      if (AUTHORIZED_DIGESTS.has(digestNormal) || AUTHORIZED_DIGESTS.has(digestExact)) {
-        // Authenticated!
-        sessionStorage.removeItem('admin_login_fails');
-        sessionStorage.removeItem('admin_lockout_until');
-        setCryptographicSession(username, AUTHORIZED_DIGESTS.has(digestNormal) ? digestNormal : digestExact);
-        showToast(`Identity verified. Welcome back, ${username}!`, 'success');
-        setLoggedIn(username, true);
-        return;
+      loginErrorMsg.textContent = 'Connection error: ' + err.message;
+      loginError.classList.remove('hidden');
+      if (typeof recordAuditLoginAttempt === 'function') {
+        recordAuditLoginAttempt('FAILED', username, isPublicPc);
       }
-    } catch (cryptoErr) {
-      console.error('Crypto verification error:', cryptoErr);
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = '<span>Authenticate & Access</span>';
     }
-
-    // 4. Authentication Failed -> Rate Limiting & Audit Logging
-    let fails = parseInt(sessionStorage.getItem('admin_login_fails') || '0', 10) + 1;
-    sessionStorage.setItem('admin_login_fails', fails.toString());
-
-    if (fails >= 5) {
-      sessionStorage.setItem('admin_lockout_until', (Date.now() + 5 * 60 * 1000).toString());
-      loginErrorMsg.textContent = 'Maximum attempts exceeded. Admin access locked for 5 minutes.';
-    } else {
-      loginErrorMsg.textContent = `Invalid credentials. Access denied. (${5 - fails} attempts remaining)`;
-    }
-
-    loginError.classList.remove('hidden');
-    loginBtn.disabled = false;
-    loginBtn.innerHTML = '<span>Authenticate & Access</span>';
   });
 
   // Logout with Session Wiping & Public PC Protection
@@ -2862,140 +2951,45 @@
     }
   }
 
-  // Supabase Paste Buttons
-  const pasteSupabaseUrlBtn = document.getElementById('paste-supabase-url-btn');
-  const pasteSupabaseKeyBtn = document.getElementById('paste-supabase-key-btn');
-  const supabaseUrlInput = document.getElementById('supabase-url-input');
-  const supabaseKeyInput = document.getElementById('supabase-key-input');
-  const saveSupabaseBtn = document.getElementById('save-supabase-btn');
-  const resetSupabaseBtn = document.getElementById('reset-supabase-btn');
+  // Supabase Settings UI & Diagnostics
+  const settingsSupaUrl = document.getElementById('settings-supa-url');
+  const settingsSupaBucket = document.getElementById('settings-supa-bucket');
+  const testSupabaseBtn = document.getElementById('test-supabase-btn');
   const supabaseStatusBadge = document.getElementById('supabase-status-badge');
 
-  if (pasteSupabaseUrlBtn && supabaseUrlInput) {
-    pasteSupabaseUrlBtn.addEventListener('click', () => pasteFromClipboard(supabaseUrlInput));
-  }
-  if (pasteSupabaseKeyBtn && supabaseKeyInput) {
-    pasteSupabaseKeyBtn.addEventListener('click', () => pasteFromClipboard(supabaseKeyInput));
-  }
-
   function updateSupabaseStatusUI() {
-    const { url, key } = getSupabaseConfig();
-    const urlInput = document.getElementById('supabase-url-input');
-    const keyInput = document.getElementById('supabase-key-input');
-    const badge = document.getElementById('supabase-status-badge');
-
-    if (urlInput && url && !urlInput.value) urlInput.value = url;
-    if (keyInput && key && !keyInput.value) keyInput.value = key;
-
-    if (badge) {
+    const { url, key, bucket } = getSupabaseConfig();
+    if (settingsSupaUrl) settingsSupaUrl.textContent = url || 'Configured in admin/config.js';
+    if (settingsSupaBucket) settingsSupaBucket.textContent = bucket || 'temp_vault';
+    if (supabaseStatusBadge) {
       if (url && key) {
-        badge.className = 'badge-success';
-        badge.textContent = '● Supabase Cloud Connected';
+        supabaseStatusBadge.className = 'badge-success';
+        supabaseStatusBadge.textContent = '● Supabase Config Active';
       } else {
-        badge.className = 'badge-amber';
-        badge.textContent = '● Staging Vault (Local Active)';
+        supabaseStatusBadge.className = 'badge-amber';
+        supabaseStatusBadge.textContent = '● Configuration Incomplete';
       }
     }
   }
 
-  if (saveSupabaseBtn) {
-    saveSupabaseBtn.addEventListener('click', async () => {
-      const urlInput = document.getElementById('supabase-url-input');
-      const keyInput = document.getElementById('supabase-key-input');
-
-      let url = (urlInput ? urlInput.value : '').trim().replace(/\/+$/, '');
-      let key = (keyInput ? keyInput.value : '').trim();
-
+  if (testSupabaseBtn) {
+    testSupabaseBtn.addEventListener('click', async () => {
+      const { url, key } = getSupabaseConfig();
       if (!url || !key) {
-        showToast('Please enter both Supabase Project URL and Public Key', 'warning');
-        if (!url && urlInput) urlInput.focus();
-        else if (!key && keyInput) keyInput.focus();
+        showToast('Supabase configuration missing in admin/config.js', 'warning');
         return;
       }
-
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-        if (urlInput) urlInput.value = url;
-      }
-
-      saveSupabaseBtn.disabled = true;
-      saveSupabaseBtn.textContent = 'Connecting...';
-
-      let discoveredBucket = 'temp_vault';
-
-      // 1. Inspect Supabase project for buckets
+      testSupabaseBtn.disabled = true;
+      testSupabaseBtn.textContent = 'Testing...';
       try {
-        const bucketRes = await fetch(`${url}/storage/v1/bucket`, {
-          headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-        });
-        if (bucketRes.ok) {
-          const buckets = await bucketRes.json();
-          if (Array.isArray(buckets) && buckets.length > 0) {
-            const hasTempVault = buckets.find(b => b.id === 'temp_vault' || b.name === 'temp_vault');
-            if (hasTempVault) {
-              discoveredBucket = 'temp_vault';
-            } else {
-              discoveredBucket = buckets[0].id || buckets[0].name || 'temp_vault';
-              showToast(`Connected to bucket: "${discoveredBucket}"`, 'info');
-            }
-          } else {
-            showToast('Note: No bucket found yet. Click "📋 Copy 1-Click SQL" below to set up your bucket in 5s.', 'warning');
-          }
-        }
-      } catch (e) {
-        console.warn('Bucket discovery note:', e);
-      }
-
-      localStorage.setItem('admin_supabase_url', url);
-      localStorage.setItem('admin_supabase_key', key);
-      localStorage.setItem('admin_supabase_bucket', discoveredBucket);
-      updateSupabaseStatusUI();
-
-      // 2. Test upload ping
-      try {
-        const testRes = await fetch(`${url}/storage/v1/object/${discoveredBucket}/_vault_ping.txt`, {
-          method: 'POST',
-          headers: {
-            'apikey': key,
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'text/plain',
-            'x-upsert': 'true'
-          },
-          body: 'ping'
-        });
-
-        if (testRes.ok) {
-          showToast('Supabase Cloud Vault verified and active!', 'success');
-        } else if (testRes.status === 404) {
-          showToast('Bucket "' + discoveredBucket + '" not found. Create it in Supabase Storage or run 1-Click SQL.', 'warning');
-        } else if (testRes.status === 403) {
-          showToast('Storage RLS is blocking upload. Run 1-Click SQL in Supabase SQL editor to allow uploads.', 'warning');
-        }
+        await supa('/rest/v1/admin_notes?select=id&limit=1', { method: 'GET' });
+        showToast('Supabase connection verified successfully!', 'success');
       } catch (err) {
-        console.warn('Ping test note:', err);
+        showToast('Connection test: ' + err.message, 'warning');
+      } finally {
+        testSupabaseBtn.disabled = false;
+        testSupabaseBtn.textContent = 'Test Connection';
       }
-
-      saveSupabaseBtn.disabled = false;
-      saveSupabaseBtn.textContent = 'Connected ✓';
-      saveSupabaseBtn.className = 'btn btn-primary-soft';
-
-      // Auto-sync notes
-      const notes = (adminScratchpad ? adminScratchpad.value : '') || localStorage.getItem('portfolio_admin_notes') || '';
-      if (notes) syncScratchpadToCloud(notes);
-
-      setTimeout(() => {
-        saveSupabaseBtn.textContent = 'Save & Link';
-        saveSupabaseBtn.className = 'btn btn-primary';
-      }, 2500);
-    });
-  }
-
-  if (resetSupabaseBtn) {
-    resetSupabaseBtn.addEventListener('click', () => {
-      localStorage.removeItem('admin_supabase_url');
-      localStorage.removeItem('admin_supabase_key');
-      updateSupabaseStatusUI();
-      showToast('Reset to local staging vault', 'info');
     });
   }
 

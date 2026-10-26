@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=20261026_live2">
+  <link rel="stylesheet" href="admin.css?v=20261026_v3">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="dashboard-body">
@@ -214,10 +214,7 @@
           </div>
 
           
-          <button id="connect-gdrive-direct-btn" class="btn btn-secondary btn-sm" title="Sign into Google directly (24/7 Anywhere Access • Laptop Off)">
-            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-            <span id="connect-gdrive-direct-label">Google Drive 24/7</span>
-          </button>
+          
 
           <button id="quick-sync-btn" class="btn btn-secondary btn-sm" title="Sync live Drive data">
             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -1210,7 +1207,7 @@
 
               <div class="setting-item">
                 <span class="s-label">Storage Quota:</span>
-                <span class="s-val">13.9 GB in Drive &bull; 65.5 GB Photos &bull; 5 TB Google One</span>
+                <span class="s-val">13.9 GB in Drive &bull; 65.5 GB Photos &bull; 5.5 TB Google One</span>
               </div>
               <div style="margin-top: 20px;">
                 <button id="disconnect-drive-btn" class="btn btn-danger btn-sm">Disconnect Google Account</button>
@@ -1240,34 +1237,67 @@
             </div>
           </div>
         
-            <!-- TEMP CLOUD VAULT SETTINGS (SUPABASE - 100% FREE FOREVER • NO CARD) -->
+            <!-- REMOTE BACKEND CONNECTION (CLOUDFLARE TUNNEL / LOCALHOST) -->
+            <div class="section-card" style="margin-top: 24px; border-left: 4px solid #2563eb;">
+              <div class="card-title-bar">
+                <div class="title-with-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                  <div>
+                    <h3>Remote Backend Connection (Cloudflare Tunnel &bull; Access From Anywhere)</h3>
+                    <span class="sub-text">Connect this portal to your private backend to load your live Google Drive files, server logs, and real-time visitor audit.</span>
+                  </div>
+                </div>
+                <span id="remote-backend-status-badge" class="badge-neutral">Static Showcase Mode</span>
+              </div>
+
+              <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end;">
+                <div class="input-group" style="margin-bottom: 0;">
+                  <label for="remote-backend-url-input">Backend Endpoint URL (Paste Tunnel Link)</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="url" id="remote-backend-url-input" class="clean-input" placeholder="https://....trycloudflare.com or http://localhost:3000">
+                    <button type="button" id="paste-backend-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">📋 Paste</button>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" id="save-backend-btn" class="btn btn-primary">Connect</button>
+                  <button type="button" id="reset-backend-btn" class="btn btn-secondary">Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TEMP CLOUD VAULT SETTINGS (SUPABASE CLOUD SYNC) -->
             <div class="section-card" style="margin-top: 24px; border-left: 4px solid #f59e0b;">
               <div class="card-title-bar">
                 <div class="title-with-icon">
                   <svg viewBox="0 0 24 24" width="22" height="22" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                   <div>
                     <h3>Temp Cloud Storage Vault (Cloud Sync)</h3>
-                    
+                    <span class="sub-text">Optional 24/7 cloud buffer for public and college lab computers without signing into Google.</span>
                   </div>
                 </div>
-                <span id="supabase-status-badge" class="badge-amber">IndexedDB Active (Local)</span>
+                <span id="supabase-status-badge" class="badge-amber">Staging Vault (Local Active)</span>
               </div>
 
               <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;">
                 <div class="input-group" style="margin-bottom: 0;">
                   <label for="supabase-url-input">Supabase Project URL</label>
-                  <input type="url" id="supabase-url-input" class="clean-input" placeholder="https://your-project.supabase.co">
+                  <div style="display: flex; gap: 8px;">
+                    <input type="url" id="supabase-url-input" class="clean-input" placeholder="https://your-project.supabase.co">
+                    <button type="button" id="paste-supabase-url-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">📋 Paste</button>
+                  </div>
                 </div>
                 <div class="input-group" style="margin-bottom: 0;">
                   <label for="supabase-key-input">Supabase Anon Public Key</label>
-                  <input type="password" id="supabase-key-input" class="clean-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                  <div style="display: flex; gap: 8px;">
+                    <input type="password" id="supabase-key-input" class="clean-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                    <button type="button" id="paste-supabase-key-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">📋 Paste</button>
+                  </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
                   <button type="button" id="save-supabase-btn" class="btn btn-primary">Save &amp; Link</button>
                   <button type="button" id="reset-supabase-btn" class="btn btn-secondary">Clear</button>
                 </div>
               </div>
-              
             </div>
           </div>
         </section>
@@ -1344,6 +1374,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261026_live2"></script>
+  <script src="admin.js?v=20261026_v3"></script>
 </body>
 </html>

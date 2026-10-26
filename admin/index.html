@@ -1179,6 +1179,17 @@
               </div>
             </div>
 
+            <!-- UPLOAD PROGRESS INDICATOR -->
+            <div id="staging-upload-progress" style="display: none; margin-top: 12px; background: #1e293b; border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.1);">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: #cbd5e1;">
+                <span id="staging-upload-filename">Uploading file...</span>
+                <span id="staging-upload-percent">0%</span>
+              </div>
+              <div style="height: 6px; background: #334155; border-radius: 3px; overflow: hidden;">
+                <div id="staging-upload-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #6366f1); transition: width 0.15s ease;"></div>
+              </div>
+            </div>
+
             <!-- STAGED FILES METRICS -->
             <div class="metrics-row">
               <div class="metric-card">
@@ -1297,7 +1308,7 @@
                     <span class="sub-text">Optional 24/7 cloud buffer for public and college lab computers without signing into Google.</span>
                   </div>
                 </div>
-                <span id="supabase-status-badge" class="badge-amber">Staging Vault (Local Active)</span>
+                <span id="supabase-status-badge" class="badge-success">● Temp Cloud Storage Vault (Supabase)</span>
               </div>
 
               <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px;">

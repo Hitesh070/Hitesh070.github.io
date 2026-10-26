@@ -351,8 +351,8 @@
         if (sbFillFree) sbFillFree.style.width = '85%';
 
         if (q.user) {
-          topbarUserName.textContent = q.user.displayName || 'Hitesh V S';
-          if (q.user.photoLink) {
+          if (topbarUserName) topbarUserName.textContent = q.user.displayName || 'Hitesh V S';
+          if (userAvatarImg && q.user.photoLink) {
             userAvatarImg.src = q.user.photoLink;
           }
         }
@@ -363,7 +363,7 @@
       if (filesRes.ok) {
         const filesData = await filesRes.json();
         cachedFiles = filesData.files || [];
-        metricFilesCountBadge.textContent = `${cachedFiles.length} files & folders`;
+        if (metricFilesCountBadge) metricFilesCountBadge.textContent = `${cachedFiles.length} files & folders`;
         renderOverviewFiles(cachedFiles);
         renderCleanExplorerGrid(cachedFiles);
       } else {

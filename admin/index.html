@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=20261026_v3">
+  <link rel="stylesheet" href="admin.css?v=20261026_v4">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="dashboard-body">
@@ -206,7 +206,7 @@
         <div class="topbar-right">
           <div id="live-mode-pill" class="status-pill green" title="Google Drive Live Cloud Active">
             <span class="status-dot"></span>
-            <span id="live-mode-label">Live Mode &bull; Google Drive</span>
+            <span id="live-mode-label">Live Mode</span>
           </div>
           <div class="status-pill green" title="Google One Storage Connected">
             <span class="status-dot"></span>
@@ -1237,41 +1237,13 @@
             </div>
           </div>
         
-            <!-- REMOTE BACKEND CONNECTION (CLOUDFLARE TUNNEL / LOCALHOST) -->
-            <div class="section-card" style="margin-top: 24px; border-left: 4px solid #2563eb;">
-              <div class="card-title-bar">
-                <div class="title-with-icon">
-                  <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-                  <div>
-                    <h3>Remote Backend Connection (Cloudflare Tunnel &bull; Access From Anywhere)</h3>
-                    <span class="sub-text">Connect this portal to your private backend to load your live Google Drive files, server logs, and real-time visitor audit.</span>
-                  </div>
-                </div>
-                <span id="remote-backend-status-badge" class="badge-neutral">Static Showcase Mode</span>
-              </div>
-
-              <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end;">
-                <div class="input-group" style="margin-bottom: 0;">
-                  <label for="remote-backend-url-input">Backend Endpoint URL (Paste Tunnel Link)</label>
-                  <div style="display: flex; gap: 8px;">
-                    <input type="url" id="remote-backend-url-input" class="clean-input" placeholder="https://....trycloudflare.com or http://localhost:3000">
-                    <button type="button" id="paste-backend-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">📋 Paste</button>
-                  </div>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                  <button type="button" id="save-backend-btn" class="btn btn-primary">Connect</button>
-                  <button type="button" id="reset-backend-btn" class="btn btn-secondary">Reset</button>
-                </div>
-              </div>
-            </div>
-
             <!-- TEMP CLOUD VAULT SETTINGS (SUPABASE CLOUD SYNC) -->
             <div class="section-card" style="margin-top: 24px; border-left: 4px solid #f59e0b;">
               <div class="card-title-bar">
                 <div class="title-with-icon">
                   <svg viewBox="0 0 24 24" width="22" height="22" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                   <div>
-                    <h3>Temp Cloud Storage Vault (Cloud Sync)</h3>
+                    <h3>Temp Cloud Storage Vault (Supabase)</h3>
                     <span class="sub-text">Optional 24/7 cloud buffer for public and college lab computers without signing into Google.</span>
                   </div>
                 </div>
@@ -1374,6 +1346,6 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261026_v3"></script>
+  <script src="admin.js?v=20261026_v4"></script>
 </body>
 </html>

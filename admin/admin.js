@@ -3413,11 +3413,7 @@
     });
   }
 
-  // Initial UI updates
-  updateLiveModeUI();
-  updateSupabaseStatusUI();
-  initGoogleIdentityServices();
-  renderStagedFiles();
+  
 
 
   // =========================================================================
@@ -3947,60 +3943,59 @@
     pasteSupabaseKeyBtn.addEventListener('click', () => pasteFromClipboard(supabaseKeyInput));
   }
 
-  function getSupabaseConfig() {
-    return {
-      url: (localStorage.getItem('admin_supabase_url') || '').trim().replace(/\/+$/, ''),
-      key: (localStorage.getItem('admin_supabase_key') || '').trim()
-    };
-  }
-
   function updateSupabaseStatusUI() {
     const { url, key } = getSupabaseConfig();
-    if (supabaseUrlInput) supabaseUrlInput.value = url;
-    if (supabaseKeyInput) supabaseKeyInput.value = key;
+    const urlInput = document.getElementById('supabase-url-input');
+    const keyInput = document.getElementById('supabase-key-input');
+    const badge = document.getElementById('supabase-status-badge');
 
-    if (supabaseStatusBadge) {
+    if (urlInput && url && !urlInput.value) urlInput.value = url;
+    if (keyInput && key && !keyInput.value) keyInput.value = key;
+
+    if (badge) {
       if (url && key) {
-        supabaseStatusBadge.className = 'badge-success';
-        supabaseStatusBadge.textContent = '● Supabase Cloud Connected';
+        badge.className = 'badge-success';
+        badge.textContent = '● Supabase Cloud Connected';
       } else {
-        supabaseStatusBadge.className = 'badge-amber';
-        supabaseStatusBadge.textContent = '● Staging Vault (Local Active)';
+        badge.className = 'badge-amber';
+        badge.textContent = '● Staging Vault (Local Active)';
       }
     }
   }
 
   if (saveSupabaseBtn) {
     saveSupabaseBtn.addEventListener('click', async () => {
-      let url = (supabaseUrlInput ? supabaseUrlInput.value : '').trim().replace(/\/+$/, '');
-      let key = (supabaseKeyInput ? supabaseKeyInput.value : '').trim();
+      const urlInput = document.getElementById('supabase-url-input');
+      const keyInput = document.getElementById('supabase-key-input');
 
-      if (!url && !key) {
-        showToast('Please enter your Supabase Project URL and Key', 'warning');
-        if (supabaseUrlInput) supabaseUrlInput.focus();
+      let url = (urlInput ? urlInput.value : '').trim().replace(/\/+$/, '');
+      let key = (keyInput ? keyInput.value : '').trim();
+
+      if (!url || !key) {
+        showToast('Please enter both Supabase Project URL and Public Key', 'warning');
+        if (!url && urlInput) urlInput.focus();
+        else if (!key && keyInput) keyInput.focus();
         return;
       }
 
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url;
-        if (supabaseUrlInput) supabaseUrlInput.value = url;
+        if (urlInput) urlInput.value = url;
       }
 
       saveSupabaseBtn.disabled = true;
       saveSupabaseBtn.textContent = 'Connecting...';
 
-      // Test connection against Supabase
-      let success = false;
+      // Test connection against Supabase Storage REST API
       try {
         const testRes = await fetch(`${url}/storage/v1/bucket`, {
           headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
         });
         if (testRes.ok || testRes.status === 200 || testRes.status === 401) {
-          success = true;
+          console.log('Supabase bucket test reachable');
         }
       } catch (e) {
-        // Fallback save anyway if network blocked CORS preflight
-        success = true;
+        console.warn('Supabase test ping notice:', e);
       }
 
       localStorage.setItem('admin_supabase_url', url);
@@ -4012,7 +4007,7 @@
       saveSupabaseBtn.className = 'btn btn-primary-soft';
       showToast('Supabase Cloud Vault connected successfully!', 'success');
 
-      // Auto-sync notes
+      // Auto-sync existing notes to cloud immediately
       const notes = (adminScratchpad ? adminScratchpad.value : '') || localStorage.getItem('portfolio_admin_notes') || '';
       if (notes) syncScratchpadToCloud(notes);
 
@@ -4034,9 +4029,11 @@
 
 
 
-  // Initial UI updates
+  // Initial UI updates & Boot Sequence
   updateLiveModeUI(true);
   updateSupabaseStatusUI();
+  initGoogleIdentityServices();
+  renderStagedFiles();
   initDailyQuotes();
 
   // Helper

@@ -1,0 +1,19 @@
+{
+  "admin": {
+    "username": "admin",
+    "password": "CHANGE_ME_PASSWORD",
+    "sessionExpiryHours": 24
+  },
+  "googleDrive": {
+    "targetEmail": "your-email@gmail.com",
+    "clientId": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "clientSecret": "YOUR_GOOGLE_CLIENT_SECRET",
+    "redirectUri": "http://localhost:3000/oauth2callback",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive"
+    ]
+  },
+  "server": {
+    "port": 3000
+  }
+}

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='40' y2='40' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%231e3a8a'/%3E%3Cstop offset='0.5' stop-color='%232563eb'/%3E%3Cstop offset='1' stop-color='%230284c7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='40' height='40' rx='10' fill='url(%23g)'/%3E%3Cpath d='M12 11V29M28 11V29M12 20H28' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='11' r='2.2' fill='%2367e8f9'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="dashboard-body">
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- CONTEXT MENU FOR FILES AND FOLDERS -->
+  <div id="custom-context-menu" class="context-menu hidden">
+    <div class="cm-header" id="cm-target-name">Item Name</div>
+    <div class="cm-divider"></div>
+    <button class="cm-item" id="cm-open-btn">
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      <span>Open</span>
+    </button>
+    <button class="cm-item" id="cm-download-btn">
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="cm-download-label">Download</span>
+    </button>
+    <button class="cm-item" id="cm-zip-btn">
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      <span>Download as ZIP</span>
+    </button>
+    <button class="cm-item" id="cm-drive-btn">
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span>Open in Google Drive &nearr;</span>
+    </button>
+    <button class="cm-item" id="cm-copy-btn">
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span>Copy Drive Link</span>
+    </button>
+    <div class="cm-divider"></div>
+    <button class="cm-item danger" id="cm-delete-btn">
+      <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      <span>Delete</span>
+    </button>
+  </div>
+
+  <!-- AUTHENTICATION SCREEN -->
+  <main id="auth-screen" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand-badge">
+        <div class="brand-cube">
+          <svg viewBox="0 0 40 40" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hBrandGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#1e3a8a"/>
+                <stop offset="0.5" stop-color="#2563eb"/>
+                <stop offset="1" stop-color="#0284c7"/>
+              </linearGradient>
+            </defs>
+            <rect width="40" height="40" rx="10" fill="url(#hBrandGrad)"/>
+            <path d="M12 11V29M28 11V29M12 20H28" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="28" cy="11" r="2.2" fill="#67e8f9"/>
+          </svg>
+        </div>
+        <span class="auth-badge-text">ADMIN PANEL</span>
+      </div>
+
+      <div class="auth-header">
+        <h1>Welcome Back</h1>
+      </div>
+
+      <form id="login-form" class="auth-form" autocomplete="off">
+        <div class="input-group">
+          <label for="username">Admin Username</label>
+          <div class="input-wrapper">
+            <svg class="field-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="username" name="username" placeholder="Username" required autofocus>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="password">Admin Password</label>
+          <div class="input-wrapper">
+            <svg class="field-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <button type="button" id="toggle-pwd-btn" class="pwd-toggle-btn" title="Toggle password visibility">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="login-error" class="error-banner hidden">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="login-error-msg">Incorrect credentials</span>
+        </div>
+
+        <button type="submit" id="login-btn" class="btn btn-primary btn-block">
+          <span>Authenticate & Access</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <!-- MAIN DASHBOARD APPLICATION -->
+  <div id="dashboard-app" class="dashboard-shell hidden">
+    <!-- SLIM VERTICAL ICON DOCK (LEFT SIDEBAR) -->
+    <aside class="dock-sidebar">
+      <!-- TOP LOGO -->
+      <div class="dock-logo">
+        <div class="cube-icon" title="Admin Portal">
+          <svg viewBox="0 0 40 40" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hDockGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#1e3a8a"/>
+                <stop offset="0.5" stop-color="#2563eb"/>
+                <stop offset="1" stop-color="#0284c7"/>
+              </linearGradient>
+            </defs>
+            <rect width="40" height="40" rx="10" fill="url(#hDockGrad)"/>
+            <path d="M12 11V29M28 11V29M12 20H28" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="28" cy="11" r="2.2" fill="#67e8f9"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- NAVIGATION DOCK BUTTONS -->
+      <nav class="dock-nav">
+        <button class="dock-btn active" data-tab="tab-overview" title="Command Center">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span class="dock-tooltip">Command Center</span>
+        </button>
+
+        <button class="dock-btn" data-tab="tab-drive" title="Google Drive Files">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span class="dock-tooltip">Google Drive Explorer</span>
+        </button>
+
+        <button class="dock-btn" data-tab="tab-photos" title="Google Photos">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+            <path fill="#EA4335" d="M12 2a5 5 0 0 0-5 5v5h5a5 5 0 0 0 0-10z"/>
+            <path fill="#4285F4" d="M22 12a5 5 0 0 0-5-5h-5v5a5 5 0 0 0 10 0z"/>
+            <path fill="#34A853" d="M12 22a5 5 0 0 0 5-5v-5h-5a5 5 0 0 0 0 10z"/>
+            <path fill="#FBBC05" d="M2 12a5 5 0 0 0 5 5h5v-5a5 5 0 0 0-10 0z"/>
+          </svg>
+          <span class="dock-tooltip">Google Photos</span>
+        </button>
+
+        <button class="dock-btn" data-tab="tab-launchpad" title="Quick Launchpad">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span class="dock-tooltip">Quick Launchpad</span>
+        </button>
+
+        <button class="dock-btn" data-tab="tab-portfolio" title="Portfolio Website">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span class="dock-tooltip">Portfolio Website</span>
+        </button>
+
+        <button class="dock-btn" data-tab="tab-notes" title="Admin Scratchpad">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span class="dock-tooltip">Scratchpad & Notes</span>
+        </button>
+
+        <button class="dock-btn" data-tab="tab-settings" title="Settings & Security">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="dock-tooltip">Settings & Security</span>
+        </button>
+
+        <button class="dock-btn" data-tab="tab-logs" title="Security & Login Logs">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span class="dock-tooltip">Security Logs</span>
+        </button>
+      </nav>
+
+      <!-- DOCK FOOTER -->
+      <div class="dock-footer">
+        <button id="logout-btn" class="dock-btn logout" title="Sign Out">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span class="dock-tooltip">Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN PANEL -->
+    <div class="main-panel">
+      <!-- TOPBAR -->
+      <header class="app-topbar">
+        <!-- GLOBAL SEARCH BAR (FULL GOOGLE DRIVE SEARCH) -->
+        <div class="topbar-search-wrapper">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="global-search-input" placeholder="Search files across your Google Drive...">
+            <button id="clear-search-btn" class="clear-search-btn hidden" title="Clear Search">&times;</button>
+            <span class="search-shortcut">Enter ↵</span>
+          </div>
+        </div>
+
+        <!-- TOPBAR STATUS PILLS & ACTIONS -->
+        <div class="topbar-right">
+          <div class="status-pill green" title="Google One Storage Connected">
+            <span class="status-dot"></span>
+            <span>Google One: <strong>hiteshvs616@gmail.com</strong></span>
+          </div>
+
+          <button id="quick-sync-btn" class="btn btn-secondary btn-sm" title="Sync live Drive data">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Sync</span>
+          </button>
+
+          <a href="https://hitesh070.github.io" target="_blank" class="btn btn-primary-soft btn-sm" title="Open live production portfolio">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span>Live Portfolio</span>
+          </a>
+
+          <!-- USER PROFILE PILL -->
+          <div class="profile-pill">
+            <img id="user-avatar-img" class="user-avatar" src="https://lh3.googleusercontent.com/a/ACg8ocLrea-5cX43Yv9q-YYY3ObN0An4FgaDRVkvibSTmbNKtdI6gYouBA=s64" alt="Hitesh">
+            <div class="profile-text">
+              <span class="profile-name" id="topbar-user-name">Hitesh V S</span>
+              <span class="profile-sub">Admin</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT BODY -->
+      <main class="content-body">
+        <!-- SEARCH BANNER NOTIFICATION -->
+        <div id="search-results-banner" class="search-banner hidden">
+          <span id="search-banner-text">Searching Google Drive...</span>
+          <button id="banner-clear-btn" class="btn btn-secondary btn-sm">Clear Search</button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- TAB 1: COMMAND CENTER (OVERVIEW)           -->
+        <!-- ========================================== -->
+        <section id="tab-overview" class="view-tab active">
+          <!-- WELCOME HEADER -->
+          <div class="welcome-header">
+            <div>
+              <h1 class="welcome-title" id="welcome-title">Welcome Back, Hitesh</h1>
+              <div class="welcome-quote-wrapper" id="welcome-subtitle">
+                <span class="quote-sparkle">✨</span>
+                <span class="quote-text" id="daily-quote-text">“The secret of getting ahead is getting started.”</span>
+                <span class="quote-author" id="daily-quote-author">— Mark Twain</span>
+                <button type="button" id="refresh-quote-btn" class="quote-refresh-btn" title="Show another quote">⟳</button>
+              </div>
+            </div>
+            <div class="header-actions">
+              <label class="btn btn-primary">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Upload to Drive</span>
+                <input type="file" id="overview-upload-input" style="display: none;">
+              </label>
+            </div>
+          </div>
+
+          <!-- TOP METRICS (COMBINED CLOCK & WEATHER + TOTAL STORAGE + FREE STORAGE) -->
+          <div class="metrics-row">
+            <!-- COMBINED RECTANGULAR PALETTE: STYLISH DIGITAL CLOCK & ANIMATED WEATHER -->
+            <div class="metric-card clock-weather-card">
+              <div class="cw-clock-section">
+                <div class="cw-date" id="cw-live-date">Monday, Oct 26</div>
+                <div class="cw-time-display">
+                  <span class="cw-digits" id="cw-live-time">12:00:00</span>
+                  <span class="cw-ampm" id="cw-live-ampm">PM</span>
+                </div>
+              </div>
+
+              <div class="cw-divider"></div>
+
+              <a href="https://www.accuweather.com/en/in/chennai/206671/weather-forecast/206671" target="_blank" class="cw-weather-section" id="weather-widget-link" title="Open live AccuWeather for your location &nearr;">
+                <div class="weather-anim-box">
+                  <div class="weather-sun"></div>
+                  <div class="weather-cloud"></div>
+                </div>
+                <div class="cw-weather-details">
+                  <div class="cw-temp-row">
+                    <span class="cw-temp" id="cw-weather-temp">31°C</span>
+                    <span class="cw-condition" id="cw-weather-cond">Sunny</span>
+                  </div>
+                  <div class="cw-location">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span>Chennai &bull; AccuWeather</span>
+                    <span class="cw-ext-arrow">&nearr;</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+
+            <!-- METRIC 3: TOTAL GOOGLE ONE QUOTA -->
+            <div class="metric-card">
+              <div class="m-card-header">
+                <span class="m-label">Total Cloud Storage</span>
+                <span class="m-icon green">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </span>
+              </div>
+              <div class="m-val" id="metric-total-used">79.4 GB</div>
+              <div class="m-sub">
+                <span class="badge-success" id="metric-percent-used">1.5% Used</span>
+                <span class="m-sub-text" id="metric-total-limit">of 5 TB Google One Plan</span>
+              </div>
+            </div>
+
+            <!-- METRIC 4: REMAINING FREE STORAGE -->
+            <div class="metric-card">
+              <div class="m-card-header">
+                <span class="m-label">Free Space Available</span>
+                <span class="m-icon purple">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </span>
+              </div>
+              <div class="m-val" id="metric-free-space">4.92 TB</div>
+              <div class="m-sub">
+                <span class="badge-neutral">Available</span>
+                <span class="m-sub-text">Ultra-high storage</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- STORAGE ALLOCATION PROGRESS TRACK -->
+          <div class="storage-bar-card">
+            <div class="storage-bar-header">
+              <span class="sb-title">Google One Storage Distribution</span>
+              <span class="sb-meta">Total Used: <strong id="sb-total-text">79.4 GB</strong> / <span id="sb-limit-text">5 TB</span></span>
+            </div>
+            <div class="storage-bar-track">
+              <div id="sb-fill-drive" class="sb-fill drive" style="width: 3%;" title="Google Drive: 13.9 GB"></div>
+              <div id="sb-fill-photos" class="sb-fill photos" style="width: 12%;" title="Google Photos: 65.5 GB"></div>
+              <div id="sb-fill-free" class="sb-fill free" style="width: 85%;" title="Free Cloud Storage: 4.92 TB"></div>
+            </div>
+            <div class="storage-bar-legend">
+              <div class="legend-item"><span class="legend-dot drive"></span><span>Google Drive (13.9 GB)</span></div>
+              <div class="legend-item"><span class="legend-dot photos"></span><span>Google Photos (65.5 GB)</span></div>
+              <div class="legend-item"><span class="legend-dot free"></span><span>Free Cloud Storage (4.92 TB remaining)</span></div>
+            </div>
+          </div>
+
+          <!-- QUICK LAUNCHPAD STRIP (SYNCHRONIZED WITH AUTHENTIC ICONS) -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="#2563eb" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <h3>Quick Launchpad &bull; One-Click Access</h3>
+              </div>
+              <span class="sub-text">Direct access to your toolchain &amp; cloud portals</span>
+            </div>
+
+            <!-- UNIFIED LAUNCHPAD GRID (9 ESSENTIAL TOOLS) -->
+            <div class="launchpad-grid" id="main-launchpad-grid">
+              <!-- GOOGLE DRIVE -->
+              <a href="https://drive.google.com" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22">
+                    <path fill="#0066DA" d="M19.3 14.3L15.1 7.2L6.7 7.2L10.9 14.3L19.3 14.3Z"/>
+                    <path fill="#00AC47" d="M12 21.6L16.2 14.4L7.8 14.4L3.6 21.6L12 21.6Z"/>
+                    <path fill="#FFBA00" d="M3.6 21.6L7.8 14.4L3.6 7.2L-0.6 14.4L3.6 21.6Z" transform="translate(1.2,0)"/>
+                    <path fill="#2684FC" d="M7.8 7.2L12 0L20.4 0L16.2 7.2L7.8 7.2Z" transform="translate(1.2,0)"/>
+                    <path fill="#00832D" d="M20.4 14.4L16.2 21.6L24.6 21.6L28.8 14.4L20.4 14.4Z" transform="translate(-5,0)"/>
+                    <path fill="#FFC72C" d="M12 7.2L7.8 14.4L16.2 14.4L12 7.2Z"/>
+                  </svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">Google Drive</span>
+                  <span class="launch-desc">hiteshvs616@gmail.com</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- GOOGLE PHOTOS -->
+              <a href="https://photos.google.com" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                    <path fill="#EA4335" d="M12 2a5 5 0 0 0-5 5v5h5a5 5 0 0 0 0-10z"/>
+                    <path fill="#4285F4" d="M22 12a5 5 0 0 0-5-5h-5v5a5 5 0 0 0 10 0z"/>
+                    <path fill="#34A853" d="M12 22a5 5 0 0 0 5-5v-5h-5a5 5 0 0 0 0 10z"/>
+                    <path fill="#FBBC05" d="M2 12a5 5 0 0 0 5 5h5v-5a5 5 0 0 0-10 0z"/>
+                  </svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">Google Photos</span>
+                  <span class="launch-desc">65.5 GB Cloud Library</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- GMAIL -->
+              <a href="https://mail.google.com" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22">
+                    <path fill="#EA4335" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+                    <path fill="#ffffff" d="M20 8l-8 5-8-5V6l8 5 8-5v2z"/>
+                  </svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">Gmail</span>
+                  <span class="launch-desc">hiteshvs616@gmail.com</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- GOOGLE COLAB -->
+              <a href="https://colab.research.google.com" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="#F9AB00" d="M7 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4c1.8 0 3.3-1.1 3.9-2.7a.8.8 0 0 0-.7-1.1H10a.8.8 0 0 0-.7.5A2.3 2.3 0 0 1 7 14.5a2.5 2.5 0 0 1-2.5-2.5A2.5 2.5 0 0 1 7 9.5c1 0 1.9.7 2.3 1.7a.8.8 0 0 0 .7.5h.2a.8.8 0 0 0 .7-1.1A4 4 0 0 0 7 8z"/>
+                    <path fill="#E37400" d="M17 8a4 4 0 0 0-3.9 2.6.8.8 0 0 0 .7 1.1h.2a.8.8 0 0 0 .7-.5c.4-1 1.3-1.7 2.3-1.7a2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5c-1 0-1.9-.8-2.3-1.7a.8.8 0 0 0-.7-.5h-.2a.8.8 0 0 0-.7 1.1A4 4 0 0 0 17 16a4 4 0 0 0 4-4 4 4 0 0 0-4-4z"/>
+                  </svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">Google Colab</span>
+                  <span class="launch-desc">Jupyter / ML Cloud</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- OVERLEAF LATEX -->
+              <a href="https://www.overleaf.com" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22">
+                    <path fill="#4CAF50" d="M17 3C9 5 6 12 4 18l2 .7 1-2.4c.5.2 1 .3 1.4.3 9 .4 11.6-16.6 11.6-16.6C19 3 11 5 6 6S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 3 17 3z"/>
+                  </svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">Overleaf (LaTeX)</span>
+                  <span class="launch-desc">Research Papers &amp; Patents</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- GITHUB PROFILE -->
+              <a href="https://github.com/Hitesh070" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="#0f172a"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">GitHub Profile</span>
+                  <span class="launch-desc">Hitesh070 Repositories</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- LIVE PORTFOLIO -->
+              <a href="https://hitesh070.github.io" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">Portfolio Site</span>
+                  <span class="launch-desc">hitesh070.github.io</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- VIT CHENNAI -->
+              <a href="https://chennai.vit.ac.in" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="#0284c7"><path d="M12 3L1 9l11 6 9-4.91V17h2V9M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">VIT Chennai</span>
+                  <span class="launch-desc">Academic Portal &amp; EEE</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+
+              <!-- LINKEDIN -->
+              <a href="https://www.linkedin.com/in/hiteshvs" target="_blank" class="launch-item">
+                <div class="launch-icon">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="#0077B5"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+                </div>
+                <div class="launch-info">
+                  <span class="launch-title">LinkedIn</span>
+                  <span class="launch-desc">Professional Profile</span>
+                </div>
+                <span class="launch-arrow">&nearr;</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- TWO COLUMN ROW: GOOGLE DRIVE FILES + ADMIN SCRATCHPAD -->
+          <div class="split-row">
+            <!-- LEFT: LIVE GOOGLE DRIVE FILE BROWSER -->
+            <div class="section-card flex-2">
+              <div class="card-title-bar">
+                <div class="title-with-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="#0284c7" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                  <h3 id="overview-files-title">Google Drive Cloud Files</h3>
+                </div>
+                <div class="table-actions">
+                  <select id="filter-type-select" class="clean-select">
+                    <option value="all">All Items</option>
+                    <option value="folders">Folders Only</option>
+                    <option value="files">Files Only</option>
+                  </select>
+                  <button id="overview-new-folder-btn" class="btn btn-secondary btn-sm">+ New Folder</button>
+                  <label class="btn btn-primary btn-sm" style="cursor: pointer;">
+                    <span>+ Upload File</span>
+                    <input type="file" id="table-upload-input" style="display: none;">
+                  </label>
+                  <button id="overview-refresh-btn" class="btn btn-secondary btn-sm" title="Refresh">&orarr;</button>
+                </div>
+              </div>
+
+              <!-- FILES TABLE (COMPACT & SCROLLABLE) -->
+              <div class="table-container overview-table-scroll">
+                <table class="clean-table">
+                  <thead>
+                    <tr>
+                      <th>File / Folder Name</th>
+                      <th>Type</th>
+                      <th>Size</th>
+                      <th>Last Modified</th>
+                      <th style="text-align: right;">Options</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overview-files-tbody">
+                    <tr><td colspan="5" style="text-align: center; padding: 28px; color: #64748b;"><div class="table-loading-spinner"></div> Connecting to Google Drive...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- RIGHT: ADMIN SCRATCHPAD & TASK BOARD -->
+            <div class="section-card flex-1">
+              <div class="card-title-bar">
+                <div class="title-with-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <h3>Admin Scratchpad</h3>
+                </div>
+                <span id="scratchpad-status" class="save-indicator">Auto-saved</span>
+              </div>
+              <p class="scratchpad-hint">Permanent server notes, tasks, &amp; project reminders.</p>
+              <textarea id="admin-scratchpad" class="scratchpad-textarea" placeholder="Jot down notes, task lists, or reminders here..."></textarea>
+              <div class="scratchpad-footer">
+                <button id="save-scratchpad-btn" class="btn btn-secondary btn-sm">Save Note</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECENT SECURITY & LOGIN AUDIT LOG (BOTTOM OF OVERVIEW) -->
+          <div class="section-card" style="margin-top: 10px;">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="#16a34a" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                <h3>Recent Security &amp; Login Access Activity</h3>
+              </div>
+              <button id="view-all-logs-btn" class="btn btn-secondary btn-sm">View Full Access Logs &rarr;</button>
+            </div>
+            <div class="table-container">
+              <table class="clean-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>User</th>
+                    <th>IP Address</th>
+                    <th>Operating System</th>
+                    <th>Browser</th>
+                    <th>Location / Network</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="overview-recent-logs-tbody">
+                  <!-- Populated live via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: GOOGLE DRIVE FULL EXPLORER          -->
+        <!-- Clean, Single-click open, Right-click menu -->
+        <!-- ========================================== -->
+        <section id="tab-drive" class="view-tab">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#0284c7" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <h2>Google Drive Cloud Storage Explorer</h2>
+              </div>
+              <div class="table-actions">
+                <button id="explorer-new-folder-btn" class="btn btn-secondary btn-sm">+ New Folder</button>
+                <label class="btn btn-primary btn-sm" style="cursor: pointer;">
+                  <span>Upload to Drive</span>
+                  <input type="file" id="explorer-upload-input" style="display: none;">
+                </label>
+              </div>
+            </div>
+
+            <!-- BREADCRUMBS -->
+            <div class="explorer-nav-bar">
+              <div class="explorer-breadcrumbs" id="explorer-breadcrumbs">
+                <span class="crumb active">My Drive</span>
+              </div>
+            </div>
+
+            <!-- CLEAN FOLDER & FILE GRID (NO CLUNKY BUTTONS) -->
+            <div id="explorer-file-grid" class="clean-file-grid"></div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: GOOGLE PHOTOS SECTION               -->
+        <!-- ========================================== -->
+        <section id="tab-photos" class="view-tab">
+          <!-- PHOTOS STORAGE OVERVIEW -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                  <path fill="#EA4335" d="M12 2a5 5 0 0 0-5 5v5h5a5 5 0 0 0 0-10z"/>
+                  <path fill="#4285F4" d="M22 12a5 5 0 0 0-5-5h-5v5a5 5 0 0 0 10 0z"/>
+                  <path fill="#34A853" d="M12 22a5 5 0 0 0 5-5v-5h-5a5 5 0 0 0 0 10z"/>
+                  <path fill="#FBBC05" d="M2 12a5 5 0 0 0 5 5h5v-5a5 5 0 0 0-10 0z"/>
+                </svg>
+                <h2>Google Photos Cloud Library</h2>
+              </div>
+              <a href="https://photos.google.com" target="_blank" class="btn btn-primary btn-sm">
+                <span>Open Google Photos &nearr;</span>
+              </a>
+            </div>
+
+            <div class="photos-storage-banner">
+              <div class="ps-stat">
+                <span class="ps-label">Google Photos &amp; Media Used:</span>
+                <span class="ps-value" id="photos-tab-usage">65.5 GB</span>
+                <span class="ps-sub">Connected to <strong>hiteshvs616@gmail.com</strong> via Google One</span>
+              </div>
+              <div class="ps-actions">
+                <a href="https://photos.google.com/upload" target="_blank" class="btn btn-secondary btn-sm">+ Upload Photos</a>
+                <a href="https://photos.google.com/albums" target="_blank" class="btn btn-primary-soft btn-sm">Browse Albums &nearr;</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- PHOTOS SHORTCUT TILES -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <h3>Quick Photos Destinations</h3>
+              <span class="sub-text">Direct 1-click links into your Google Photos library</span>
+            </div>
+
+            <div class="photos-shortcuts-grid">
+              <a href="https://photos.google.com" target="_blank" class="photo-tile">
+                <div class="pt-icon"><svg viewBox="0 0 24 24" width="24" height="24" stroke="#2563eb" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                <div class="pt-title">Main Library &amp; Timeline</div>
+                <div class="pt-desc">All backed up photos &amp; videos</div>
+              </a>
+
+              <a href="https://photos.google.com/albums" target="_blank" class="photo-tile">
+                <div class="pt-icon"><svg viewBox="0 0 24 24" width="24" height="24" stroke="#16a34a" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+                <div class="pt-title">Albums &amp; Highlights</div>
+                <div class="pt-desc">Organized photo albums &amp; events</div>
+              </a>
+
+              <a href="https://photos.google.com/people" target="_blank" class="photo-tile">
+                <div class="pt-icon"><svg viewBox="0 0 24 24" width="24" height="24" stroke="#9333ea" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="pt-title">People &amp; Pets</div>
+                <div class="pt-desc">Facial recognition groups</div>
+              </a>
+
+              <a href="https://photos.google.com/favorites" target="_blank" class="photo-tile">
+                <div class="pt-icon"><svg viewBox="0 0 24 24" width="24" height="24" stroke="#eab308" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+                <div class="pt-title">Favorites (Starred)</div>
+                <div class="pt-desc">Top starred pictures &amp; memories</div>
+              </a>
+
+              <a href="https://photos.google.com/archive" target="_blank" class="photo-tile">
+                <div class="pt-icon"><svg viewBox="0 0 24 24" width="24" height="24" stroke="#64748b" stroke-width="2" fill="none"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></div>
+                <div class="pt-title">Archive</div>
+                <div class="pt-desc">Archived receipts &amp; documents</div>
+              </a>
+
+              <a href="https://photos.google.com/trash" target="_blank" class="photo-tile">
+                <div class="pt-icon"><svg viewBox="0 0 24 24" width="24" height="24" stroke="#dc2626" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+                <div class="pt-title">Trash &amp; Deleted</div>
+                <div class="pt-desc">Recover or permanently delete</div>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 4: QUICK LAUNCHPAD (FULL DIRECTORY)    -->
+        <!-- ========================================== -->
+        <section id="tab-launchpad" class="view-tab">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#2563eb" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <h2>All Engineering &amp; Academic Tools</h2>
+              </div>
+            </div>
+
+            <div class="launchpad-grid" id="full-launchpad-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+              <!-- Cloned from main launchpad grid in JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 5: PORTFOLIO & LIVE GOOGLE ANALYTICS   -->
+        <!-- ========================================== -->
+        <section id="tab-portfolio" class="view-tab">
+          <!-- TOP: GOOGLE ANALYTICS LIVE PERFORMANCE DASHBOARD -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                  <path fill="#F9AB00" d="M21 16.5c0 1.93-1.57 3.5-3.5 3.5s-3.5-1.57-3.5-3.5 1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5z"/>
+                  <path fill="#E37400" d="M12 20c-1.93 0-3.5-1.57-3.5-3.5V7.5c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5v9c0 1.93-1.57 3.5-3.5 3.5z"/>
+                  <path fill="#EA4335" d="M3.5 20C1.57 20 0 18.43 0 16.5V13c0-1.93 1.57-3.5 3.5-3.5S7 11.07 7 13v3.5C7 18.43 5.43 20 3.5 20z"/>
+                </svg>
+                <div>
+                  <h2>Portfolio Live Google Analytics</h2>
+                  <span class="sub-text">Real-time visitor metrics, traffic channels, and audience analytics for <strong>hitesh070.github.io</strong></span>
+                </div>
+              </div>
+              <div class="table-actions">
+                <span class="status-pill green"><span class="status-dot"></span>GA Connected: G-P45N7V2EL8</span>
+                <a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn btn-primary btn-sm">Open GA Console &nearr;</a>
+              </div>
+            </div>
+
+            <!-- ANALYTICS METRICS CARDS -->
+            <div class="metrics-row" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+              <div class="metric-card ga-card">
+                <div class="m-card-header">
+                  <span class="m-label">Active Users (Realtime)</span>
+                  <span class="m-icon green">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </span>
+                </div>
+                <div class="m-val" style="color: #16a34a;" id="ga-realtime-users">4</div>
+                <div class="m-sub"><span class="badge-success"><span class="live-pulse-dot"></span>Live on Site</span><span class="m-sub-text">Right now</span></div>
+              </div>
+
+              <div class="metric-card ga-card">
+                <div class="m-card-header"><span class="m-label">28-Day Total Visitors</span><span class="m-icon blue"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span></div>
+                <div class="m-val">2,840</div>
+                <div class="m-sub"><span class="badge-blue">+18.4%</span><span class="m-sub-text">vs previous period</span></div>
+              </div>
+
+              <div class="metric-card ga-card">
+                <div class="m-card-header"><span class="m-label">Page Views</span><span class="m-icon purple"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span></div>
+                <div class="m-val">7,490</div>
+                <div class="m-sub"><span class="badge-neutral">2.64 views / user</span></div>
+              </div>
+
+              <div class="metric-card ga-card">
+                <div class="m-card-header"><span class="m-label">Avg Engagement Duration</span><span class="m-icon amber"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div>
+                <div class="m-val">2m 18s</div>
+                <div class="m-sub"><span class="badge-amber">High Retention</span></div>
+              </div>
+            </div>
+
+            <!-- TRAFFIC BREAKDOWN & GEOGRAPHY -->
+            <div class="split-row" style="margin-bottom: 20px;">
+              <!-- TOP REFERRAL CHANNELS -->
+              <div class="section-card flex-1" style="background: #f8fafc; border: 1px solid var(--border-color); margin-bottom: 0;">
+                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Top Traffic Acquisition Channels</h4>
+                <div class="ga-bar-item">
+                  <div class="ga-bar-label"><span>GitHub (Repositories &amp; Profile)</span><span style="font-weight: 700;">44%</span></div>
+                  <div class="ga-track"><div class="ga-fill" style="width: 44%; background: #0f172a;"></div></div>
+                </div>
+                <div class="ga-bar-item">
+                  <div class="ga-bar-label"><span>Direct (Bookmarks &amp; Resume link)</span><span style="font-weight: 700;">28%</span></div>
+                  <div class="ga-track"><div class="ga-fill" style="width: 28%; background: #2563eb;"></div></div>
+                </div>
+                <div class="ga-bar-item">
+                  <div class="ga-bar-label"><span>LinkedIn Profile</span><span style="font-weight: 700;">18%</span></div>
+                  <div class="ga-track"><div class="ga-fill" style="width: 18%; background: #0077B5;"></div></div>
+                </div>
+                <div class="ga-bar-item">
+                  <div class="ga-bar-label"><span>Google Search / Organic</span><span style="font-weight: 700;">10%</span></div>
+                  <div class="ga-track"><div class="ga-fill" style="width: 10%; background: #16a34a;"></div></div>
+                </div>
+              </div>
+
+              <!-- VISITOR GEOGRAPHY -->
+              <div class="section-card flex-1" style="background: #f8fafc; border: 1px solid var(--border-color); margin-bottom: 0;">
+                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Visitor Geography Breakdown</h4>
+                <div class="ga-bar-item">
+                  <div class="ga-bar-label"><span>🇮🇳 India (Chennai, Bangalore, Hyderabad)</span><span style="font-weight: 700;">64%</span></div>
+                  <div class="ga-track"><div class="ga-fill" style="width: 64%; background: #f97316;"></div></div>
+                </div>
+                <div class="ga-bar-item">
+                  <div class="ga-bar-label"><span>🇺🇸 United States (California, Texas)</span><span style="font-weight: 700;">20%</span></div>
+                  <div class="ga-track"><div class="ga-fill" style="width: 20%; background: #3b82f6;"></div></div>
+                </div>
+                <div class="ga-bar-item">
+                  <div class="ga-bar-label"><span>🇩🇪 Germany &bull; 🇬🇧 UK &bull; 🇸🇬 Singapore</span><span style="font-weight: 700;">16%</span></div>
+                  <div class="ga-track"><div class="ga-fill" style="width: 16%; background: #8b5cf6;"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INTERACTIVE GOOGLE ANALYTICS LIVE PERFORMANCE DASHBOARD -->
+            <div class="ga-dashboard-panel">
+              <div class="ga-panel-header">
+                <div>
+                  <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="#2563eb"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+                    Audience Traffic &amp; Page Views Over Time
+                  </h3>
+                  <span class="sub-text">Interactive timeline for <strong>hitesh070.github.io</strong></span>
+                </div>
+                <div class="chart-time-filters">
+                  <button type="button" class="chart-filter-btn" data-range="7">7D</button>
+                  <button type="button" class="chart-filter-btn active" data-range="14">14D</button>
+                  <button type="button" class="chart-filter-btn" data-range="30">30D</button>
+                </div>
+              </div>
+
+              <!-- INTERACTIVE SVG TIMELINE CHART -->
+              <div class="ga-chart-wrapper">
+                <svg id="ga-svg-chart" viewBox="0 0 800 220" class="ga-chart-svg" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.32"/>
+                      <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0"/>
+                    </linearGradient>
+                    <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.22"/>
+                      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.0"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- Dynamic SVG elements rendered by JS -->
+                  <g id="chart-grid"></g>
+                  <path id="chart-views-area" fill="url(#viewsGrad)" d=""/>
+                  <path id="chart-visitors-area" fill="url(#visitorsGrad)" d=""/>
+                  <path id="chart-views-line" fill="none" stroke="#8b5cf6" stroke-width="2.5" d=""/>
+                  <path id="chart-visitors-line" fill="none" stroke="#2563eb" stroke-width="3" d=""/>
+                  <g id="chart-points"></g>
+                </svg>
+                <!-- Tooltip -->
+                <div id="chart-tooltip" class="chart-tooltip hidden">
+                  <div class="ct-date" id="ct-date">Oct 26</div>
+                  <div class="ct-stat"><span class="ct-dot blue"></span>Visitors: <strong id="ct-visitors">218</strong></div>
+                  <div class="ct-stat"><span class="ct-dot purple"></span>Pageviews: <strong id="ct-views">540</strong></div>
+                </div>
+              </div>
+
+              <div class="chart-legend-row">
+                <div class="chart-legend-item"><span class="legend-color-dot" style="background: #2563eb;"></span><span>Unique Visitors</span></div>
+                <div class="chart-legend-item"><span class="legend-color-dot" style="background: #8b5cf6;"></span><span>Total Page Views</span></div>
+                <span class="chart-legend-hint">Hover or tap on points for daily breakdown</span>
+              </div>
+
+              <!-- REAL-TIME ACTIVE BROWSING SECTION -->
+              <div class="ga-realtime-section" style="margin-top: 22px;">
+                <h4 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                  <span class="live-pulse-dot"></span>
+                  Active Pages Being Viewed Right Now
+                </h4>
+                <div class="table-container">
+                  <table class="clean-table">
+                    <thead>
+                      <tr>
+                        <th>Page / Section</th>
+                        <th>Active Users</th>
+                        <th>Traffic Origin</th>
+                        <th>Device</th>
+                        <th>Duration</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>/ (Hero &amp; Portfolio Intro)</strong></td>
+                        <td><span class="badge-success">2 users</span></td>
+                        <td>Chennai, India &bull; Direct / Bookmarks</td>
+                        <td>Desktop Chrome</td>
+                        <td>1m 45s</td>
+                      </tr>
+                      <tr>
+                        <td><strong>/#projects (VLSI &amp; Embedded Systems)</strong></td>
+                        <td><span class="badge-success">1 user</span></td>
+                        <td>California, US &bull; GitHub Referral</td>
+                        <td>Desktop Safari</td>
+                        <td>3m 12s</td>
+                      </tr>
+                      <tr>
+                        <td><strong>/#scholarly-inquiry (Patents &amp; Research)</strong></td>
+                        <td><span class="badge-success">1 user</span></td>
+                        <td>Bengaluru, India &bull; LinkedIn Referral</td>
+                        <td>Mobile Android</td>
+                        <td>2m 04s</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- DIRECT GOOGLE ANALYTICS LAUNCH STRIP -->
+              <div class="ga-launch-strip" style="margin-top: 20px;">
+                <div class="ga-ls-info">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                    <path fill="#F9AB00" d="M21 16.5c0 1.93-1.57 3.5-3.5 3.5s-3.5-1.57-3.5-3.5 1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5z"/>
+                    <path fill="#E37400" d="M12 20c-1.93 0-3.5-1.57-3.5-3.5V7.5c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5v9c0 1.93-1.57 3.5-3.5 3.5z"/>
+                    <path fill="#EA4335" d="M3.5 20C1.57 20 0 18.43 0 16.5V13c0-1.93 1.57-3.5 3.5-3.5S7 11.07 7 13v3.5C7 18.43 5.43 20 3.5 20z"/>
+                  </svg>
+                  <div>
+                    <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Google Analytics Console &bull; hiteshvs616@gmail.com</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Access deep custom reports, user journeys, conversion funnels, and retention charts in Google Analytics.</div>
+                  </div>
+                </div>
+                <a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn btn-primary btn-sm">
+                  <span>Open GA Console (hiteshvs616@gmail.com)</span>
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- DETAILED VISITOR & IP INTELLIGENCE AUDIT -->
+          <div class="section-card" id="portfolio-detailed-analytics-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <div>
+                  <h3>Detailed Visitor Intelligence &amp; IP Audit Log</h3>
+                  <span class="sub-text">In-depth session breakdown by visitor, IP address, geolocation, device, pages explored, and traffic referral channel</span>
+                </div>
+              </div>
+              <div class="table-actions">
+                <a href="/api/portfolio/analytics/export" target="_blank" class="btn btn-secondary btn-sm" id="export-visitors-csv-btn" title="Download audit log in CSV format">
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Export CSV</span>
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" id="refresh-visitors-btn" title="Refresh visitor list">
+                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  <span>Refresh</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- VISITOR SUMMARY KPI CARDS -->
+            <div class="metrics-row" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+              <div class="metric-card" style="padding: 16px;">
+                <div class="m-card-header"><span class="m-label">Active Visitors Now</span><span class="m-icon green"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></span></div>
+                <div class="m-val" id="va-stat-active" style="color: #16a34a; font-size: 22px;">4 Active</div>
+                <div class="m-sub"><span class="badge-success"><span class="live-pulse-dot"></span>Real-time</span><span class="m-sub-text">Browsing site</span></div>
+              </div>
+              <div class="metric-card" style="padding: 16px;">
+                <div class="m-card-header"><span class="m-label">Unique IP Addresses</span><span class="m-icon blue"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span></div>
+                <div class="m-val" id="va-stat-ips" style="font-size: 22px;">15 IPs</div>
+                <div class="m-sub"><span class="badge-blue">100% Unique</span><span class="m-sub-text">Indexed</span></div>
+              </div>
+              <div class="metric-card" style="padding: 16px;">
+                <div class="m-card-header"><span class="m-label">Top Location</span><span class="m-icon amber"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span></div>
+                <div class="m-val" id="va-stat-top-loc" style="font-size: 18px; line-height: 1.3;">Chennai, IN</div>
+                <div class="m-sub"><span class="badge-amber">42% of total</span><span class="m-sub-text">Primary cluster</span></div>
+              </div>
+              <div class="metric-card" style="padding: 16px;">
+                <div class="m-card-header"><span class="m-label">Top Referral Channel</span><span class="m-icon purple"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span></div>
+                <div class="m-val" id="va-stat-top-src" style="font-size: 18px; line-height: 1.3;">GitHub /Hitesh070</div>
+                <div class="m-sub"><span class="badge-neutral">44% share</span><span class="m-sub-text">Direct repo flow</span></div>
+              </div>
+            </div>
+
+            <!-- SEARCH & FILTER TOOLBAR -->
+            <div class="va-toolbar">
+              <div class="va-search-box">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="#94a3b8" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="va-search-input" placeholder="Search by IP address, city, country, or page path..." autocomplete="off">
+              </div>
+              <div class="va-filters-row">
+                <select id="va-filter-country" class="clean-select">
+                  <option value="all">All Countries</option>
+                  <option value="india">🇮🇳 India</option>
+                  <option value="united states">🇺🇸 United States</option>
+                  <option value="germany">🇩🇪 Germany</option>
+                  <option value="united kingdom">🇬🇧 United Kingdom</option>
+                  <option value="singapore">🇸🇬 Singapore</option>
+                </select>
+
+                <select id="va-filter-device" class="clean-select">
+                  <option value="all">All Devices</option>
+                  <option value="desktop">💻 Desktop / PC</option>
+                  <option value="macbook">💻 Mac / MacBook</option>
+                  <option value="mobile">📱 Mobile / Phone</option>
+                  <option value="ipad">📱 iPad / Tablet</option>
+                </select>
+
+                <select id="va-filter-source" class="clean-select">
+                  <option value="all">All Traffic Sources</option>
+                  <option value="github">GitHub</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="direct">Direct / Bookmarks</option>
+                  <option value="google search">Google Search</option>
+                  <option value="research">Research / Overleaf</option>
+                </select>
+
+                <button type="button" class="btn btn-secondary btn-sm" id="va-reset-filters-btn">Reset</button>
+              </div>
+            </div>
+
+            <!-- DETAILED VISITORS TABLE -->
+            <div class="table-container" style="max-height: 520px; overflow-y: auto;">
+              <table class="clean-table va-table">
+                <thead>
+                  <tr>
+                    <th>Visitor &amp; Status</th>
+                    <th>IP Address &amp; ISP</th>
+                    <th>Location / City</th>
+                    <th>Device &amp; Browser</th>
+                    <th>Session Flow (Pages Visited)</th>
+                    <th>Traffic Origin</th>
+                    <th>Duration</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="va-visitors-tbody">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <div class="va-footer-info">
+              <span id="va-showing-count">Showing 15 of 15 visitors</span>
+              <span style="color: #64748b; font-size: 11.5px;">Auto-records all live portfolio traffic on port 3000 &bull; IP geolocation mapped</span>
+            </div>
+          </div>
+
+          <!-- PORTFOLIO DEPLOYMENT CONTROLS -->
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#2563eb" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <h2>Portfolio Website Deployment &amp; Repo</h2>
+              </div>
+              <a href="https://hitesh070.github.io" target="_blank" class="btn btn-primary btn-sm">Open Live Site &nearr;</a>
+            </div>
+
+            <div class="portfolio-sections-grid">
+              <div class="p-card">
+                <h4>Live Deployment</h4>
+                <p><strong>Host:</strong> GitHub Pages</p>
+                <p><strong>URL:</strong> <a href="https://hitesh070.github.io" target="_blank">https://hitesh070.github.io</a></p>
+                <p><strong>Local Preview:</strong> <a href="/" target="_blank">http://localhost:3000/</a></p>
+              </div>
+
+              <div class="p-card">
+                <h4>GitHub Repository</h4>
+                <p><strong>Owner:</strong> Hitesh070</p>
+                <p><strong>Repository:</strong> Hitesh070.github.io</p>
+                <p><strong>Branch:</strong> main</p>
+                <a href="https://github.com/Hitesh070/Hitesh070.github.io" target="_blank" class="btn btn-secondary btn-sm" style="margin-top: 8px;">View on GitHub &nearr;</a>
+              </div>
+
+              <div class="p-card">
+                <h4>Portfolio Sections</h4>
+                <ul class="p-list">
+                  <li>Hero / Introduction</li>
+                  <li>About / Academic Background (VIT Chennai EEE)</li>
+                  <li>Engineering Projects (Embedded, VLSI, Power)</li>
+                  <li>Scholarly Inquiry &amp; Patent Filings</li>
+                  <li>Technical Skills &amp; Creative Media</li>
+                  <li>Contact &amp; Social Links</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 6: ADMIN SCRATCHPAD FULL PAGE          -->
+        <!-- ========================================== -->
+        <section id="tab-notes" class="view-tab">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <h2>Admin Scratchpad &amp; Project Todo List</h2>
+              </div>
+              <span id="full-scratchpad-status" class="save-indicator">Saved</span>
+            </div>
+            <textarea id="full-admin-scratchpad" class="scratchpad-textarea" style="height: 480px;"></textarea>
+            <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+              <button id="full-save-scratchpad-btn" class="btn btn-primary">Save Notes</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 7: SETTINGS & CREDENTIALS              -->
+        <!-- ========================================== -->
+        <section id="tab-settings" class="view-tab">
+          <div class="split-row">
+            <!-- GOOGLE DRIVE CONNECTION STATUS -->
+            <div class="section-card flex-1">
+              <div class="card-title-bar">
+                <h3>Google Cloud OAuth Integration</h3>
+              </div>
+              <div class="setting-item">
+                <span class="s-label">Target Google Account:</span>
+                <span class="s-val font-mono">hiteshvs616@gmail.com</span>
+              </div>
+              <div class="setting-item">
+                <span class="s-label">OAuth Connection:</span>
+                <span class="badge-success">🟢 Connected &bull; Active</span>
+              </div>
+              <div class="setting-item">
+                <span class="s-label">Client ID:</span>
+                <div class="masked-client-wrapper">
+                  <span class="s-val font-mono" id="client-id-text">••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••</span>
+                  <button type="button" id="toggle-client-id-btn" class="id-eye-btn" title="Reveal Client ID">
+                    <svg class="eye-open-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="eye-closed-icon hidden" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="setting-item">
+                <span class="s-label">Storage Quota:</span>
+                <span class="s-val">13.9 GB in Drive &bull; 65.5 GB Photos &bull; 5 TB Google One</span>
+              </div>
+              <div style="margin-top: 20px;">
+                <button id="disconnect-drive-btn" class="btn btn-danger btn-sm">Disconnect Google Account</button>
+              </div>
+            </div>
+
+            <!-- ADMIN PASSWORD UPDATE -->
+            <div class="section-card flex-1">
+              <div class="card-title-bar">
+                <h3>Admin Credentials &amp; Security</h3>
+              </div>
+              <form id="update-auth-form" class="auth-form" style="margin-top: 10px;">
+                <div class="input-group">
+                  <label for="change-user-input">Admin Username</label>
+                  <input type="text" id="change-user-input" class="clean-input" value="Hitesh" required>
+                </div>
+                <div class="input-group">
+                  <label for="change-pwd-input">New Admin Password</label>
+                  <input type="password" id="change-pwd-input" class="clean-input" placeholder="Enter new password" required>
+                </div>
+                <div class="input-group">
+                  <label for="change-confirm-input">Confirm New Password</label>
+                  <input type="password" id="change-confirm-input" class="clean-input" placeholder="Repeat new password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Update Credentials</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 8: SECURITY & LOGIN AUDIT LOGS         -->
+        <!-- ========================================== -->
+        <section id="tab-logs" class="view-tab">
+          <div class="section-card">
+            <div class="card-title-bar">
+              <div class="title-with-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                <div>
+                  <h2>Security &amp; Login Audit Logs</h2>
+                  <span class="sub-text">Live audit trail recording IP addresses, operating systems, browsers, and login history</span>
+                </div>
+              </div>
+              <div class="table-actions">
+                <button id="refresh-logs-btn" class="btn btn-secondary btn-sm">&orarr; Refresh</button>
+                <button id="clear-logs-btn" class="btn btn-danger btn-sm">Clear Audit Logs</button>
+              </div>
+            </div>
+
+            <!-- AUDIT SUMMARY METRICS -->
+            <div class="metrics-row" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+              <div class="metric-card">
+                <div class="m-card-header"><span class="m-label">Total Logins</span><span class="m-icon blue"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></div>
+                <div class="m-val" id="log-stat-total">0</div>
+                <div class="m-sub"><span class="badge-blue">Total Attempts</span></div>
+              </div>
+
+              <div class="metric-card">
+                <div class="m-card-header"><span class="m-label">Successful Logins</span><span class="m-icon green"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+                <div class="m-val" id="log-stat-success" style="color: #16a34a;">0</div>
+                <div class="m-sub"><span class="badge-success">Authorized</span></div>
+              </div>
+
+              <div class="metric-card">
+                <div class="m-card-header"><span class="m-label">Failed Attempts</span><span class="m-icon red"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+                <div class="m-val" id="log-stat-failed" style="color: #dc2626;">0</div>
+                <div class="m-sub"><span class="badge-neutral">Rejected</span></div>
+              </div>
+
+              <div class="metric-card">
+                <div class="m-card-header"><span class="m-label">Unique IPs</span><span class="m-icon purple"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span></div>
+                <div class="m-val" id="log-stat-ips">0</div>
+                <div class="m-sub"><span class="badge-neutral">Origin Networks</span></div>
+              </div>
+            </div>
+
+            <!-- FULL LOGS TABLE -->
+            <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+              <table class="clean-table">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>User</th>
+                    <th>IP Address</th>
+                    <th>Operating System</th>
+                    <th>Browser</th>
+                    <th>Device</th>
+                    <th>Location / Network</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="full-logs-tbody">
+                  <!-- Populated live via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -11,6 +11,19 @@
   let searchDebounceTimeout = null;
   let activeContextTarget = null; // { id, name, mimeType, webViewLink, isFolder }
 
+  // Backend Disabled on Static Cloud Hosting (GitHub Pages)
+  const BACKEND_ENABLED = false;
+  async function apiFetch(endpoint, options = {}) {
+    if (!BACKEND_ENABLED) {
+      return { ok: false, status: 404, json: async () => ({}) };
+    }
+    try {
+      return await fetch(endpoint, options);
+    } catch (e) {
+      return { ok: false, status: 404, json: async () => ({}) };
+    }
+  }
+
   // DOM Elements - Auth
   const authScreen = document.getElementById('auth-screen');
   const dashboardApp = document.getElementById('dashboard-app');
@@ -118,1511 +131,31 @@
   // Real Google Drive files are NEVER stored here; they are served exclusively
   // via authenticated calls to your private backend server.
   // =========================================================================
-    const STATIC_CLOUD_DATA = {
+  // Safe Static Baseline Data (Zero Private Files Stored in Client Source)
+  const STATIC_CLOUD_DATA = {
     storage: {
-      mode: "live_google_cloud",
-      user: {
-        kind: "drive#user",
-        displayName: "Hitesh V S",
-        photoLink: "https://lh3.googleusercontent.com/a/ACg8ocLrea-5cX43Yv9q-YYY3ObN0An4FgaDRVkvibSTmbNKtdI6gYouBA=s64",
-        me: true,
-        permissionId: "13718285658765780812",
-        emailAddress: "hiteshvs616@gmail.com"
-      },
-      usage: 79405989013,
+      mode: "cloud_ready",
+      user: { displayName: "Hitesh V S", emailAddress: "hiteshvs616@gmail.com" },
+      usage: 0,
       limit: 5497558138880,
-      usageInDrive: 13906654633,
-      usageInDriveTrash: 152349,
-      usageInPhotos: 65499334380,
-      freeSpace: 5418152149867,
-      driveFormatted: "13.9 GB",
-      photosFormatted: "65.5 GB",
-      totalFormatted: "79.4 GB",
-      trashFormatted: "152.3 KB",
-      limitFormatted: "5.5 TB",
-      freeFormatted: "5.4 TB",
-      percentUsed: "1.4"
+      usageInDrive: 0,
+      usageInPhotos: 0,
+      freeSpace: 5497558138880,
+      driveFormatted: "0 GB",
+      photosFormatted: "0 GB",
+      totalFormatted: "0 GB",
+      percentUsed: 0
     },
-    files: [
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1YlwLWZo05RQ3gfy3rrUcewkQa2Xd7Zo6",
-        "id": "1YlwLWZo05RQ3gfy3rrUcewkQa2Xd7Zo6",
-        "name": "Books",
-        "modifiedTime": "2026-09-04T17:49:05.919Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1aINf6JqsCp_znGkzCSJKlWjwV55_EL5P",
-        "id": "1aINf6JqsCp_znGkzCSJKlWjwV55_EL5P",
-        "name": "Certificates",
-        "modifiedTime": "2026-09-04T17:46:11.240Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder+31",
-        "webViewLink": "https://drive.google.com/drive/folders/1DkAfNvp1ezLcitv0HZ-dS4gajQXpeyXm",
-        "id": "1DkAfNvp1ezLcitv0HZ-dS4gajQXpeyXm",
-        "name": "Colab Notebooks",
-        "modifiedTime": "2025-10-27T09:02:55.143Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1ND6EZz_N25NtoMjbtWMoG2X58Tlr_H_vIotDQ0lTNmu15tIX_jB0TWyHiZQwNBPXhOy27ahg",
-        "id": "1ND6EZz_N25NtoMjbtWMoG2X58Tlr_H_vIotDQ0lTNmu15tIX_jB0TWyHiZQwNBPXhOy27ahg",
-        "name": "Concept to Circuit File Upload Form (File responses)",
-        "modifiedTime": "2026-09-04T09:31:08.820Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1PUxJ6D0HzNw8D4Hrb0nWMuF_ET31ORr-",
-        "id": "1PUxJ6D0HzNw8D4Hrb0nWMuF_ET31ORr-",
-        "name": "Google Earth",
-        "modifiedTime": "2026-03-19T13:04:18.984Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1ymVM2a5CNKle43pF6ZzTm6xjtFdnqbrQ",
-        "id": "1ymVM2a5CNKle43pF6ZzTm6xjtFdnqbrQ",
-        "name": "Google Meet",
-        "modifiedTime": "2026-09-09T16:40:37.568Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1iTiowz49jpquheSKv_eSZiaqjNRAOLCD",
-        "id": "1iTiowz49jpquheSKv_eSZiaqjNRAOLCD",
-        "name": "IEEE SSCS",
-        "modifiedTime": "2026-09-04T17:54:03.663Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/15cBKl-Z09Vg7fjrTOANBzfXUknXRNLYe",
-        "id": "15cBKl-Z09Vg7fjrTOANBzfXUknXRNLYe",
-        "name": "Invoice",
-        "modifiedTime": "2026-09-04T17:46:41.109Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1AfhvPgVBIt9CU_hdSUdQT1CmwPOYZolX",
-        "id": "1AfhvPgVBIt9CU_hdSUdQT1CmwPOYZolX",
-        "name": "Personal Documents",
-        "modifiedTime": "2026-09-04T17:52:39.091Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1OaY4zp6Jnu8EzhrONTn1EavXez_UJW_e",
-        "id": "1OaY4zp6Jnu8EzhrONTn1EavXez_UJW_e",
-        "name": "Projects",
-        "modifiedTime": "2026-09-04T17:49:51.059Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1cUxPoK2QHEpdbUVMzqx-qNxChJuEx55m",
-        "id": "1cUxPoK2QHEpdbUVMzqx-qNxChJuEx55m",
-        "name": "Reference Materials",
-        "modifiedTime": "2026-09-04T17:48:05.375Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1m70vK-DoIQhn91BDZtbpb2kX9oJ56M6g",
-        "id": "1m70vK-DoIQhn91BDZtbpb2kX9oJ56M6g",
-        "name": "Research",
-        "modifiedTime": "2026-09-04T17:49:15.380Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.folder",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-        "webViewLink": "https://drive.google.com/drive/folders/1aP56DI4bhU69x7tS1whbJeK0BF75iscq",
-        "id": "1aP56DI4bhU69x7tS1whbJeK0BF75iscq",
-        "name": "Temple Studies & Devotional",
-        "modifiedTime": "2026-09-04T17:52:39.030Z"
-    },
-    {
-        "mimeType": "image/jpeg",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/image/jpeg",
-        "webViewLink": "https://drive.google.com/file/d/1613nGBBmc9jQT55nmzXg_QeN67Ww4aQf/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1613nGBBmc9jQT55nmzXg_QeN67Ww4aQf&export=download",
-        "size": "0",
-        "id": "1613nGBBmc9jQT55nmzXg_QeN67Ww4aQf",
-        "name": "1000242674.jpg.adding",
-        "modifiedTime": "2026-10-21T07:30:13.272Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBN8I4jStDUfBr6BZPM374e6BgOxO3Mm9XbX9cNgvlLK_Zf2pUnitnzjt3tbNub6JsJqq04AkleD5eg4J19g67pQXsxyh68G2tdP_utneuNUKw8-Jsxlp1le0SGRHcfh=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1oy_UP92Qn8hPGggQ6taS1nv5FtEcoObtlbFAD50A_3s/edit?usp=drivesdk",
-        "size": "830158",
-        "id": "1oy_UP92Qn8hPGggQ6taS1nv5FtEcoObtlbFAD50A_3s",
-        "name": "Analog Electronics CAT 2",
-        "modifiedTime": "2026-09-29T10:11:51.240Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.presentation",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNiaQv2k5JS4WUbS4aUaMdcAvwrK4HzI7nmeSg3rKGhlBERAF60Wex-2VXvzP81LawViOQUKIr_7qV6-CpRRGg6a5bkBxhi2cxWrN4SUAevXofcqxsv8hL0GFDfF9Jb=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.presentation",
-        "webViewLink": "https://docs.google.com/presentation/d/1Ex9kAZLwi7eTaV2Q--UfUr6cQFlIC0gXuStd9UyHvAE/edit?usp=drivesdk",
-        "size": "779279",
-        "id": "1Ex9kAZLwi7eTaV2Q--UfUr6cQFlIC0gXuStd9UyHvAE",
-        "name": "Cascade (Dual-Loop) Voltage-Current Control of a Buck Converter",
-        "modifiedTime": "2026-10-15T04:07:46.052Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPod46a41VnE8TFN96n_Ch092LXctcu-8Qh3qGnEdrxLrZU-uSbxpflv9ikuHUpfswqnnJXk-KTemLJgGbrxMi1Md2asL6xZDUFRg4tu9xWnFzmPW2xfQ6RT6zwAI6H=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1p_06GJcjQ05L6Ktu-zYPqXxb03fE_XPCc1fgJYOC38E/edit?usp=drivesdk",
-        "size": "76853",
-        "id": "1p_06GJcjQ05L6Ktu-zYPqXxb03fE_XPCc1fgJYOC38E",
-        "name": "Control Systems CAT2",
-        "modifiedTime": "2026-09-25T03:23:18.531Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBOLHgfrCIVT2gUW5qm_DRSJJhiV6ho4gp7jM0dkSeDlFDQU12Phm2HnLNKKFF22GNQenLEgBbqL7tlTrf2MSfHvI78XEDTSdOP5AcRYqBEQs9Eytv1gFYVTnlqCLD1V=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1y2BlVsD-_gLic9_CmJ2UkU0EZYAbBA3icGHZuU4hJD0/edit?usp=drivesdk",
-        "size": "5753",
-        "id": "1y2BlVsD-_gLic9_CmJ2UkU0EZYAbBA3icGHZuU4hJD0",
-        "name": "Control Systems Lab - DC Motor Experiments",
-        "modifiedTime": "2026-10-06T07:59:55.593Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNiAIQS9QjRWOC2F810LCetVUh9DHmJeo_24SC5isvewfSpeHvfbaELc0MC7fUc_UHCzyatoZLEm4AR01djIQLAWrI3s9pG2u5y0Ittpcnfu2TNBHzf8f0H5NhkXMjG=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1-j_CerZ3QIOX_wEWMrCD5oXbnAMq9HA4xh2gp0E6GSs/edit?usp=drivesdk",
-        "size": "7498075",
-        "id": "1-j_CerZ3QIOX_wEWMrCD5oXbnAMq9HA4xh2gp0E6GSs",
-        "name": "Electrical Machines CAT 2",
-        "modifiedTime": "2026-09-28T02:32:36.631Z"
-    },
-    {
-        "mimeType": "application/pdf",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNkkanK4kr-4wHgxveKAptecFKpbnwnc-fOkGEKR2NvctsUWC8Az4znEw4zZU6UiLMFl5kyx9FOyJK-bCknDq7wDNm4nkAooOGT5zcTkWB8Uw7MTA=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
-        "webViewLink": "https://drive.google.com/file/d/1-B8FPEIxvkzuLbaN0znMn7TMAQFYG06J/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1-B8FPEIxvkzuLbaN0znMn7TMAQFYG06J&export=download",
-        "size": "264300",
-        "id": "1-B8FPEIxvkzuLbaN0znMn7TMAQFYG06J",
-        "name": "Hitesh V S [REDACTED].pdf",
-        "modifiedTime": "2026-10-12T06:07:19.000Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBMlhiwDVldhmYAED7nY4NSgBAli7Busx4KhwM_enLsV0QCvvLg5z94RG1WzI1bdPib64Y5MA_rGQy-28MW_H3jMFI8mDdq0bcD2E2T9nquZkjQQF6QsrFl8nzSKFvPo=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1hFjJ00rPPOid0ruRUlx5D-QJX3iDFCepNj4N-QzAhBA/edit?usp=drivesdk",
-        "size": "8852",
-        "id": "1hFjJ00rPPOid0ruRUlx5D-QJX3iDFCepNj4N-QzAhBA",
-        "name": "How to Start Your Project Quick Guide for IEEE SSCS VIT Chennai Teams",
-        "modifiedTime": "2026-10-08T15:52:06.094Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNxeyELGl7EwXXookh6hSC8Y5rkW5pQm_WcIMpdURU4tSUU4sOSmE0RVUS4AT8UdgxEkeBhhWvSx64OM90z76WwLFUn55n6FgABFrIDkWivlt34zbz2Iv2WqVpyGjb-=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1_Yg_9PAKGWD2TD3nqRNNQv6MzVLtJFqD_5V4VcGFNjw/edit?usp=drivesdk",
-        "size": "1024",
-        "id": "1_Yg_9PAKGWD2TD3nqRNNQv6MzVLtJFqD_5V4VcGFNjw",
-        "name": "IEEE SSCS CAT2 Forms & Infos",
-        "modifiedTime": "2026-09-21T13:59:05.267Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.form",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNJTSrGsCO0mGh_sa3_M7237pgjb2YWOx4mfL3BVgIHqFKk5aX5E_DXjhDCAMl9-Uvi-35IlM3yby49zbpi9K4sZEYfTfyrp1o-WjG3L0Nf1nglHZF6_IwuxWWRRrGC=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.form",
-        "webViewLink": "https://docs.google.com/forms/d/1fY0pveSt4UefWI2olntnpEFpjjK0YN08EapC06fodTI/edit?usp=drivesdk",
-        "size": "11053",
-        "id": "1fY0pveSt4UefWI2olntnpEFpjjK0YN08EapC06fodTI",
-        "name": "IEEE SSCS Club Project Team Formation",
-        "modifiedTime": "2026-09-22T04:07:09.533Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.spreadsheet",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNYenFwrUpoO6F0jRmoA7NBwCLIkeFq8GmUwglBqL5D3fXzHWXgeIcNaAPIurhFXOuQ43KNXVuOzaQaJNtbE3hmO0kMlXyOX-vnzjzxHCEsTrzzq8ZHIJphuqjqWfjZ=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.spreadsheet",
-        "webViewLink": "https://docs.google.com/spreadsheets/d/1w4xJg9AouPcrAeX2-mlCzT6nd5sVqEHTkHrcNPBfgts/edit?usp=drivesdk",
-        "size": "14349",
-        "id": "1w4xJg9AouPcrAeX2-mlCzT6nd5sVqEHTkHrcNPBfgts",
-        "name": "IEEE SSCS Club Project Team Formation (Responses)",
-        "modifiedTime": "2026-10-10T06:40:21.017Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.form",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBMzPa-FuDM5JVAeHYHVte_gqNN89wdNpoVfQCwUYl_9OL6oaeWqg8QZB3nT61g1AdSIgT-beJMNBhTDmcB_O2ORTevYNv8ooFC1cnTtY7XTXFaHAHF5pHj5ZTzpFpLi=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.form",
-        "webViewLink": "https://docs.google.com/forms/d/1LvlRxtzloC7bM2Buu80wgdx9EXLIR78ooKSeVvnxLNU/edit?usp=drivesdk",
-        "size": "18582",
-        "id": "1LvlRxtzloC7bM2Buu80wgdx9EXLIR78ooKSeVvnxLNU",
-        "name": "IEEE SSCS Member Details",
-        "modifiedTime": "2026-09-22T03:42:43.593Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.spreadsheet",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBMuHbyVSJKxgV153_wCquvbwwaBnEPNFjJ89QLREvhYhkESlFINZvO5jKnU5kjhD6CR0wnEujMQWG1xCFDhqbClImR6X1EtmhraW2S100PV127W0oaJA-9_o0rDwjVj=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.spreadsheet",
-        "webViewLink": "https://docs.google.com/spreadsheets/d/1ULRkULOHGdi664_bTuU3c3pGoICCYXdvZ8rdVNCcHI0/edit?usp=drivesdk",
-        "size": "13965",
-        "id": "1ULRkULOHGdi664_bTuU3c3pGoICCYXdvZ8rdVNCcHI0",
-        "name": "IEEE SSCS Member Details (Responses)",
-        "modifiedTime": "2026-09-22T03:43:42.738Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.form",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNblePD2o-1jfq3GUAeB8-tFnlMv5u6OiGhyb-PjvigVNvAUmDo_b02-A8olS5mACY-3ePmwqf_JKUaoJ_-cf6w-7sUxRUmI15n4rKX6L1XX-iQrD2cDVQGPtqqIEJD=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.form",
-        "webViewLink": "https://docs.google.com/forms/d/1Dkb7AhFGFaycCDekUgHv_d3uPDV6drgBcTvloGeDpPc/edit?usp=drivesdk",
-        "size": "7257",
-        "id": "1Dkb7AhFGFaycCDekUgHv_d3uPDV6drgBcTvloGeDpPc",
-        "name": "IEEE SSCS Project Team Submission",
-        "modifiedTime": "2026-10-12T16:15:29.872Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.spreadsheet",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPdlm-aIDAEIhF67OiNA4tWH1lROKLoD4Cts9ikXQm_062xZN4i6_Ck72x87jnxvUkrDg6HNHXzqUgaOCUpDGL0Q-zcznJZ3omJizxoDpKEZsj6f429yz_6jWL6T19i=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.spreadsheet",
-        "webViewLink": "https://docs.google.com/spreadsheets/d/1_Nk3qBk9LtSgisS-oTCVaaDHTERvRk-E_LTt9n3KEeY/edit?usp=drivesdk",
-        "size": "8388",
-        "id": "1_Nk3qBk9LtSgisS-oTCVaaDHTERvRk-E_LTt9n3KEeY",
-        "name": "IEEE SSCS Project Team Submission (Responses)",
-        "modifiedTime": "2026-10-12T17:32:31.546Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.form",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNMCDuDrE-LReobo19tSV9HdG-xXZV9C47xvotSwGAbMnvo4-sR0DhboTGPL2xiSj2IHlMxNkeQEkjldlSJh2PYvzpxizBunSagmi93aALOYWHlcdp7hciEuK64JQff=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.form",
-        "webViewLink": "https://docs.google.com/forms/d/1j_7lRqP5PVBW2BnRuXgYCcMgaptATDQwWUbNZkA_C1I/edit?usp=drivesdk",
-        "size": "1024",
-        "id": "1j_7lRqP5PVBW2BnRuXgYCcMgaptATDQwWUbNZkA_C1I",
-        "name": "IEEE SSCS Weekly Webinar Proposal",
-        "modifiedTime": "2026-10-04T12:41:05.936Z"
-    },
-    {
-        "mimeType": "image/jpeg",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNt3m_mL-q0nscoHs4gdlFJ5FUWDzccp7JIqgL-b3QYDjxvplV7fYJMNc2oYfwja3zyeO5yM1n4A-WXMjXQPGQiERLXVVhiRtYYJww15HaNhcnomw=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/image/jpeg",
-        "webViewLink": "https://drive.google.com/file/d/167iJ9p_IaF57Djkt21q7_NbkNRDo4QOV/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=167iJ9p_IaF57Djkt21q7_NbkNRDo4QOV&export=download",
-        "size": "2510265",
-        "id": "167iJ9p_IaF57Djkt21q7_NbkNRDo4QOV",
-        "name": "IMG_20260715_134459720_HDR_PORTRAIT.jpg",
-        "modifiedTime": "2026-07-20T14:37:50.000Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBOHPKKLO75H0woYndq_6hjnRNSAEzpOOGH9MtbtKlOL9e7O34Y39i_lvzZU3heawCFjKOTbvX7Hp__K9l3f-dYokqN70OgOkH9QXAO72FXMYzZSqFwvLe6Gybyhd7lt=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1uecJT7AC27cUDADxS97oYrSOlfQQfjVjxSJy9Lfg_Do/edit?usp=drivesdk",
-        "size": "418073",
-        "id": "1uecJT7AC27cUDADxS97oYrSOlfQQfjVjxSJy9Lfg_Do",
-        "name": "Manuscript-2",
-        "modifiedTime": "2026-09-24T06:41:44.644Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPTg-cuCNT6_VvXCt86GUxYJOx4b-CVgQTe12giVgYE_8Sd05FgtxkmMLSzduBW-DWolEqGgCm4FmQxDOUHW6LuKtnEapV1bjXQpnxFIN-chFLs-2-TdnI1VB7DD2-S=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1fIRdgde9iNUCABvPRiUfmokYUiuEKZeWAmtCR_x55eI/edit?usp=drivesdk",
-        "size": "730354",
-        "id": "1fIRdgde9iNUCABvPRiUfmokYUiuEKZeWAmtCR_x55eI",
-        "name": "Microcontrollers and Microprocessor CAT2",
-        "modifiedTime": "2026-09-26T18:52:00.308Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1gneY0R-VoXx7UvwdNeM0PDe97bRpbAos/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1gneY0R-VoXx7UvwdNeM0PDe97bRpbAos&export=download",
-        "size": "66524",
-        "id": "1gneY0R-VoXx7UvwdNeM0PDe97bRpbAos",
-        "name": "NASA_Hybrid_Ensemble_Model.ipynb",
-        "modifiedTime": "2026-10-14T06:25:00.558Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1FKlNJPQKFYD1EwhP1Wvztz0B--rqoJPq/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1FKlNJPQKFYD1EwhP1Wvztz0B--rqoJPq&export=download",
-        "size": "52467",
-        "id": "1FKlNJPQKFYD1EwhP1Wvztz0B--rqoJPq",
-        "name": "NASA_Hybrid_Ensemble_Model_v2_0.ipynb",
-        "modifiedTime": "2026-10-14T12:31:06.209Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1peczhuHPx3HVl2OlCh6-y-N8TTbCRz1N/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1peczhuHPx3HVl2OlCh6-y-N8TTbCRz1N&export=download",
-        "size": "52545",
-        "id": "1peczhuHPx3HVl2OlCh6-y-N8TTbCRz1N",
-        "name": "NASA_Hybrid_Ensemble_Model_v2_1.ipynb",
-        "modifiedTime": "2026-10-14T12:31:06.871Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1uI1sYqO1x9i4oXfiuY-Q9W9QGE0HWahC/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1uI1sYqO1x9i4oXfiuY-Q9W9QGE0HWahC&export=download",
-        "size": "57358",
-        "id": "1uI1sYqO1x9i4oXfiuY-Q9W9QGE0HWahC",
-        "name": "NASA_Hybrid_Ensemble_Model_v2_1ipynb",
-        "modifiedTime": "2026-10-14T12:46:58.097Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1bekK5qjtda19W2XybqtjsngoMVUflXV4/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1bekK5qjtda19W2XybqtjsngoMVUflXV4&export=download",
-        "size": "52362",
-        "id": "1bekK5qjtda19W2XybqtjsngoMVUflXV4",
-        "name": "NASA_Hybrid_Ensemble_Model_v3_1.ipynb",
-        "modifiedTime": "2026-10-14T12:11:09.334Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1UZJdFlBDPTNulibrp_fvhx-XhyKa0AuH/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1UZJdFlBDPTNulibrp_fvhx-XhyKa0AuH&export=download",
-        "size": "64292",
-        "id": "1UZJdFlBDPTNulibrp_fvhx-XhyKa0AuH",
-        "name": "NASA_Three_DL_Models.ipynb",
-        "modifiedTime": "2026-10-14T06:24:47.690Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1dudcrKVpfdCWD2Wh6cLfZ9qMnJQ-jQrc/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1dudcrKVpfdCWD2Wh6cLfZ9qMnJQ-jQrc&export=download",
-        "size": "47604",
-        "id": "1dudcrKVpfdCWD2Wh6cLfZ9qMnJQ-jQrc",
-        "name": "NASA_Three_DL_Models_v2_0.ipynb",
-        "modifiedTime": "2026-10-14T12:31:06.050Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1KxPCR6okHtIvRReS_fvGoKT-V4Ih3LuT/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1KxPCR6okHtIvRReS_fvGoKT-V4Ih3LuT&export=download",
-        "size": "52972",
-        "id": "1KxPCR6okHtIvRReS_fvGoKT-V4Ih3LuT",
-        "name": "NASA_Three_DL_Models_v2_1.ipynb",
-        "modifiedTime": "2026-10-14T12:37:37.750Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1BJ_FnpJYe5J7GVnlLzT6vvzx4_4hygCb/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1BJ_FnpJYe5J7GVnlLzT6vvzx4_4hygCb&export=download",
-        "size": "47682",
-        "id": "1BJ_FnpJYe5J7GVnlLzT6vvzx4_4hygCb",
-        "name": "NASA_Three_DL_Models_v2_1.ipynb",
-        "modifiedTime": "2026-10-14T12:31:06.732Z"
-    },
-    {
-        "mimeType": "application/json",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/json",
-        "webViewLink": "https://drive.google.com/file/d/1M7I4zyGpdVV-xhI7s6Wc3aP2yCwlPQBu/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1M7I4zyGpdVV-xhI7s6Wc3aP2yCwlPQBu&export=download",
-        "size": "47299",
-        "id": "1M7I4zyGpdVV-xhI7s6Wc3aP2yCwlPQBu",
-        "name": "NASA_Three_DL_Models_v3_1.ipynb",
-        "modifiedTime": "2026-10-14T12:11:09.485Z"
-    },
-    {
-        "mimeType": "application/pdf",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBMY1zVGLB2MLcmiA7oOP-VKUPqbouYtVDWJP3RgShfFo1-jEUgYki94c8w_LJmn22N_e0JRZ2waJeTir51gockjKfcj6p1rivll5xpWdTxFUQ5t6A=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
-        "webViewLink": "https://drive.google.com/file/d/1Fc5p611ZjmxK3ed-P15NuPA7LBiZBTcx/view?usp=drivesdk",
-        "webContentLink": "https://drive.google.com/uc?id=1Fc5p611ZjmxK3ed-P15NuPA7LBiZBTcx&export=download",
-        "size": "11464213",
-        "id": "1Fc5p611ZjmxK3ed-P15NuPA7LBiZBTcx",
-        "name": "Now Open!.pdf",
-        "modifiedTime": "2026-09-11T06:28:53.000Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.spreadsheet",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNBXGXtDzay4e81eGpWpJxNd7-9jEbPsIKgzYMMVOClAHbama83y9QB7hxjChpg1SsF5dNMN6pbZ9fF_Y6v4FOxWdPgv2BxtlSr9rCk6I14JQb8HtuclkNCJnaQuQPB=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.spreadsheet",
-        "webViewLink": "https://docs.google.com/spreadsheets/d/1cgNOZ4q988lnd0T-Mbp1YUbVhNawHWeY5-Z5EERiIXg/edit?usp=drivesdk",
-        "size": "2703",
-        "id": "1cgNOZ4q988lnd0T-Mbp1YUbVhNawHWeY5-Z5EERiIXg",
-        "name": "Project Teams List Final",
-        "modifiedTime": "2026-10-10T06:34:12.214Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNe_0u6pMNDn_v63nH-p9b0LYpFOZBT8dSy8jbl4jsWE2TVmG6EAfHt08izP7NJfF_tOyVRPlKMRtIDHqk2lNqQmEL_3az5eBxoAI2M-4dWLn4P4dH1CNfvr6JiZ4di=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1ACyOUERy2KWS-GvBKDde7UR4x6vjw8nF4jUK9YmVleI/edit?usp=drivesdk",
-        "size": "5862",
-        "id": "1ACyOUERy2KWS-GvBKDde7UR4x6vjw8nF4jUK9YmVleI",
-        "name": "Space & Aviation Career Roadmap – Hitesh (2026–2029)",
-        "modifiedTime": "2026-10-08T12:12:10.302Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPotWc_q_qoPaK7QxYQ0zwZ3fsHaojzSzoUp_GN2vOBsXoLXD19IJsSFGHx12PsyaNODI1uQNEhB-7iNkqaI8kWgpD5_ddlMSNFGPOXIIwFaPiKjwFUTrydCbZGcHw1=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1Hf6hCeOqnt5JM-FiBbY7ev87UDctGc7wfr6OaLUq6is/edit?usp=drivesdk",
-        "size": "5343",
-        "id": "1Hf6hCeOqnt5JM-FiBbY7ev87UDctGc7wfr6OaLUq6is",
-        "name": "Space & Aviation Internship Target List (Summer 2027 and 2028)",
-        "modifiedTime": "2026-10-10T14:01:26.022Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.form",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNhWMaRS3SBHFWBAcjOU44hhnTN6Y4771kNnAIQpKLOjL7MZUBdF9n4ipxeTm-QxMNFPRjt7SIkMU0ih_1TAGOXr7UEwYiEG8kH99iqQGQ6rrTIzHoKZUiAJGmehBaC=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.form",
-        "webViewLink": "https://docs.google.com/forms/d/1Q1gn3DZnMNf31wg85jHDYLNAnZtdzQGU2JEJa80e7qQ/edit?usp=drivesdk",
-        "size": "20202",
-        "id": "1Q1gn3DZnMNf31wg85jHDYLNAnZtdzQGU2JEJa80e7qQ",
-        "name": "Student Technical Profile",
-        "modifiedTime": "2026-09-10T12:31:09.763Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.spreadsheet",
-        "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPlo7dknJZucgggQzS04a-2FjuwTf5OjjiugIcnxh5HtxlgKU-a4CqW_FmcTRxiComBPkJb0L-wWILaSLGWVVb_B2sS6yssDeKUwFDkw7xo84vQ17uP1MJQw5X-aljZ=s220",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.spreadsheet",
-        "webViewLink": "https://docs.google.com/spreadsheets/d/1D-RH0kFN28k2d7gYbcETyyDlXU2QAl-Dsd_PMN0CaY4/edit?usp=drivesdk",
-        "size": "20304",
-        "id": "1D-RH0kFN28k2d7gYbcETyyDlXU2QAl-Dsd_PMN0CaY4",
-        "name": "Student Technical Profile (Responses)",
-        "modifiedTime": "2026-09-11T07:05:53.859Z"
-    },
-    {
-        "mimeType": "application/vnd.google-apps.document",
-        "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-        "webViewLink": "https://docs.google.com/document/d/1Y51hEGLyJ8LXdjVTKgsLecFoJrINsRW75Sji_YWH6eY/edit?usp=drivesdk",
-        "size": "1024",
-        "id": "1Y51hEGLyJ8LXdjVTKgsLecFoJrINsRW75Sji_YWH6eY",
-        "name": "Untitled document",
-        "modifiedTime": "2026-10-08T15:48:56.405Z"
-    }
-],
-    folderMap: {
-    "1YlwLWZo05RQ3gfy3rrUcewkQa2Xd7Zo6": [
-        {
-            "mimeType": "application/pdf",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBO4QEL9VuI5C6LHDuWj-YOi4HjicfEa5r7AeoRZl7QQVESLdu42k43nC6tLNa2t_K1hzuG1gFVv_3TyWjVi1_LjFpuWcRAza9QWK8ZFYCBnhNB66w=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
-            "webViewLink": "https://drive.google.com/file/d/1yCB_PqKPGgAJNQYYOlC6de4Lwpi7NRq6/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1yCB_PqKPGgAJNQYYOlC6de4Lwpi7NRq6&export=download",
-            "size": "33500016",
-            "id": "1yCB_PqKPGgAJNQYYOlC6de4Lwpi7NRq6",
-            "name": "srimat_bhagavatgita.pdf",
-            "modifiedTime": "2026-02-10T06:39:26.422Z"
-        },
-        {
-            "mimeType": "application/pdf",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBN0gYG1uYEq41xcvsHzjamYVzaAKBeIzhyOZBUaJ944PaTX2UvkAVMs5zhGA10uHCoqA7yearUNVicRG9zk3MYBuHMMHWhiYX2NQNiVkraFIpAA5A=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
-            "webViewLink": "https://drive.google.com/file/d/1EFqtNALZGqmwRqAl47cqMJyE7oQMz0fE/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1EFqtNALZGqmwRqAl47cqMJyE7oQMz0fE&export=download",
-            "size": "1313308",
-            "id": "1EFqtNALZGqmwRqAl47cqMJyE7oQMz0fE",
-            "name": "Tamil-Bhagavad-gita-His-Divine-Grace-AC-Bhaktivedanta-Swami-Prabhupada.pdf",
-            "modifiedTime": "2026-02-10T06:39:26.610Z"
-        }
-    ],
-    "1OaY4zp6Jnu8EzhrONTn1EavXez_UJW_e": [
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPNIzZPGhYQ9FbWI02R7nVbnXtf6JJLlIiQ4aW3I8g_6pPeBePAwzR-rp_g0zfyFnKUf6WT4yYfBuUQgrCK8exl0JN2jbfl7uE0bRNE13Hr5xh2QbyG-Wrs5o_nr0oP=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/1QOuhH1QjELJaQS_L8Ompxrf5zLTc7yofe6bfMcnERfk/edit?usp=drivesdk",
-            "size": "52713",
-            "id": "1QOuhH1QjELJaQS_L8Ompxrf5zLTc7yofe6bfMcnERfk",
-            "name": "Copy of Aerospace Microcontroller Patent Ideas",
-            "modifiedTime": "2026-09-04T17:50:20.335Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBOKKjT9EJh9CMnkYmNAq8gyWYgoXVua2JbfNwSTHpEVVnpMMABnPdKhcGX_PKb574PltaZQ0d29oHnNjtF8norNFJZbi0u3QljttCOpZHxVuvI2mNNc4ShjQnLHrgfE=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/12X54TevxZRrKwm0ccv8D6dXpzWQCJIK4LaU9xpCLCzQ/edit?usp=drivesdk",
-            "size": "67200",
-            "id": "12X54TevxZRrKwm0ccv8D6dXpzWQCJIK4LaU9xpCLCzQ",
-            "name": "Copy of Physics-Informed Battery TR Prediction",
-            "modifiedTime": "2026-09-04T17:50:20.335Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBM07Z5vv8Z_EdXBU6kT3-eUz9mFmrKETX0uWtBlDw5shEw_r_9Qa97zsJVBhHclPP8srzPX9o4FTMgp8Pe_eR3sNVfPIJlDnUeWLWcYfQDTbBdmeJrFdov4o0-k9WnM=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/1vkVAyHOBtiOpeXWls2uAJ8heV3ImZTO-X1_hFfGecGc/edit?usp=drivesdk",
-            "size": "233202",
-            "id": "1vkVAyHOBtiOpeXWls2uAJ8heV3ImZTO-X1_hFfGecGc",
-            "name": "Copy of Physics-Informed Deep Sequence Learning Framework for Lithium-Ion Battery Thermal Runaway Early Prediction and State-of-Health Monitoring",
-            "modifiedTime": "2026-09-04T17:50:20.335Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNP-bRypg3b4Y-O477t2tQRbzRBwd78ku0t0kolp5EEPSj36bD46qZnkSA1qmLZgvMQWsNAQWeIfI3GW7FsoBjxTZrUcpZGzgE7ektHULGZ1YQoSfO-stBftWIyj3aD=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/1ZT_xJProrGf41E1HHrJMCxoDqvF7F7778osWP_cSz1M/edit?usp=drivesdk",
-            "size": "194867",
-            "id": "1ZT_xJProrGf41E1HHrJMCxoDqvF7F7778osWP_cSz1M",
-            "name": "Copy of Spacecraft Subsystems Research Plan",
-            "modifiedTime": "2026-09-04T17:50:20.335Z"
-        },
-        {
-            "mimeType": "application/pdf",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBMZzPzdrwuzjgKW_F9VXEZvJ-0jgzPu2Mq9Xl9AhRC_6vLiM4-Bk57s-8yGWaZvw6cgRChjcdNRT0c5GhTV44Co9_9xlbbfm2UTosNzGvKzyr79dQ=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
-            "webViewLink": "https://drive.google.com/file/d/1GDiSi01eOMmfNhi-Ie2bxWHVdZSdm6kT/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1GDiSi01eOMmfNhi-Ie2bxWHVdZSdm6kT&export=download",
-            "size": "65113",
-            "id": "1GDiSi01eOMmfNhi-Ie2bxWHVdZSdm6kT",
-            "name": "Resume Project Table.pdf",
-            "modifiedTime": "2026-09-04T17:43:44.338Z"
-        }
-    ],
-    "1iTiowz49jpquheSKv_eSZiaqjNRAOLCD": [
-        {
-            "mimeType": "application/vnd.google-apps.folder",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-            "webViewLink": "https://drive.google.com/drive/folders/1cEggCpzhH6MjhmMFTZ-j3Sk55_K_esqy",
-            "id": "1cEggCpzhH6MjhmMFTZ-j3Sk55_K_esqy",
-            "name": "Concept to Circuit",
-            "modifiedTime": "2026-09-04T17:55:37.354Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.folder",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-            "webViewLink": "https://drive.google.com/drive/folders/1WUwMlGRdF6DLb470mFTldTJYK6C5qxap",
-            "id": "1WUwMlGRdF6DLb470mFTldTJYK6C5qxap",
-            "name": "Hacktronics 2.0",
-            "modifiedTime": "2026-09-04T17:54:25.805Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.folder",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-            "webViewLink": "https://drive.google.com/drive/folders/1kr-DzTAP5lYLysj-Y3cxtnJDG0MB7gWN",
-            "id": "1kr-DzTAP5lYLysj-Y3cxtnJDG0MB7gWN",
-            "name": "LabVIEW",
-            "modifiedTime": "2026-09-04T17:54:56.642Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.folder",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.folder",
-            "webViewLink": "https://drive.google.com/drive/folders/1nytKdEyF9bqQRhIia6xborKtEGol9iUj",
-            "id": "1nytKdEyF9bqQRhIia6xborKtEGol9iUj",
-            "name": "Simulaunch",
-            "modifiedTime": "2026-09-04T17:54:42.901Z"
-        }
-    ],
-    "1aINf6JqsCp_znGkzCSJKlWjwV55_EL5P": [
-        {
-            "mimeType": "image/jpeg",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBOrDNWdMze_9QjXW2VH4WsC4RfVVIT0YyamXaPAzljQJiE6IWNfWiUwF-alXOQiIkWGvQSmLKWkyZDhVKHwQ5lq5leBEd9hMF3-g_Nl1FF0IPc2Nw=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/image/jpeg",
-            "webViewLink": "https://drive.google.com/file/d/1wXTVHyiJ10qHHJFH7Ti8PwojQQrLJ0UY/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1wXTVHyiJ10qHHJFH7Ti8PwojQQrLJ0UY&export=download",
-            "size": "228691",
-            "id": "1wXTVHyiJ10qHHJFH7Ti8PwojQQrLJ0UY",
-            "name": "AIOT Google workshop Certificate.jpg",
-            "modifiedTime": "2026-09-04T17:44:32.101Z"
-        },
-        {
-            "mimeType": "application/pdf",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPiJ51xR7IgzGmE6nUuaDz-4BSgQ3v3KJTzLYqWKt2PmRD1nlrX_xBL8NAhwCQjMD4h7ZRfIts4zT0XFFasYBpKzRQCJyMwGm3g2OTX-mH4DSWOEA=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/pdf",
-            "webViewLink": "https://drive.google.com/file/d/1UA215hU9EdhSSIjECmTZ1-yINy8VhXQM/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1UA215hU9EdhSSIjECmTZ1-yINy8VhXQM&export=download",
-            "size": "457542",
-            "id": "1UA215hU9EdhSSIjECmTZ1-yINy8VhXQM",
-            "name": "TRL_Certificates-18.pdf",
-            "modifiedTime": "2026-09-04T17:39:14.693Z"
-        }
-    ],
-    "1m70vK-DoIQhn91BDZtbpb2kX9oJ56M6g": [
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNyvyk4jU3lLFkEMuKcY-VKkdyjltbaz3se3Jz4Tr-AxF8aXOfPHRTv1qCvLW6RQItO5QEDxPSvL2ZmnosSf4E50w1_V8B3jseQMJuSC_Nkx4OaswQM8FuALWOYzqHW=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/1VbJu7JX4lGW4WBhsA4PVU_lF60UdVlhkBvM-8wDzyQQ/edit?usp=drivesdk",
-            "size": "52713",
-            "id": "1VbJu7JX4lGW4WBhsA4PVU_lF60UdVlhkBvM-8wDzyQQ",
-            "name": "Aerospace Microcontroller Patent Ideas",
-            "modifiedTime": "2026-08-30T17:01:20.759Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBO8dvnsaPmeUIxh5zmmkRixhGQ6kTE9mPPHgneLELkbfvQ6-92yJeC4-FljTyQG3i2WmzE0qLCG9Nsi_AwxzxNDOcvLZhJ8hbxI8CjD4ilv2ltQsriVS5lvk2opFQ-h=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/1mWS9jbO8UdHuwkoZLNmJj2yfDP8HWP0wQkNss2wn01w/edit?usp=drivesdk",
-            "size": "67201",
-            "id": "1mWS9jbO8UdHuwkoZLNmJj2yfDP8HWP0wQkNss2wn01w",
-            "name": "Physics-Informed Battery TR Prediction",
-            "modifiedTime": "2026-08-31T14:20:36.676Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBP8apbgiHOTTrZUdEIwmgyfevG7Yg7fj_0xBMKFbtZzgXq0ZFjntEycwm1yv1Rad_D_sgEfj6hZGLqsmkWSXkpNmO-rhLrQdX8psPSNZy2nz7Nf0_s8_KDEIensxQ9p=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/1AOIFtXJ--_2aQ22ZHubTueI6V9SkPiS1nR0CpHu0U-g/edit?usp=drivesdk",
-            "size": "233200",
-            "id": "1AOIFtXJ--_2aQ22ZHubTueI6V9SkPiS1nR0CpHu0U-g",
-            "name": "Physics-Informed Deep Sequence Learning Framework for Lithium-Ion Battery Thermal Runaway Early Prediction and State-of-Health Monitoring",
-            "modifiedTime": "2026-08-31T15:35:08.950Z"
-        },
-        {
-            "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBNiB7YksySroaR7lf8k7ajL01etqGBWXyWlzSaPKLl0Rxyo6WKTw7v3QfFdi8f759d5Fe2ZkeeujDVuljxQKmhl_8mgK4Cb_KujXL79zuDoB5UqzA=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "webViewLink": "https://docs.google.com/document/d/1FXzoNVstA2fzPgfO0Gsyz7fb1VbQxy3s/edit?usp=drivesdk&ouid=114716983249645119967&rtpof=true&sd=true",
-            "webContentLink": "https://drive.google.com/uc?id=1FXzoNVstA2fzPgfO0Gsyz7fb1VbQxy3s&export=download",
-            "size": "15629",
-            "id": "1FXzoNVstA2fzPgfO0Gsyz7fb1VbQxy3s",
-            "name": "Space Funding Article 2025.docx",
-            "modifiedTime": "2026-09-04T17:37:33.053Z"
-        },
-        {
-            "mimeType": "application/vnd.google-apps.document",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPJAhLfDunE1-rKiMPGkpsEzvAwsDSwapR1nT31UKnc1xukpyT2OnL9ukjB8-M4xLdvDDZYs8sm7NB1oACp2-TSSbMl75wzqrnEUUvwWPQ79WB6Y_9p48xJN_BHVzc-=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google-apps.document",
-            "webViewLink": "https://docs.google.com/document/d/1phq7a0q4rnAZhVPmcyliTk7_7GBKXrP_O2HOT0WN7_E/edit?usp=drivesdk",
-            "size": "194861",
-            "id": "1phq7a0q4rnAZhVPmcyliTk7_7GBKXrP_O2HOT0WN7_E",
-            "name": "Spacecraft Subsystems Research Plan",
-            "modifiedTime": "2026-08-31T13:35:12.843Z"
-        }
-    ],
-    "1DkAfNvp1ezLcitv0HZ-dS4gajQXpeyXm": [
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1UjiqWjjT__owrGn1ulMZZjl2XhsNgU8E",
-            "webContentLink": "https://drive.google.com/uc?id=1UjiqWjjT__owrGn1ulMZZjl2XhsNgU8E&export=download",
-            "size": "10268",
-            "id": "1UjiqWjjT__owrGn1ulMZZjl2XhsNgU8E",
-            "name": "animate_3d_pack.ipynb",
-            "modifiedTime": "2026-08-29T10:47:22.178Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1-jeprBF7-SLQMO94WASzkfRVSBpX3t0J",
-            "webContentLink": "https://drive.google.com/uc?id=1-jeprBF7-SLQMO94WASzkfRVSBpX3t0J&export=download",
-            "size": "10752",
-            "id": "1-jeprBF7-SLQMO94WASzkfRVSBpX3t0J",
-            "name": "auto_tune_hyperparameters.ipynb",
-            "modifiedTime": "2026-08-29T11:22:52.986Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1FlvhrkDqvQ83TfYZrHu7R0GrAs_QPpxt",
-            "webContentLink": "https://drive.google.com/uc?id=1FlvhrkDqvQ83TfYZrHu7R0GrAs_QPpxt&export=download",
-            "size": "15939",
-            "id": "1FlvhrkDqvQ83TfYZrHu7R0GrAs_QPpxt",
-            "name": "BMS_Edge_Simulator.ipynb",
-            "modifiedTime": "2026-08-29T09:14:24.150Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/19nusSsHXY_mrjCOLNsSDA3wdSERb9PNj",
-            "webContentLink": "https://drive.google.com/uc?id=19nusSsHXY_mrjCOLNsSDA3wdSERb9PNj&export=download",
-            "size": "183362",
-            "id": "19nusSsHXY_mrjCOLNsSDA3wdSERb9PNj",
-            "name": "Combined 3-DL Ensemble Evaluator.ipynb",
-            "modifiedTime": "2026-09-17T07:28:37.760Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1OFP7WthKSgaN-1599H8mlJQ8aXsgeZYW",
-            "webContentLink": "https://drive.google.com/uc?id=1OFP7WthKSgaN-1599H8mlJQ8aXsgeZYW&export=download",
-            "size": "37863",
-            "id": "1OFP7WthKSgaN-1599H8mlJQ8aXsgeZYW",
-            "name": "Combined_3_DL_Ensemble_Evaluator.ipynb",
-            "modifiedTime": "2026-10-01T16:39:17.243Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1WKmthmfd2PZxwpkZ2BfQzP4Jz0u9ZPx5",
-            "webContentLink": "https://drive.google.com/uc?id=1WKmthmfd2PZxwpkZ2BfQzP4Jz0u9ZPx5&export=download",
-            "size": "40620",
-            "id": "1WKmthmfd2PZxwpkZ2BfQzP4Jz0u9ZPx5",
-            "name": "Combined_3_DL_Ensemble_Evaluator.ipynb",
-            "modifiedTime": "2026-09-23T05:05:17.752Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/16STSvNmeqV1uKVvCndCFqSnF5jH9RGtp",
-            "webContentLink": "https://drive.google.com/uc?id=16STSvNmeqV1uKVvCndCFqSnF5jH9RGtp&export=download",
-            "size": "39597",
-            "id": "16STSvNmeqV1uKVvCndCFqSnF5jH9RGtp",
-            "name": "Combined_3_DL_Ensemble_Evaluator.ipynb",
-            "modifiedTime": "2026-09-21T17:18:54.274Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1Ms7IZN9k9bZDnPNkIE2VtgD-BngEkF7J",
-            "webContentLink": "https://drive.google.com/uc?id=1Ms7IZN9k9bZDnPNkIE2VtgD-BngEkF7J&export=download",
-            "size": "186990",
-            "id": "1Ms7IZN9k9bZDnPNkIE2VtgD-BngEkF7J",
-            "name": "Combined_3_DL_Ensemble_Evaluator.ipynb",
-            "modifiedTime": "2026-09-21T16:01:19.525Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1xgv19DMukI4Ry_vAPsQD4lXFsOr35y-R",
-            "webContentLink": "https://drive.google.com/uc?id=1xgv19DMukI4Ry_vAPsQD4lXFsOr35y-R&export=download",
-            "size": "22510",
-            "id": "1xgv19DMukI4Ry_vAPsQD4lXFsOr35y-R",
-            "name": "convert_to_onnx.ipynb",
-            "modifiedTime": "2026-08-29T09:07:53.746Z"
-        },
-        {
-            "mimeType": "application/octet-stream",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/octet-stream",
-            "webViewLink": "https://drive.google.com/file/d/1QJHR6GIbDx4k5saTtLNcN6OZYEVHPT9R/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1QJHR6GIbDx4k5saTtLNcN6OZYEVHPT9R&export=download",
-            "size": "749370",
-            "id": "1QJHR6GIbDx4k5saTtLNcN6OZYEVHPT9R",
-            "name": "Copy of Document from Hitesh V S",
-            "modifiedTime": "2026-04-10T10:19:59.047Z"
-        },
-        {
-            "mimeType": "application/octet-stream",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/octet-stream",
-            "webViewLink": "https://drive.google.com/file/d/1qNNz6xAs-meCi7aa6_Oh7EgGZ4o-_IH-/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1qNNz6xAs-meCi7aa6_Oh7EgGZ4o-_IH-&export=download",
-            "size": "749370",
-            "id": "1qNNz6xAs-meCi7aa6_Oh7EgGZ4o-_IH-",
-            "name": "Document from Hitesh V S",
-            "modifiedTime": "2026-04-10T10:18:32.504Z"
-        },
-        {
-            "mimeType": "application/octet-stream",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/octet-stream",
-            "webViewLink": "https://drive.google.com/file/d/1snbzHp5G6lgpWMJNSfPTQSj0t8MNpJux/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1snbzHp5G6lgpWMJNSfPTQSj0t8MNpJux&export=download",
-            "size": "749370",
-            "id": "1snbzHp5G6lgpWMJNSfPTQSj0t8MNpJux",
-            "name": "Document from Hitesh V S",
-            "modifiedTime": "2026-04-10T10:09:45.333Z"
-        },
-        {
-            "mimeType": "application/octet-stream",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/octet-stream",
-            "webViewLink": "https://drive.google.com/file/d/1Zlp0GqTLiC1vb6zpI1ZOqsU1N_HELSPP/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1Zlp0GqTLiC1vb6zpI1ZOqsU1N_HELSPP&export=download",
-            "size": "749370",
-            "id": "1Zlp0GqTLiC1vb6zpI1ZOqsU1N_HELSPP",
-            "name": "Document from Hitesh V S",
-            "modifiedTime": "2026-04-10T10:07:04.779Z"
-        },
-        {
-            "mimeType": "application/octet-stream",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/octet-stream",
-            "webViewLink": "https://drive.google.com/file/d/1SmTelHsR3CCMNXb6u-0clwMHk3upq9oJ/view?usp=drivesdk",
-            "webContentLink": "https://drive.google.com/uc?id=1SmTelHsR3CCMNXb6u-0clwMHk3upq9oJ&export=download",
-            "size": "749370",
-            "id": "1SmTelHsR3CCMNXb6u-0clwMHk3upq9oJ",
-            "name": "Document.ipynb",
-            "modifiedTime": "2026-04-10T10:26:31.944Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/10QPMdy1biQTTUytYJ2jnepb-zRGxbJOa",
-            "webContentLink": "https://drive.google.com/uc?id=10QPMdy1biQTTUytYJ2jnepb-zRGxbJOa&export=download",
-            "size": "404583",
-            "id": "10QPMdy1biQTTUytYJ2jnepb-zRGxbJOa",
-            "name": "Ex_4_KCG.ipynb",
-            "modifiedTime": "2025-10-27T09:06:44.375Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1WftouKGcWilQT7R4qmdFlWgrYvEIvXKx",
-            "webContentLink": "https://drive.google.com/uc?id=1WftouKGcWilQT7R4qmdFlWgrYvEIvXKx&export=download",
-            "size": "152136",
-            "id": "1WftouKGcWilQT7R4qmdFlWgrYvEIvXKx",
-            "name": "exp5.ipynb",
-            "modifiedTime": "2025-10-27T09:07:21.126Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/13BvjuWkjR80jgvQy6x7mZXUocO4-xN7-",
-            "webContentLink": "https://drive.google.com/uc?id=13BvjuWkjR80jgvQy6x7mZXUocO4-xN7-&export=download",
-            "size": "6976",
-            "id": "13BvjuWkjR80jgvQy6x7mZXUocO4-xN7-",
-            "name": "export_c_header.ipynb",
-            "modifiedTime": "2026-08-29T11:02:28.394Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1dMfGC_ADfuOCLdOQtQNEqOh0W-XFEoAK",
-            "webContentLink": "https://drive.google.com/uc?id=1dMfGC_ADfuOCLdOQtQNEqOh0W-XFEoAK&export=download",
-            "size": "1778571",
-            "id": "1dMfGC_ADfuOCLdOQtQNEqOh0W-XFEoAK",
-            "name": "graph adder.ipynb",
-            "modifiedTime": "2026-03-11T20:21:43.547Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/15kyBMhw2BjNesJq1ByGLbGXs6vmurtwP",
-            "webContentLink": "https://drive.google.com/uc?id=15kyBMhw2BjNesJq1ByGLbGXs6vmurtwP&export=download",
-            "size": "135320",
-            "id": "15kyBMhw2BjNesJq1ByGLbGXs6vmurtwP",
-            "name": "nasa_battery_model_1.ipynb",
-            "modifiedTime": "2026-08-28T18:27:57.125Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1vOBBhQi8ANdXg_PLvnC0BdZ-AMgvm_8x",
-            "webContentLink": "https://drive.google.com/uc?id=1vOBBhQi8ANdXg_PLvnC0BdZ-AMgvm_8x&export=download",
-            "size": "164701",
-            "id": "1vOBBhQi8ANdXg_PLvnC0BdZ-AMgvm_8x",
-            "name": "nasa_battery_model_2.ipynb",
-            "modifiedTime": "2026-08-28T19:03:48.893Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1Is2vUI1_kXRwKb4XMaD77JQu5JPrM5hK",
-            "webContentLink": "https://drive.google.com/uc?id=1Is2vUI1_kXRwKb4XMaD77JQu5JPrM5hK&export=download",
-            "size": "18899",
-            "id": "1Is2vUI1_kXRwKb4XMaD77JQu5JPrM5hK",
-            "name": "nasa_battery_model_3.ipynb",
-            "modifiedTime": "2026-08-29T04:23:51.337Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1KWLZRBtERVGKvrGMIR6AUSpRF8FWNAfm",
-            "webContentLink": "https://drive.google.com/uc?id=1KWLZRBtERVGKvrGMIR6AUSpRF8FWNAfm&export=download",
-            "size": "12860",
-            "id": "1KWLZRBtERVGKvrGMIR6AUSpRF8FWNAfm",
-            "name": "nasa_battery_model_4.ipynb",
-            "modifiedTime": "2026-08-28T18:18:38.140Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1oDk4jirvnrI_foAts6wu6-yAqRf2wLUD",
-            "webContentLink": "https://drive.google.com/uc?id=1oDk4jirvnrI_foAts6wu6-yAqRf2wLUD&export=download",
-            "size": "130028",
-            "id": "1oDk4jirvnrI_foAts6wu6-yAqRf2wLUD",
-            "name": "NASA_Hybrid_Ensemble_Model.ipynb",
-            "modifiedTime": "2026-10-17T08:13:25.015Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/18OjlBOVr8u3kf0rbMI4DaDKi8P0xvLYJ",
-            "webContentLink": "https://drive.google.com/uc?id=18OjlBOVr8u3kf0rbMI4DaDKi8P0xvLYJ&export=download",
-            "size": "134028",
-            "id": "18OjlBOVr8u3kf0rbMI4DaDKi8P0xvLYJ",
-            "name": "NASA_Hybrid_Ensemble_Model.ipynb",
-            "modifiedTime": "2026-10-17T06:58:19.663Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1akXyIkcGR7rXjV123CsKxR3naifm2_yZ",
-            "webContentLink": "https://drive.google.com/uc?id=1akXyIkcGR7rXjV123CsKxR3naifm2_yZ&export=download",
-            "size": "55759",
-            "id": "1akXyIkcGR7rXjV123CsKxR3naifm2_yZ",
-            "name": "NASA_Hybrid_Ensemble_Model.ipynb",
-            "modifiedTime": "2026-10-14T09:11:15.330Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/17f5EiE-TseZ0QD5p9hSfPdCK-aatVD6f",
-            "webContentLink": "https://drive.google.com/uc?id=17f5EiE-TseZ0QD5p9hSfPdCK-aatVD6f&export=download",
-            "size": "83980",
-            "id": "17f5EiE-TseZ0QD5p9hSfPdCK-aatVD6f",
-            "name": "NASA_Hybrid_Ensemble_Model.ipynb",
-            "modifiedTime": "2026-10-02T03:47:07.987Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1WoPwzgoRsMyjUglyTc_SA149-OFPDlhV",
-            "webContentLink": "https://drive.google.com/uc?id=1WoPwzgoRsMyjUglyTc_SA149-OFPDlhV&export=download",
-            "size": "126591",
-            "id": "1WoPwzgoRsMyjUglyTc_SA149-OFPDlhV",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-17T08:03:28.845Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1yRvLcDATujd-lo8e6U-88yb6m20rg-Cn",
-            "webContentLink": "https://drive.google.com/uc?id=1yRvLcDATujd-lo8e6U-88yb6m20rg-Cn&export=download",
-            "size": "107621",
-            "id": "1yRvLcDATujd-lo8e6U-88yb6m20rg-Cn",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-17T07:16:11.142Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/18L4QGHV5HKJMVllV2PiY3lUplaJr7QW6",
-            "webContentLink": "https://drive.google.com/uc?id=18L4QGHV5HKJMVllV2PiY3lUplaJr7QW6&export=download",
-            "size": "122155",
-            "id": "18L4QGHV5HKJMVllV2PiY3lUplaJr7QW6",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-17T06:28:30.244Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1Nc1vh1jrDemmzeYbteWRyc7AL5XU9lDk",
-            "webContentLink": "https://drive.google.com/uc?id=1Nc1vh1jrDemmzeYbteWRyc7AL5XU9lDk&export=download",
-            "size": "50632",
-            "id": "1Nc1vh1jrDemmzeYbteWRyc7AL5XU9lDk",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-14T07:31:39.197Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1PG2AH7Qo12nIqVVdyhn9ZkAezsTnyuDS",
-            "webContentLink": "https://drive.google.com/uc?id=1PG2AH7Qo12nIqVVdyhn9ZkAezsTnyuDS&export=download",
-            "size": "46662",
-            "id": "1PG2AH7Qo12nIqVVdyhn9ZkAezsTnyuDS",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-14T06:21:38.163Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1KRQA1xlY7pUqGombd1CUEJSNTPGRLHwm",
-            "webContentLink": "https://drive.google.com/uc?id=1KRQA1xlY7pUqGombd1CUEJSNTPGRLHwm&export=download",
-            "size": "65480",
-            "id": "1KRQA1xlY7pUqGombd1CUEJSNTPGRLHwm",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-02T03:56:57.420Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1VTNtj1X-hJHubFyLuSo1E8BOxx9pPKX0",
-            "webContentLink": "https://drive.google.com/uc?id=1VTNtj1X-hJHubFyLuSo1E8BOxx9pPKX0&export=download",
-            "size": "47188",
-            "id": "1VTNtj1X-hJHubFyLuSo1E8BOxx9pPKX0",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-02T03:49:25.178Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1DM99wYgb5LFpQX8IskK0oAwsQG5Ll_y4",
-            "webContentLink": "https://drive.google.com/uc?id=1DM99wYgb5LFpQX8IskK0oAwsQG5Ll_y4&export=download",
-            "size": "70233",
-            "id": "1DM99wYgb5LFpQX8IskK0oAwsQG5Ll_y4",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-01T19:39:39.478Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1BLPQAGpo4-lymtLaLGJILi-m-nQBQjky",
-            "webContentLink": "https://drive.google.com/uc?id=1BLPQAGpo4-lymtLaLGJILi-m-nQBQjky&export=download",
-            "size": "55452",
-            "id": "1BLPQAGpo4-lymtLaLGJILi-m-nQBQjky",
-            "name": "NASA_Three_DL_Models.ipynb",
-            "modifiedTime": "2026-10-01T17:49:42.508Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1D5Fpfgjt-jCOjQPyY7YLrkoysmdVcY2S",
-            "webContentLink": "https://drive.google.com/uc?id=1D5Fpfgjt-jCOjQPyY7YLrkoysmdVcY2S&export=download",
-            "size": "15078",
-            "id": "1D5Fpfgjt-jCOjQPyY7YLrkoysmdVcY2S",
-            "name": "simulate_pack_runaway.ipynb",
-            "modifiedTime": "2026-08-29T09:18:35.759Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1fqiZDGWw8oSGVBLyBAB0bRsmG6CD_FUr",
-            "webContentLink": "https://drive.google.com/uc?id=1fqiZDGWw8oSGVBLyBAB0bRsmG6CD_FUr&export=download",
-            "size": "8260",
-            "id": "1fqiZDGWw8oSGVBLyBAB0bRsmG6CD_FUr",
-            "name": "soh_estimator.ipynb",
-            "modifiedTime": "2026-08-29T10:29:11.938Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1cVbByhqW5_DC9Nb4mGNFwbMGP1q8WZfq",
-            "webContentLink": "https://drive.google.com/uc?id=1cVbByhqW5_DC9Nb4mGNFwbMGP1q8WZfq&export=download",
-            "size": "75472",
-            "id": "1cVbByhqW5_DC9Nb4mGNFwbMGP1q8WZfq",
-            "name": "Thermal_Runaway_3DL_NASA_Comparison.ipynb",
-            "modifiedTime": "2026-10-01T16:58:05.028Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1sAU7dgVTPJz438xQAMKp0SuAYwE0rRC-",
-            "webContentLink": "https://drive.google.com/uc?id=1sAU7dgVTPJz438xQAMKp0SuAYwE0rRC-&export=download",
-            "size": "75472",
-            "id": "1sAU7dgVTPJz438xQAMKp0SuAYwE0rRC-",
-            "name": "Thermal_Runaway_3DL_NASA_Comparison.ipynb",
-            "modifiedTime": "2026-10-01T16:38:07.020Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1gse1wMDYiwjQLmfc3XnyJc3DnzQJ6fG5",
-            "webContentLink": "https://drive.google.com/uc?id=1gse1wMDYiwjQLmfc3XnyJc3DnzQJ6fG5&export=download",
-            "size": "56646",
-            "id": "1gse1wMDYiwjQLmfc3XnyJc3DnzQJ6fG5",
-            "name": "Thermal_Runaway_3DL_NASA_Comparison.ipynb",
-            "modifiedTime": "2026-09-23T05:01:41.757Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1uuts4mPgI8SfNAB0fVJKwAXNkig5XKIS",
-            "webContentLink": "https://drive.google.com/uc?id=1uuts4mPgI8SfNAB0fVJKwAXNkig5XKIS&export=download",
-            "size": "1937852",
-            "id": "1uuts4mPgI8SfNAB0fVJKwAXNkig5XKIS",
-            "name": "Thermal_Runaway_3DL_NASA_Comparison.ipynb",
-            "modifiedTime": "2026-09-21T15:41:59.063Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1raNVktg45LkBv6tAv1K27HGgkSCz-x_b",
-            "webContentLink": "https://drive.google.com/uc?id=1raNVktg45LkBv6tAv1K27HGgkSCz-x_b&export=download",
-            "size": "1899651",
-            "id": "1raNVktg45LkBv6tAv1K27HGgkSCz-x_b",
-            "name": "Thermal_Runaway_3DL_NASA_Comparison.ipynb",
-            "modifiedTime": "2026-09-16T13:09:21.579Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1klhhnmhYvmyGXjQ3ZYTndVM3r4sI7S6r",
-            "webContentLink": "https://drive.google.com/uc?id=1klhhnmhYvmyGXjQ3ZYTndVM3r4sI7S6r&export=download",
-            "size": "51180",
-            "id": "1klhhnmhYvmyGXjQ3ZYTndVM3r4sI7S6r",
-            "name": "Thermal_Runaway_DL_NASA_Model1.ipynb",
-            "modifiedTime": "2026-10-01T16:26:49.627Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1RQ38GD6OWjX-ihVPbQS0v-cDkB4sGQ0z",
-            "webContentLink": "https://drive.google.com/uc?id=1RQ38GD6OWjX-ihVPbQS0v-cDkB4sGQ0z&export=download",
-            "size": "37843",
-            "id": "1RQ38GD6OWjX-ihVPbQS0v-cDkB4sGQ0z",
-            "name": "Thermal_Runaway_DL_NASA_Model1.ipynb",
-            "modifiedTime": "2026-09-23T05:00:15.538Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1eSfEAPEIjrFGsXH4tZ00pZ1nnspeCPK_",
-            "webContentLink": "https://drive.google.com/uc?id=1eSfEAPEIjrFGsXH4tZ00pZ1nnspeCPK_&export=download",
-            "size": "535080",
-            "id": "1eSfEAPEIjrFGsXH4tZ00pZ1nnspeCPK_",
-            "name": "Thermal_Runaway_DL_NASA_Model1.ipynb",
-            "modifiedTime": "2026-09-21T15:34:53.774Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/149DgwLBCZBUNZuLXu7l1ajw-DeCFeifV",
-            "webContentLink": "https://drive.google.com/uc?id=149DgwLBCZBUNZuLXu7l1ajw-DeCFeifV&export=download",
-            "size": "540101",
-            "id": "149DgwLBCZBUNZuLXu7l1ajw-DeCFeifV",
-            "name": "Thermal_Runaway_DL_NASA_Model1.ipynb",
-            "modifiedTime": "2026-09-21T15:07:32.006Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/19er6xtm43-xAKoNDuFymDm0nrzzVbIrF",
-            "webContentLink": "https://drive.google.com/uc?id=19er6xtm43-xAKoNDuFymDm0nrzzVbIrF&export=download",
-            "size": "50869",
-            "id": "19er6xtm43-xAKoNDuFymDm0nrzzVbIrF",
-            "name": "Thermal_Runaway_DL_NASA_Model1.ipynb",
-            "modifiedTime": "2026-09-16T12:55:26.861Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/144x6SU5MmevuMiqjU7cZE7K3V-tsPBWY",
-            "webContentLink": "https://drive.google.com/uc?id=144x6SU5MmevuMiqjU7cZE7K3V-tsPBWY&export=download",
-            "size": "324",
-            "id": "144x6SU5MmevuMiqjU7cZE7K3V-tsPBWY",
-            "name": "Untitled0.ipynb",
-            "modifiedTime": "2025-10-27T09:03:38.587Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/12-W505jx7V-ruWiETufTMLKvJLv6IPWt",
-            "webContentLink": "https://drive.google.com/uc?id=12-W505jx7V-ruWiETufTMLKvJLv6IPWt&export=download",
-            "size": "20471",
-            "id": "12-W505jx7V-ruWiETufTMLKvJLv6IPWt",
-            "name": "Untitled1.ipynb",
-            "modifiedTime": "2026-04-10T13:42:04.726Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1XrWuSDGBfwDnsJJnFQjUFVLxPh5xBMkx",
-            "webContentLink": "https://drive.google.com/uc?id=1XrWuSDGBfwDnsJJnFQjUFVLxPh5xBMkx&export=download",
-            "size": "11255",
-            "id": "1XrWuSDGBfwDnsJJnFQjUFVLxPh5xBMkx",
-            "name": "Untitled2.ipynb",
-            "modifiedTime": "2026-05-28T06:05:51.466Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/14AaQ4pg2OKeJxByUX43RMnjHvWMAWqsA",
-            "webContentLink": "https://drive.google.com/uc?id=14AaQ4pg2OKeJxByUX43RMnjHvWMAWqsA&export=download",
-            "size": "438893",
-            "id": "14AaQ4pg2OKeJxByUX43RMnjHvWMAWqsA",
-            "name": "Untitled3.ipynb",
-            "modifiedTime": "2026-06-01T08:08:27.423Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBMqO9q_mqNfh-nvvUhInJs6a-oiGMYZ3q0PTTOfkvIvstJRzPjhUIB77gIGcjUow6vDUtAoIH3-l8GYbR3AHuMOAd6KSnzeFO3cxV863sEs46Q-jg=s220",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1hRzOlBwnrLtq6JNptZorzXNY4oBXxCfM",
-            "webContentLink": "https://drive.google.com/uc?id=1hRzOlBwnrLtq6JNptZorzXNY4oBXxCfM&export=download",
-            "size": "1677723",
-            "id": "1hRzOlBwnrLtq6JNptZorzXNY4oBXxCfM",
-            "name": "Untitled5_(2) (1).ipynb",
-            "modifiedTime": "2026-04-10T13:39:11.739Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1A4iNXmd87iAeKXFbecPSj7W9b_4mv6Is",
-            "webContentLink": "https://drive.google.com/uc?id=1A4iNXmd87iAeKXFbecPSj7W9b_4mv6Is&export=download",
-            "size": "544661",
-            "id": "1A4iNXmd87iAeKXFbecPSj7W9b_4mv6Is",
-            "name": "Untitled5_(2).ipynb",
-            "modifiedTime": "2026-04-10T14:10:27.471Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/18c9TJgXPf9gfIR27-CMwRkT9IT6aNjcd",
-            "webContentLink": "https://drive.google.com/uc?id=18c9TJgXPf9gfIR27-CMwRkT9IT6aNjcd&export=download",
-            "size": "280865",
-            "id": "18c9TJgXPf9gfIR27-CMwRkT9IT6aNjcd",
-            "name": "Untitled5_(2).ipynb",
-            "modifiedTime": "2026-04-09T14:59:48.392Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1G2qkyUHEq2PHPdF0pI_gFLnv0P17s-xu",
-            "webContentLink": "https://drive.google.com/uc?id=1G2qkyUHEq2PHPdF0pI_gFLnv0P17s-xu&export=download",
-            "size": "303209",
-            "id": "1G2qkyUHEq2PHPdF0pI_gFLnv0P17s-xu",
-            "name": "Untitled5_(2)_(1) (1).ipynb",
-            "modifiedTime": "2026-04-10T14:03:19.116Z"
-        },
-        {
-            "mimeType": "application/vnd.google.colaboratory",
-            "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/application/vnd.google.colaboratory",
-            "webViewLink": "https://colab.research.google.com/drive/1os3IUFUSGA_Zgxx6L3UUOrspd9HTPd6D",
-            "webContentLink": "https://drive.google.com/uc?id=1os3IUFUSGA_Zgxx6L3UUOrspd9HTPd6D&export=download",
-            "size": "12002",
-            "id": "1os3IUFUSGA_Zgxx6L3UUOrspd9HTPd6D",
-            "name": "verify_DL_Model1.ipynb",
-            "modifiedTime": "2026-08-29T08:00:29.656Z"
-        }
-    ]
-},
-    visitors: [
-      {
-        id: "USR-98421",
-        ip: "49.207.182.14",
-        status: "online",
-        statusText: "Active Now",
-        country: "India",
-        countryCode: "IN",
-        city: "Chennai, Tamil Nadu",
-        flag: "🇮🇳",
-        isp: "Airtel Broadband Chennai",
-        device: "Desktop PC",
-        os: "Windows 11 Pro",
-        browser: "Google Chrome 124.0",
-        entryPage: "/",
-        currentPage: "/#projects",
-        pagesVisited: ["/", "/#projects", "/#scholarly-inquiry", "/resume.pdf"],
-        pageCount: 4,
-        referrer: "Direct / Bookmarks",
-        referrerType: "Direct",
-        duration: "4m 12s",
-        timestamp: new Date().toISOString(),
-        timeFormatted: "Just now"
-      },
-      {
-        id: "USR-98418",
-        ip: "106.51.72.193",
-        status: "online",
-        statusText: "Active Now",
-        country: "India",
-        countryCode: "IN",
-        city: "Bengaluru, Karnataka",
-        flag: "🇮🇳",
-        isp: "Jio Fiber Bengaluru",
-        device: "MacBook Pro",
-        os: "macOS Sonoma 14.4",
-        browser: "Apple Safari 17.4",
-        entryPage: "/#scholarly-inquiry",
-        currentPage: "/#scholarly-inquiry",
-        pagesVisited: ["/#scholarly-inquiry", "/#projects"],
-        pageCount: 2,
-        referrer: "LinkedIn / in/hitesh-v-s",
-        referrerType: "LinkedIn",
-        duration: "2m 48s",
-        timestamp: new Date(Date.now() - 110 * 1000).toISOString(),
-        timeFormatted: "1m ago"
-      },
-      {
-        id: "USR-98415",
-        ip: "54.215.89.12",
-        status: "online",
-        statusText: "Active Now",
-        country: "United States",
-        countryCode: "US",
-        city: "San Jose, California",
-        flag: "🇺🇸",
-        isp: "Amazon AWS Cloud Subnet",
-        device: "Desktop PC",
-        os: "Ubuntu Linux 22.04",
-        browser: "Google Chrome 124.0",
-        entryPage: "/#projects",
-        currentPage: "/#projects (VLSI & Deep Learning)",
-        pagesVisited: ["/#projects", "/#research-papers"],
-        pageCount: 2,
-        referrer: "GitHub /Hitesh070",
-        referrerType: "GitHub",
-        duration: "3m 30s",
-        timestamp: new Date(Date.now() - 180 * 1000).toISOString(),
-        timeFormatted: "3m ago"
-      },
-      {
-        id: "USR-98411",
-        ip: "157.48.21.84",
-        status: "online",
-        statusText: "Active Now",
-        country: "India",
-        countryCode: "IN",
-        city: "Hyderabad, Telangana",
-        flag: "🇮🇳",
-        isp: "ACT Fibernet Hyderabad",
-        device: "Mobile Phone",
-        os: "Android 14 (Samsung OneUI)",
-        browser: "Chrome Mobile 124.0",
-        entryPage: "/",
-        currentPage: "/",
-        pagesVisited: ["/"],
-        pageCount: 1,
-        referrer: "Google Search (hitesh vs portfolio)",
-        referrerType: "Google Search",
-        duration: "1m 15s",
-        timestamp: new Date(Date.now() - 240 * 1000).toISOString(),
-        timeFormatted: "4m ago"
-      },
-      {
-        id: "USR-98399",
-        ip: "136.24.120.89",
-        status: "offline",
-        statusText: "12m ago",
-        country: "United States",
-        countryCode: "US",
-        city: "Austin, Texas",
-        flag: "🇺🇸",
-        isp: "AT&T Internet Services",
-        device: "Desktop PC",
-        os: "Windows 11",
-        browser: "Microsoft Edge 124.0",
-        entryPage: "/",
-        currentPage: "/resume.pdf",
-        pagesVisited: ["/", "/#experience", "/#projects", "/resume.pdf"],
-        pageCount: 4,
-        referrer: "LinkedIn / Talent Acquisition",
-        referrerType: "LinkedIn",
-        duration: "5m 24s",
-        timestamp: new Date(Date.now() - 720 * 1000).toISOString(),
-        timeFormatted: "12m ago"
-      },
-      {
-        id: "USR-98390",
-        ip: "82.165.197.1",
-        status: "offline",
-        statusText: "28m ago",
-        country: "Germany",
-        countryCode: "DE",
-        city: "Munich, Bavaria",
-        flag: "🇩🇪",
-        isp: "Deutsche Telekom AG",
-        device: "MacBook Air",
-        os: "macOS Ventura",
-        browser: "Mozilla Firefox 125.0",
-        entryPage: "/#projects",
-        currentPage: "/#scholarly-inquiry",
-        pagesVisited: ["/#projects", "/#scholarly-inquiry"],
-        pageCount: 2,
-        referrer: "GitHub /Hitesh070",
-        referrerType: "GitHub",
-        duration: "3m 45s",
-        timestamp: new Date(Date.now() - 1680 * 1000).toISOString(),
-        timeFormatted: "28m ago"
-      },
-      {
-        id: "USR-98382",
-        ip: "188.166.241.98",
-        status: "offline",
-        statusText: "44m ago",
-        country: "United Kingdom",
-        countryCode: "GB",
-        city: "London, England",
-        flag: "🇬🇧",
-        isp: "DigitalOcean Datacenter",
-        device: "Desktop PC",
-        os: "Linux x86_64",
-        browser: "Google Chrome 123.0",
-        entryPage: "/",
-        currentPage: "/#projects",
-        pagesVisited: ["/", "/#projects"],
-        pageCount: 2,
-        referrer: "GitHub / NASA_Hybrid_Ensemble",
-        referrerType: "GitHub",
-        duration: "2m 10s",
-        timestamp: new Date(Date.now() - 2640 * 1000).toISOString(),
-        timeFormatted: "44m ago"
-      },
-      {
-        id: "USR-98375",
-        ip: "117.200.114.62",
-        status: "offline",
-        statusText: "1h ago",
-        country: "India",
-        countryCode: "IN",
-        city: "Chennai (VIT Campus)",
-        flag: "🇮🇳",
-        isp: "VIT Institutional WiFi",
-        device: "Laptop PC",
-        os: "Windows 11",
-        browser: "Google Chrome 124.0",
-        entryPage: "/",
-        currentPage: "/#projects",
-        pagesVisited: ["/", "/#about", "/#projects", "/#experience", "/#contact"],
-        pageCount: 5,
-        referrer: "Direct / Bookmarks",
-        referrerType: "Direct",
-        duration: "7m 50s",
-        timestamp: new Date(Date.now() - 3900 * 1000).toISOString(),
-        timeFormatted: "1 hour ago"
-      }
-    ],
+    files: [],
+    folderMap: {},
     logs: [
-      {
-        id: "log_demo_1",
-        timestamp: new Date().toISOString(),
-        dateFormatted: "Just now",
-        username: "Hitesh",
-        status: "SUCCESS",
-        ip: "127.0.0.1",
-        os: "Windows 11 Pro",
-        browser: "Google Chrome",
-        device: "Desktop PC",
-        location: "Admin Terminal • Chennai, Tamil Nadu",
-        userAgent: "Browser Direct Access"
-      },
-      {
-        id: "log_demo_2",
-        timestamp: new Date(Date.now() - 3600 * 1000).toISOString(),
-        dateFormatted: "1 hour ago",
-        username: "Hitesh",
-        status: "SUCCESS",
-        ip: "127.0.0.1",
-        os: "macOS Sonoma",
-        browser: "Safari",
-        device: "Laptop PC",
-        location: "Admin Terminal • Chennai, Tamil Nadu",
-        userAgent: "Browser Direct Access"
-      }
-    ]
+      { id: 'log_1', status: 'authorized', user: 'Hitesh', ip: 'Admin Client', os: 'Web Client', browser: 'Browser', device: 'Admin Terminal', location: 'Active Workspace', timestamp: 'Active' }
+    ],
+    visitors: []
   };
 
-  // =========================================================================
-  // REMOTE BACKEND & AUTH HELPERS (Connect to self-hosted Node.js backend)
-  // =========================================================================
-  const REMOTE_API_STORAGE_KEY = 'portfolio_admin_api_url';
-  const AUTH_TOKEN_STORAGE_KEY = 'portfolio_admin_token';
-
-  function getApiBaseUrl() {
-    const raw = localStorage.getItem(REMOTE_API_STORAGE_KEY) || '';
-    return raw.trim().replace(/\/+$/, '');
-  }
-
-  function getAuthToken() {
-    return sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || '';
-  }
-
-  function setAuthToken(token) {
-    if (token) {
-      sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
-      localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
-    } else {
-      sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-      localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-    }
-  }
-
-  async function apiFetch(endpoint, options = {}) {
-    const base = getApiBaseUrl();
-    const url = endpoint.startsWith('http') ? endpoint : (base ? `${base}${endpoint}` : endpoint);
-    const headers = options.headers ? { ...options.headers } : {};
-    const token = getAuthToken();
-    if (token && !headers['Authorization']) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    return fetch(url, {
-      ...options,
-      headers,
-      credentials: 'include'
-    });
-  }
-
   function formatBytes(bytes) {
-    if (!bytes || bytes === 0) return '0 B';
+    if (bytes === 0 || !bytes) return '0 B';
     if (bytes >= 1e12) return (bytes / 1e12).toFixed(1) + ' TB';
     if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB';
     if (bytes >= 1e6) return (bytes / 1e6).toFixed(1) + ' MB';
@@ -1657,21 +190,6 @@
       return `<svg viewBox="0 0 24 24" width="24" height="24" fill="#ea580c"><circle cx="12" cy="12" r="10"/></svg>`;
     }
     return `<svg viewBox="0 0 24 24" width="24" height="24" stroke="#2563eb" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
-  }
-
-  // Check Session
-  async function checkAuth() {
-    try {
-      const res = await apiFetch('/api/auth/me');
-      const data = await res.json();
-      if (data.authenticated) {
-        setLoggedIn(data.user);
-      } else {
-        setLoggedOut();
-      }
-    } catch (e) {
-      setLoggedOut();
-    }
   }
 
   function setLoggedIn(user, animate = false) {
@@ -1725,9 +243,9 @@
   // Cryptographic Authentication Engine & Session Manager
   const AUTH_SALT = 'portfolio-admin-salt-2026';
   const AUTHORIZED_DIGESTS = new Set([
-    '751c571b1b1f5df3c5b39ac152ed804bece4334e69180d57ee6d9df02762c23d', // hitesh:[REDACTED]:portfolio-admin-salt-2026
-    '7ba89270808b06fb6660e1747343ed0234a84bbe3e180ae235f8a3a8be671d18', // admin:[REDACTED]:portfolio-admin-salt-2026
-    'd2152a8de5990c6d4d7c9b23ec0be975480f8b5c681a0209510bd7946a7490f0'  // Hitesh:[REDACTED]:portfolio-admin-salt-2026
+    '751c571b1b1f5df3c5b39ac152ed804bece4334e69180d57ee6d9df02762c23d',
+    '7ba89270808b06fb6660e1747343ed0234a84bbe3e180ae235f8a3a8be671d18',
+    'd2152a8de5990c6d4d7c9b23ec0be975480f8b5c681a0209510bd7946a7490f0'
   ]);
 
   async function computeSha256(str) {
@@ -1870,18 +388,35 @@
     loginBtn.innerHTML = '<span>Authenticate & Access</span>';
   });
 
-  // Logout with confirmation prompt
+  // Logout with Session Wiping & Public PC Protection
   logoutBtn.addEventListener('click', async () => {
     const confirmed = confirm('Are you sure you want to log out of the Admin Portal?');
     if (!confirmed) return;
 
     try {
       await apiFetch('/api/auth/logout', { method: 'POST' });
-      showToast('Logged out of Admin Portal', 'success');
-      setLoggedOut();
-    } catch (e) {
-      setLoggedOut();
+    } catch (e) {}
+
+    clearCryptographicSession();
+    setAuthToken('');
+    setDirectDriveToken('');
+
+    const isPublicPc = sessionStorage.getItem('admin_public_pc_mode') === 'true' || localStorage.getItem('admin_public_pc_mode') === 'true';
+    if (isPublicPc) {
+      sessionStorage.clear();
+      localStorage.removeItem('gdrive_direct_token');
+      localStorage.removeItem('gdrive_token_expires');
+      localStorage.removeItem('portfolio_admin_token');
+      localStorage.removeItem('admin_public_pc_mode');
+      try {
+        if (window.indexedDB) {
+          indexedDB.deleteDatabase('PortfolioVaultDB');
+        }
+      } catch (err) {}
     }
+
+    showToast('Logged out of Admin Portal & session cleared', 'success');
+    setLoggedOut();
   });
 
   // Central Tab Switching Helper
@@ -1931,13 +466,22 @@
     if (metricTotalLimit) metricTotalLimit.textContent = `of ${q.limitFormatted || '5 TB'} Google One Plan`;
     if (photosTabUsage) photosTabUsage.textContent = q.photosFormatted || '65.5 GB';
 
-    if (sbTotalText) sbTotalText.textContent = q.totalFormatted || '79.4 GB';
+    if (sbTotalText) sbTotalText.textContent = q.totalFormatted || '0 B';
     if (sbLimitText) sbLimitText.textContent = q.limitFormatted || '5 TB';
     
-    if (sbFillDrive) sbFillDrive.style.width = '3%';
-    if (sbFillPhotos) sbFillPhotos.style.width = '12%';
+    const limit = q.limit || 5497558138880;
+    const driveBytes = q.usageInDrive || 0;
+    const totalUsage = q.usage || 0;
+    const otherBytes = Math.max(0, totalUsage - driveBytes);
+
+    const drivePct = limit > 0 ? Math.min(100, Math.max(0.5, (driveBytes / limit) * 100)) : 1;
+    const otherPct = limit > 0 ? Math.min(100, Math.max(0.5, (otherBytes / limit) * 100)) : 2;
+    const freePct = Math.max(0, 100 - drivePct - otherPct);
+
+    if (sbFillDrive) sbFillDrive.style.width = drivePct.toFixed(1) + '%';
+    if (sbFillPhotos) sbFillPhotos.style.width = otherPct.toFixed(1) + '%';
     const sbFillFree = document.getElementById('sb-fill-free');
-    if (sbFillFree) sbFillFree.style.width = '85%';
+    if (sbFillFree) sbFillFree.style.width = freePct.toFixed(1) + '%';
 
     if (q.user) {
       if (topbarUserName) topbarUserName.textContent = q.user.displayName || 'Hitesh V S';
@@ -2060,13 +604,7 @@
         showToast('Opening folder in Google Drive...', 'info');
       }
     } else {
-      const a = document.createElement('a');
-      a.href = `/api/drive/download/${target.id}`;
-      a.download = target.name;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 100);
-      showToast(`Downloading "${target.name}"...`, 'success');
+      window.downloadDriveFile(target.id, target.name, target.mimeType);
     }
   });
 
@@ -2185,6 +723,76 @@
   }
 
   // Open Folder (Never throws error - loads live files or subfolder contents)
+  // Robust Direct Google Drive Download Engine
+  async function downloadDriveFile(fileId, fileName, mimeType) {
+    if (!fileId) return;
+    const token = getDirectDriveToken();
+    showToast(`Preparing download for ${fileName || 'file'}...`, 'info');
+
+    if (token) {
+      try {
+        const isGoogleApp = mimeType && mimeType.startsWith('application/vnd.google-apps.');
+        let downloadUrl;
+        if (isGoogleApp) {
+          const exportMime = (mimeType.includes('spreadsheet') || mimeType.includes('sheet'))
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'application/pdf';
+          downloadUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/export?mimeType=${encodeURIComponent(exportMime)}`;
+        } else {
+          downloadUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
+        }
+
+        const res = await fetch(downloadUrl, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName || 'download';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+          showToast(`Downloaded ${fileName || 'file'} successfully!`, 'success');
+          return;
+        }
+      } catch (err) {
+        console.warn('Direct token download note:', err);
+      }
+    }
+
+    // Direct Google Drive Fallback
+    const directUcUrl = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`;
+    const webViewUrl = `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view?usp=sharing`;
+    window.open(directUcUrl, '_blank') || window.open(webViewUrl, '_blank');
+    showToast(`Opening download link for ${fileName || 'file'}...`, 'info');
+  }
+  window.downloadDriveFile = downloadDriveFile;
+
+  // Fetch Folder Files directly from Google Drive v3 REST API
+  async function fetchFolderFiles(folderId) {
+    const token = getDirectDriveToken();
+    if (token) {
+      try {
+        const targetParent = folderId && folderId !== 'root' ? folderId : 'root';
+        const qStr = `'${targetParent.replace(/'/g, "\\'")}' in parents and trashed = false`;
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files?pageSize=100&fields=nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,parents,iconLink)&q=${encodeURIComponent(qStr)}&orderBy=folder,name`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data.files || [];
+        }
+      } catch (err) {
+        console.warn('Direct Drive folder fetch note:', err);
+      }
+    }
+    return (STATIC_CLOUD_DATA.folderMap && STATIC_CLOUD_DATA.folderMap[folderId]) || [];
+  }
+
   async function openFolderInExplorer(folderId, folderName) {
     currentFolderId = folderId;
     explorerBreadcrumbs.push({ id: folderId, name: folderName });
@@ -2198,17 +806,7 @@
     const driveTab = document.getElementById('tab-drive');
     if (driveTab) driveTab.classList.add('active');
 
-    try {
-      const res = await apiFetch(`/api/drive/files?folderId=${encodeURIComponent(folderId)}`);
-      if (res.ok) {
-        const data = await res.json();
-        renderCleanExplorerGrid(data.files || []);
-        return;
-      }
-    } catch (e) {}
-
-    // Fallback: Check folderMap or filter child items
-    const folderFiles = (STATIC_CLOUD_DATA.folderMap && STATIC_CLOUD_DATA.folderMap[folderId]) || [];
+    const folderFiles = await fetchFolderFiles(folderId);
     renderCleanExplorerGrid(folderFiles);
   }
 
@@ -2226,15 +824,7 @@
           explorerBreadcrumbs = explorerBreadcrumbs.slice(0, idx + 1);
           currentFolderId = crumb.id;
           renderBreadcrumbs();
-          try {
-            const res = await apiFetch(`/api/drive/files?folderId=${encodeURIComponent(crumb.id)}`);
-            if (res.ok) {
-              const data = await res.json();
-              renderCleanExplorerGrid(data.files || []);
-              return;
-            }
-          } catch (e) {}
-          const folderFiles = (STATIC_CLOUD_DATA.folderMap && STATIC_CLOUD_DATA.folderMap[crumb.id]) || (crumb.id === 'root' ? (STATIC_CLOUD_DATA.files || []) : []);
+          const folderFiles = await fetchFolderFiles(crumb.id);
           renderCleanExplorerGrid(folderFiles);
         });
       }
@@ -2398,7 +988,9 @@
     const directToken = getDirectDriveToken();
     if (directToken) {
       try {
-        const liveRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=name contains '${encodeURIComponent(query)}' and trashed = false&fields=files(id,name,mimeType,size,modifiedTime,webViewLink)&pageSize=50`, {
+        const escapedTerm = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const qParam = encodeURIComponent(`name contains '${escapedTerm}' and trashed = false`);
+        const liveRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${qParam}&fields=files(id,name,mimeType,size,modifiedTime,webViewLink)&pageSize=50`, {
           headers: { 'Authorization': `Bearer ${directToken}` }
         });
         if (liveRes.ok) {
@@ -2460,26 +1052,38 @@
   clearSearchBtn.addEventListener('click', clearSearch);
   bannerClearBtn.addEventListener('click', clearSearch);
 
-  // Upload File
+  // Direct Client-Side Upload to Google Drive v3 REST API
   async function uploadFile(file) {
     if (!file) return;
-    showToast(`Uploading "${file.name}" to Google Drive...`, 'success');
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('folderId', currentFolderId);
+    const directToken = getDirectDriveToken();
+    if (!directToken) {
+      showToast('Please connect Google Drive first (Click "Connect Drive" in topbar)', 'warning');
+      triggerGoogleSignIn();
+      return;
+    }
+    showToast(`Uploading "${file.name}" to Google Drive...`, 'info');
 
     try {
-      const res = await apiFetch('/api/drive/upload', {
+      const metadata = {
+        name: file.name,
+        parents: currentFolderId && currentFolderId !== 'root' ? [currentFolderId] : []
+      };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', file);
+
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
-        body: formData
+        headers: { 'Authorization': `Bearer ${directToken}` },
+        body: form
       });
-      const data = await res.json();
+
       if (res.ok) {
         showToast(`Uploaded "${file.name}" to Google Drive!`, 'success');
-        loadLiveDriveData();
+        await loadDirectDriveFiles(currentFolderId);
       } else {
-        showToast(data.error || 'Upload failed', 'error');
+        const err = await res.json().catch(() => ({}));
+        showToast('Upload failed: ' + (err.error ? err.error.message : res.statusText), 'error');
       }
     } catch (e) {
       showToast('Error uploading: ' + e.message, 'error');
@@ -2499,47 +1103,74 @@
     explorerUploadInput.value = '';
   });
 
-  // Create Folder
+  // Direct Client-Side Create Folder in Google Drive v3 REST API
   async function handleCreateFolder() {
     const name = prompt('Enter new folder name:');
     if (!name || !name.trim()) return;
 
+    const directToken = getDirectDriveToken();
+    if (!directToken) {
+      showToast('Please connect Google Drive first (Click "Connect Drive" in topbar)', 'warning');
+      triggerGoogleSignIn();
+      return;
+    }
+
     try {
-      const res = await apiFetch('/api/drive/create-folder', {
+      const metadata = {
+        name: name.trim(),
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: currentFolderId && currentFolderId !== 'root' ? [currentFolderId] : []
+      };
+      const res = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), parentId: currentFolderId })
+        headers: {
+          'Authorization': `Bearer ${directToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(metadata)
       });
-      const data = await res.json();
+
       if (res.ok) {
         showToast(`Folder "${name}" created in Google Drive!`, 'success');
-        loadLiveDriveData();
+        await loadDirectDriveFiles(currentFolderId);
       } else {
-        showToast(data.error || 'Failed to create folder', 'error');
+        const err = await res.json().catch(() => ({}));
+        showToast('Failed to create folder: ' + (err.error ? err.error.message : res.statusText), 'error');
       }
     } catch (e) {
-      showToast('Error creating folder', 'error');
+      showToast('Error creating folder: ' + e.message, 'error');
     }
   }
 
   overviewNewFolderBtn.addEventListener('click', handleCreateFolder);
   explorerNewFolderBtn.addEventListener('click', handleCreateFolder);
 
-  // Delete File
+  // Direct Client-Side Delete File from Google Drive v3 REST API
   async function deleteFile(fileId, fileName) {
     if (!confirm(`Delete "${fileName}" from Google Drive?`)) return;
 
+    const directToken = getDirectDriveToken();
+    if (!directToken) {
+      showToast('Please connect Google Drive first (Click "Connect Drive" in topbar)', 'warning');
+      triggerGoogleSignIn();
+      return;
+    }
+
     try {
-      const res = await apiFetch(`/api/drive/files/${fileId}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (res.ok) {
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${directToken}` }
+      });
+
+      if (res.ok || res.status === 204) {
         showToast(`Deleted "${fileName}"`, 'success');
-        loadLiveDriveData();
+        await loadDirectDriveFiles(currentFolderId);
       } else {
-        showToast(data.error || 'Delete failed', 'error');
+        const err = await res.json().catch(() => ({}));
+        showToast('Delete failed: ' + (err.error ? err.error.message : res.statusText), 'error');
       }
     } catch (e) {
-      showToast('Error deleting', 'error');
+      showToast('Error deleting: ' + e.message, 'error');
     }
   }
 
@@ -2593,8 +1224,6 @@
 
     setStatus('Saving to Cloud...');
     try {
-      await ensureSupabaseBucket(url, key);
-
       const bucketName = getSupabaseConfig().bucket || 'temp_vault';
       const uploadUrl = `${url}/storage/v1/object/${bucketName}/admin_scratchpad.txt`;
       let res = await fetch(uploadUrl, {
@@ -2625,7 +1254,13 @@
       } else {
         const errText = await res.text().catch(() => '');
         console.warn('Supabase scratchpad error response:', res.status, errText);
-        setStatus('Saved to Cloud (Supabase)');
+        if (res.status === 401 || res.status === 403) {
+          setStatus('Cloud Sync Error (Check Supabase RLS / Policy)', true);
+        } else if (res.status === 404) {
+          setStatus(`Bucket "${bucketName}" not found in Supabase`, true);
+        } else {
+          setStatus(`Cloud Sync Failed (${res.status}) - Saved Locally`, true);
+        }
       }
     } catch (e) {
       console.warn('Scratchpad cloud sync error:', e);
@@ -2740,18 +1375,27 @@
     }
   });
 
-  // Disconnect Drive
+  // Disconnect Drive & Revoke OAuth Access
   disconnectDriveBtn.addEventListener('click', async () => {
-    if (!confirm('Disconnect Google Drive?')) return;
-    try {
-      const res = await apiFetch('/api/drive/disconnect', { method: 'POST' });
-      if (res.ok) {
-        showToast('Google Drive disconnected', 'success');
-        loadLiveDriveData();
+    if (!confirm('Disconnect Google Drive and clear active tokens?')) return;
+    const token = getDirectDriveToken();
+    if (token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+      try {
+        google.accounts.oauth2.revoke(token, () => {
+          console.log('Revoked Google Drive OAuth access token');
+        });
+      } catch (e) {
+        console.warn('Revoke token note:', e);
       }
-    } catch (e) {
-      showToast('Disconnect error', 'error');
     }
+    setDirectDriveToken('');
+    cachedFiles = [];
+    currentFolderId = 'root';
+    applyStorageMetrics(STATIC_CLOUD_DATA.storage);
+    renderRecentFiles();
+    renderStorageBreakdown(STATIC_CLOUD_DATA.storage);
+    updateLiveModeUI(false);
+    showToast('Google Drive disconnected and token cleared', 'success');
   });
 
   // =========================================================================
@@ -3472,15 +2116,20 @@
   const liveModePill = document.getElementById('live-mode-pill');
   const liveModeLabel = document.getElementById('live-mode-label');
 
-  function updateLiveModeUI(isConnected = false) {
+  function updateLiveModeUI(isActive = false) {
     if (!liveModePill) return;
-    const isDriveActive = isConnected || !!getDirectDriveToken() || (Array.isArray(cachedFiles) && cachedFiles.length > 0);
-    if (isDriveActive) {
+    const hasToken = !!getDirectDriveToken();
+    const isLive = isActive && hasToken;
+    if (isLive) {
       liveModePill.style.display = 'inline-flex';
       liveModePill.className = 'status-pill green';
       if (liveModeLabel) liveModeLabel.textContent = 'Live Mode';
+      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Drive: Live';
+      if (connectGdriveDirectBtn) connectGdriveDirectBtn.className = 'btn btn-primary-soft btn-sm';
     } else {
       liveModePill.style.display = 'none';
+      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Connect Drive';
+      if (connectGdriveDirectBtn) connectGdriveDirectBtn.className = 'btn btn-secondary btn-sm';
     }
   }
 
@@ -3499,25 +2148,39 @@
   // ZONE 1: DIRECT GOOGLE DRIVE OAUTH 24/7 (Client-Side GIS & OAuth Web Redirect Fallback)
   const GOOGLE_CLIENT_ID = '216288105966-av9qgm44ubfpg1l3374ldqg4m4uaif9u.apps.googleusercontent.com';
   let gdriveTokenClient = null;
-  const connectGdriveDirectBtn = document.getElementById('connect-gdrive-direct-btn');
-  const connectGdriveDirectLabel = document.getElementById('connect-gdrive-direct-label');
+  const connectGdriveDirectBtn = document.getElementById('connect-gdrive-direct-btn') || document.getElementById('connect-gdrive-topbar-btn');
+  const connectGdriveDirectLabel = document.getElementById('connect-gdrive-direct-label') || document.getElementById('connect-gdrive-label');
 
   function getDirectDriveToken() {
+    const expiresAt = parseInt(sessionStorage.getItem('gdrive_token_expires') || localStorage.getItem('gdrive_token_expires') || '0', 10);
+    if (expiresAt && Date.now() > expiresAt) {
+      setDirectDriveToken('');
+      return '';
+    }
     return sessionStorage.getItem('gdrive_direct_token') || localStorage.getItem('gdrive_direct_token') || '';
   }
 
-  function setDirectDriveToken(token) {
+  function setDirectDriveToken(token, expiresIn = 3600) {
+    const isPublicPc = sessionStorage.getItem('admin_public_pc_mode') === 'true' || localStorage.getItem('admin_public_pc_mode') === 'true';
     if (token) {
+      const expiresAt = (Date.now() + (expiresIn * 1000)).toString();
       sessionStorage.setItem('gdrive_direct_token', token);
-      localStorage.setItem('gdrive_direct_token', token);
+      sessionStorage.setItem('gdrive_token_expires', expiresAt);
+      if (!isPublicPc) {
+        localStorage.setItem('gdrive_direct_token', token);
+        localStorage.setItem('gdrive_token_expires', expiresAt);
+      }
       if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Drive: Live';
       if (connectGdriveDirectBtn) connectGdriveDirectBtn.className = 'btn btn-primary-soft btn-sm';
       updateLiveModeUI(true);
     } else {
       sessionStorage.removeItem('gdrive_direct_token');
+      sessionStorage.removeItem('gdrive_token_expires');
       localStorage.removeItem('gdrive_direct_token');
-      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Google Drive';
+      localStorage.removeItem('gdrive_token_expires');
+      if (connectGdriveDirectLabel) connectGdriveDirectLabel.textContent = 'Connect Drive';
       if (connectGdriveDirectBtn) connectGdriveDirectBtn.className = 'btn btn-secondary btn-sm';
+      updateLiveModeUI(false);
     }
   }
 
@@ -3530,7 +2193,10 @@
         setDirectDriveToken(accessToken);
         history.replaceState(null, '', window.location.pathname + window.location.search);
         showToast('Connected to Google Drive Live!', 'success');
-        setTimeout(() => loadDirectDriveFiles(), 300);
+        setTimeout(() => {
+          loadDirectDriveFiles();
+          checkAndResumePendingDriveUploads();
+        }, 300);
       }
     } catch (e) {}
   }
@@ -3732,11 +2398,11 @@
       if (!res.ok) return [];
       const list = await res.json();
       if (!Array.isArray(list)) return [];
-      return list.filter(item => item.name && item.name !== 'admin_scratchpad.txt').map(item => {
+      return list.filter(item => item.name && item.name !== 'admin_scratchpad.txt' && item.name !== '_vault_ping.txt' && !item.name.startsWith('.')).map(item => {
         const displayName = item.name.replace(/^\d+_/, '');
         const size = (item.metadata && item.metadata.size) || item.size || 0;
         const mimeType = (item.metadata && item.metadata.mimetype) || 'application/octet-stream';
-        const publicUrl = `${url}/storage/v1/object/public/temp_vault/${encodeURIComponent(item.name)}`;
+        const publicUrl = `${url}/storage/v1/object/public/${bucketName}/${encodeURIComponent(item.name)}`;
         return {
           id: 'supa_' + item.name,
           name: displayName,
@@ -3836,19 +2502,20 @@
   function getSupabaseConfig() {
     return {
       url: (localStorage.getItem('admin_supabase_url') || '').trim().replace(/\/+$/, ''),
-      key: (localStorage.getItem('admin_supabase_key') || '').trim()
+      key: (localStorage.getItem('admin_supabase_key') || '').trim(),
+      bucket: (localStorage.getItem('admin_supabase_bucket') || 'temp_vault').trim()
     };
   }
 
   async function uploadToSupabaseBucket(file) {
-    const { url, key } = getSupabaseConfig();
+    const { url, key, bucket } = getSupabaseConfig();
     if (!url || !key) return null;
 
     try {
-      await ensureSupabaseBucket(url, key);
       const cleanFileName = encodeURIComponent(file.name.replace(/[^a-zA-Z0-9._-]/g, '_'));
-      const bucketName = getSupabaseConfig().bucket || 'temp_vault';
-      const uploadUrl = `${url}/storage/v1/object/${bucketName}/${Date.now()}_${cleanFileName}`;
+      const bucketName = bucket || 'temp_vault';
+      const rawName = `${Date.now()}_${cleanFileName}`;
+      const uploadUrl = `${url}/storage/v1/object/${bucketName}/${rawName}`;
       const res = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
@@ -3859,7 +2526,8 @@
         body: file
       });
       if (res.ok) {
-        return uploadUrl;
+        const publicUrl = `${url}/storage/v1/object/public/${bucketName}/${rawName}`;
+        return { rawName, url: publicUrl };
       } else {
         console.warn('Supabase upload status:', res.status, await res.text().catch(() => ''));
       }
@@ -3947,7 +2615,9 @@
       const { url, key } = getSupabaseConfig();
       if (url && key) {
         try {
-          await fetch(`${url}/storage/v1/object/temp_vault`, {
+          const { bucket } = getSupabaseConfig();
+          const bucketName = bucket || 'temp_vault';
+          await fetch(`${url}/storage/v1/object/${bucketName}`, {
             method: 'DELETE',
             headers: {
               'apikey': key,
@@ -3965,19 +2635,34 @@
     showToast('File removed from temp staging', 'info');
   };
 
+  async function checkAndResumePendingDriveUploads() {
+    const pendingSingle = sessionStorage.getItem('pending_drive_upload_id');
+    const pendingAll = sessionStorage.getItem('pending_drive_upload_all');
+    if (pendingSingle) {
+      sessionStorage.removeItem('pending_drive_upload_id');
+      showToast('Resuming transfer to Google Drive...', 'info');
+      await window.moveStagedFileToDrive(pendingSingle);
+    } else if (pendingAll) {
+      sessionStorage.removeItem('pending_drive_upload_all');
+      showToast('Resuming transfer of all staged files...', 'info');
+      const moveAllBtn = document.getElementById('move-all-to-drive-btn');
+      if (moveAllBtn) moveAllBtn.click();
+    }
+  }
+
   window.moveStagedFileToDrive = async function(id) {
     const directToken = getDirectDriveToken();
-    const files = await getCombinedStagedFiles();
-    const f = files.find(x => x.id === id);
-    if (!f) {
-      showToast('File not found in staging vault', 'warning');
-      return;
-    }
-
     if (!directToken) {
       sessionStorage.setItem('pending_drive_upload_id', id);
       showToast('Connecting to Google Drive authorization to complete transfer...', 'info');
       triggerGoogleSignIn();
+      return;
+    }
+
+    const files = await getCombinedStagedFiles();
+    const f = files.find(x => x.id === id);
+    if (!f) {
+      showToast('File not found in staging vault', 'warning');
       return;
     }
 
@@ -4317,7 +3002,7 @@
 
 
   // Initial UI updates & Boot Sequence
-  updateLiveModeUI(true);
+  updateLiveModeUI(!!getDirectDriveToken());
   updateSupabaseStatusUI();
   initGoogleIdentityServices();
   renderStagedFiles();

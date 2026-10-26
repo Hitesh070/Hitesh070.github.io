@@ -209,7 +209,7 @@ p {
 
 .reveal-on-scroll.active {
     opacity: 1;
-    transform: translate(0, 0) scale(1) !important;
+    transform: translate(0, 0) scale(1);
 }
 
 .reveal-up { transform: translateY(40px); }

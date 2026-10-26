@@ -600,7 +600,7 @@ function initContactFormAndCopy() {
 
     copyBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            const textToCopy = btn.getAttribute('data-copy-val');
+            const textToCopy = btn.getAttribute('data-copy-val') || btn.getAttribute('data-copy') || 'hiteshvs616@gmail.com';
             if (textToCopy) {
                 navigator.clipboard.writeText(textToCopy);
                 showToast(`Copied ${textToCopy} to clipboard!`);
@@ -640,3 +640,37 @@ function showToast(msg) {
         setTimeout(() => toast.remove(), 400);
     }, 2600);
 }
+
+
+    // Contact Form Handler
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+      contactForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nameInput = contactForm.querySelector('[name="name"]') || contactForm.querySelector('#name');
+        const emailInput = contactForm.querySelector('[name="email"]') || contactForm.querySelector('#email');
+        const messageInput = contactForm.querySelector('[name="message"]') || contactForm.querySelector('#message');
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+
+        const name = nameInput ? nameInput.value : '';
+        const email = emailInput ? emailInput.value : '';
+        const message = messageInput ? messageInput.value : '';
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Opening Mail Client...';
+        }
+
+        const mailtoUrl = `mailto:hiteshvs616@gmail.com?subject=${encodeURIComponent('Portfolio Contact from ' + name)}&body=${encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\n\nMessage:\n' + message)}`;
+        window.location.href = mailtoUrl;
+
+        setTimeout(() => {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Message Ready ✓';
+          }
+          contactForm.reset();
+        }, 1200);
+      });
+    }
+  

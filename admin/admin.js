@@ -1137,7 +1137,9 @@
   // =========================================================================
   const toggleClientIdBtn = document.getElementById('toggle-client-id-btn');
   const clientIdText = document.getElementById('client-id-text');
-  const fullClientId = '216288105966-av9qgm44ubfpg1l3374ldqg4m4uaif9u.apps.googleusercontent.com';
+  let fullClientId = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
+  // Dynamically load from authenticated backend status
+  fetch('/api/drive/status').then(r => r.json()).then(d => { if (d.clientId) fullClientId = d.clientId; }).catch(() => {});
   const maskedClientId = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
   let isClientIdRevealed = false;
 

@@ -708,10 +708,12 @@ app.post('/api/auth/login', (req, res) => {
       expiresAt: Date.now() + expiryMs
     });
 
+    const isHttps = Boolean(req.secure || req.headers['x-forwarded-proto'] === 'https');
     res.cookie('admin_session', sessionToken, {
       httpOnly: true,
       maxAge: expiryMs,
-      sameSite: 'lax'
+      sameSite: 'lax',
+      secure: isHttps
     });
 
     return res.json({
@@ -841,7 +843,7 @@ app.get('/api/drive/status', requireAuth, async (req, res) => {
         isConnected: false,
         error: err.message,
         needsApiEnabled: err.message.includes('has not been used in project') || err.message.includes('disabled'),
-        enableApiUrl: 'https://console.developers.google.com/apis/api/drive.googleapis.com/overview?project=216288105966',
+        enableApiUrl: 'https://console.developers.google.com/apis/api/drive.googleapis.com/overview',
         clientId: cfg.googleDrive.clientId || '',
         hasSecret: Boolean(cfg.googleDrive.clientSecret),
         mode: 'error',

@@ -41,3 +41,7 @@ cookies.txt
 
 # Local experimental development directory
 experimental/
+
+# Local tunnel binaries
+*.exe
+server/bin/

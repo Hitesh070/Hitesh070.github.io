@@ -1122,14 +1122,29 @@
                   <span class="sub-text">Temporary upload staging before transfer to Google Drive.</span>
                 </div>
               </div>
-              <div class="table-actions">
+              <div class="table-actions" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="vault-realtime-badge" class="badge-neutral" style="font-size: 11px;" title="Supabase Realtime Sync">● Realtime Sync</span>
+                <select id="temp-drive-folder-select" class="filter-select" style="max-width: 170px; padding: 5px 8px; font-size: 12px;" title="Destination Google Drive folder for transfers">
+                  <option value="root">📁 My Drive (Root)</option>
+                </select>
+                <select id="vault-retention-select" class="filter-select" style="padding: 5px 8px; font-size: 12px;" title="Auto-delete staged files after retention period">
+                  <option value="0">Keep: Permanent</option>
+                  <option value="1">Keep: 1 Day</option>
+                  <option value="3">Keep: 3 Days</option>
+                  <option value="7" selected>Keep: 7 Days</option>
+                  <option value="14">Keep: 14 Days</option>
+                </select>
+                <button type="button" id="vault-bulk-delete-btn" class="btn btn-danger-soft btn-sm" style="display: none;" title="Delete selected files">
+                  <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  <span>Delete (<span id="vault-selected-count">0</span>)</span>
+                </button>
                 <button type="button" id="temp-refresh-btn" class="btn btn-secondary btn-sm" title="Sync files from Cloud Vault">
                   <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                   <span>Sync Cloud</span>
                 </button>
                 <button type="button" id="temp-move-all-btn" class="btn btn-primary btn-sm" title="Transfer all staged files into Google Drive">
                   <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-                  <span>Move All to Google Drive</span>
+                  <span>Move All</span>
                 </button>
                 <button type="button" id="temp-clear-all-btn" class="btn btn-secondary btn-sm">Clear All</button>
               </div>
@@ -1143,6 +1158,16 @@
                 <div class="drop-title">Drag &amp; Drop files here, or <span class="drop-browse">Browse</span></div>
                 <div class="drop-sub">Upload assignments, code files, PDFs, or research notes from this computer .</div>
               </div>
+            <!-- UPLOAD PROGRESS INDICATOR -->
+            <div id="staging-upload-progress" style="display: none; margin-top: 12px; background: #1e293b; border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.1);">
+              <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: #cbd5e1;">
+                <span id="staging-upload-filename">Uploading file...</span>
+                <span id="staging-upload-percent">0%</span>
+              </div>
+              <div style="height: 6px; background: #334155; border-radius: 3px; overflow: hidden;">
+                <div id="staging-upload-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #6366f1); transition: width 0.15s ease;"></div>
+              </div>
+            </div>
             </div>
 
             <!-- STAGED FILES METRICS -->
@@ -1169,9 +1194,11 @@
               <table class="clean-table">
                 <thead>
                   <tr>
+                    <th style="width: 36px; text-align: center;"><input type="checkbox" id="vault-select-all" style="cursor: pointer;" title="Select all files"></th>
                     <th>File Name</th>
                     <th>Size</th>
-                    <th>Uploaded Date</th>
+                    <th>Uploaded</th>
+                    <th>Retention</th>
                     <th>Origin Device</th>
                     <th style="text-align: right;">Actions</th>
                   </tr>

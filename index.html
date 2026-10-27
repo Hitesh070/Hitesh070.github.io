@@ -47,7 +47,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css?v=20261008_resume">
+    <link rel="stylesheet" href="styles.css?v=v1.1.0">
+    <link rel="canonical" href="https://hitesh070.github.io/">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+
+    <!-- JSON-LD Structured Data Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Hitesh V S",
+      "url": "https://hitesh070.github.io/",
+      "image": "https://hitesh070.github.io/assets/hero.jpg",
+      "sameAs": [
+        "https://github.com/Hitesh070",
+        "https://www.linkedin.com/in/hiteshvs",
+        "https://www.instagram.com/070_hitesh/"
+      ],
+      "jobTitle": "Electrical & Electronics Engineering Student",
+      "worksFor": {
+        "@type": "CollegeOrUniversity",
+        "name": "Vellore Institute of Technology (VIT), Chennai"
+      },
+      "alumniOf": "VIT Chennai",
+      "knowsAbout": [
+        "Embedded Systems",
+        "Robotics",
+        "Field Oriented Control (FOC)",
+        "BLDC Motor Drives",
+        "Digital VLSI",
+        "FPGA",
+        "ROS2",
+        "Power Electronics",
+        "IoT"
+      ]
+    }
+    </script>
 </head>
 
 <body class="bg-void">
@@ -76,6 +112,8 @@
             </div>
 
             <div class="nav-actions">
+                <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
+                <button class="theme-toggle-btn" id="cmd-palette-btn" aria-label="Command Palette" title="Command Palette (Ctrl+K)"><i class="fa-solid fa-terminal"></i></button>
                 <button class="mobile-toggle-btn" id="mobile-menu-btn" aria-label="Toggle Navigation">
                     <i class="fa-solid fa-bars"></i>
                 </button>
@@ -912,6 +950,7 @@
 
                 <!-- Clean Aligned Contact Form -->
                 <form class="minimal-contact-form reveal-on-scroll reveal-right" id="contact-form">
+                    <input type="text" name="_hp" style="display:none;" tabindex="-1" autocomplete="off">
                     <div class="form-grid-2">
                         <div class="input-field-group">
                             <label for="name">Your Name</label>
@@ -978,7 +1017,42 @@
     <div class="toast-container" id="toast-container"></div>
 
     <!-- JavaScript Engine -->
-    <script src="app.js?v=20261008_resume"></script>
+    <script src="app.js?v=v1.1.0"></script>
+
+    <!-- PROJECT CASE STUDY MODAL -->
+    <div class="case-study-backdrop" id="case-study-modal" aria-hidden="true">
+      <div class="case-study-card">
+        <button type="button" class="case-study-close-btn" id="close-case-study-btn" aria-label="Close modal">&times;</button>
+        <div id="case-study-content"></div>
+      </div>
+    </div>
+
+    <!-- COMMAND PALETTE (CTRL+K) -->
+    <div class="cmd-palette-backdrop" id="cmd-palette-modal" aria-hidden="true">
+      <div class="cmd-palette-modal">
+        <input type="text" class="cmd-search-input" id="cmd-search-input" placeholder="Type a section name or command... (e.g. Projects, Contact, Dark Mode, Admin)">
+        <div class="cmd-results-list" id="cmd-results-list">
+          <a href="#hero" class="cmd-item" data-action="nav"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-house"></i> Home / Overview</span><span class="cmd-item-shortcut">Jump</span></a>
+          <a href="#about" class="cmd-item" data-action="nav"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-user"></i> About Me</span><span class="cmd-item-shortcut">Jump</span></a>
+          <a href="#skills" class="cmd-item" data-action="nav"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-microchip"></i> Engineering Skills</span><span class="cmd-item-shortcut">Jump</span></a>
+          <a href="#projects" class="cmd-item" data-action="nav"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-diagram-project"></i> Technical Projects</span><span class="cmd-item-shortcut">Jump</span></a>
+          <a href="#academics" class="cmd-item" data-action="nav"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-graduation-cap"></i> Academics & Research</span><span class="cmd-item-shortcut">Jump</span></a>
+          <a href="#contact" class="cmd-item" data-action="nav"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-envelope"></i> Contact Channel</span><span class="cmd-item-shortcut">Jump</span></a>
+          <div class="cmd-item" id="cmd-toggle-theme"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-circle-half-stroke"></i> Toggle Dark / Light Theme</span><span class="cmd-item-shortcut">Theme</span></div>
+          <a href="/admin/" class="cmd-item" target="_blank"><span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-shield-halved"></i> Open Admin Portal</span><span class="cmd-item-shortcut">Admin &nearr;</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+      <a href="#hero" class="bottom-nav-item active"><i class="fa-solid fa-house"></i><span>Home</span></a>
+      <a href="#projects" class="bottom-nav-item"><i class="fa-solid fa-diagram-project"></i><span>Projects</span></a>
+      <a href="#academics" class="bottom-nav-item"><i class="fa-solid fa-graduation-cap"></i><span>Academics</span></a>
+      <a href="#contact" class="bottom-nav-item"><i class="fa-solid fa-envelope"></i><span>Contact</span></a>
+      <a href="/admin/" class="bottom-nav-item"><i class="fa-solid fa-shield-halved"></i><span>Admin</span></a>
+    </nav>
+
 </body>
 
 </html>

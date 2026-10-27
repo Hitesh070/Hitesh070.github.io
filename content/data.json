@@ -1,0 +1,76 @@
+{
+  "author": {
+    "name": "Hitesh V S",
+    "role": "Electrical & Electronics Engineering Student",
+    "institution": "Vellore Institute of Technology (VIT), Chennai",
+    "email": "hiteshvs616@gmail.com",
+    "github": "https://github.com/Hitesh070",
+    "linkedin": "https://www.linkedin.com/in/hiteshvs",
+    "instagram": "https://www.instagram.com/070_hitesh/"
+  },
+  "projects": [
+    {
+      "id": "autonomous-rover",
+      "title": "Autonomous Navigation & Terrain Mapping Rover",
+      "category": "Robotics & Embedded",
+      "summary": "Differential drive rover equipped with LiDAR, stereo vision, and onboard ROS2 navigation stack for SLAM in GPS-denied indoor and rugged outdoor environments.",
+      "tech": ["ROS2", "LiDAR", "Python", "C++", "STM32", "OpenCV"],
+      "metrics": "±3cm SLAM localization accuracy across 500m² test area",
+      "github": "https://github.com/Hitesh070"
+    },
+    {
+      "id": "bldc-foc-drive",
+      "title": "Field Oriented Control (FOC) BLDC Motor Driver",
+      "category": "Power Electronics",
+      "summary": "Custom 3-phase inverter board with space vector PWM, current sensing shunt feedback, and sensorless rotor position estimation.",
+      "tech": ["Altium", "STM32G4", "Power MOSFETs", "C", "Control Systems"],
+      "metrics": "94.2% power efficiency at 48V / 25A continuous rating",
+      "github": "https://github.com/Hitesh070"
+    },
+    {
+      "id": "fpga-accelerator",
+      "title": "FPGA-Accelerated Edge Neural Inference Engine",
+      "category": "Digital VLSI",
+      "summary": "Synthesized 8-bit quantized matrix-multiply systolic array on Xilinx Artix-7 FPGA with AXI4 streaming interface for real-time edge classification.",
+      "tech": ["Verilog", "Xilinx Vivado", "Artix-7", "AXI4", "ModelSim"],
+      "metrics": "14.8x speedup over ARM Cortex-M7 at 1.2W power draw",
+      "github": "https://github.com/Hitesh070"
+    },
+    {
+      "id": "iot-energy-monitor",
+      "title": "Smart Grid IoT Power Quality Monitor",
+      "category": "IoT & Systems",
+      "summary": "High-speed real-time voltage/current harmonics measurement device with ESP32, MQTT telemetry, and cloud analytics dashboard.",
+      "tech": ["ESP32", "C++", "FreeRTOS", "MQTT", "Supabase", "React"],
+      "metrics": "Measures THD up to 31st harmonic at 10kS/s",
+      "github": "https://github.com/Hitesh070"
+    }
+  ],
+  "publications": [
+    {
+      "title": "Sensorless Field-Oriented Control Strategies for Low-Inductance BLDC Actuators in High-Dynamics Quadrupedal Robotics",
+      "venue": "IEEE International Conference on Power Electronics, Drives and Energy Systems (PEDES)",
+      "year": "2026",
+      "status": "Accepted / Published",
+      "doi": "10.1109/PEDES.2026.104928"
+    },
+    {
+      "title": "Energy-Optimal Trajectory Generation for Multirotor UAVs Utilizing Onboard Wind Field Estimation",
+      "venue": "VIT Undergraduate Research Symposium (V-URS)",
+      "year": "2025",
+      "status": "Award of Excellence",
+      "doi": "10.1109/VIT.2025.04821"
+    }
+  ],
+  "creative": {
+    "astronomy": {
+      "setup": "Sky-Watcher 8\" Dobsonian & Seestar S50 Smart Scope",
+      "interests": "Deep sky imaging, lunar cartography, and planetary spectroscopy",
+      "highlights": ["Orion Nebula (M42)", "Andromeda Galaxy (M31)", "Saturn Ring Division"]
+    },
+    "music": {
+      "instruments": "Acoustic & Electric Guitar, Keyboard, Digital Audio Workstation (FL Studio)",
+      "genres": "Progressive Rock, Ambient Cinematic Soundscapes, Fingerstyle"
+    }
+  }
+}

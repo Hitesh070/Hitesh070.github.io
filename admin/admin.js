@@ -4516,3 +4516,192 @@
   // Init
   checkAuth();
 })();
+
+  // =========================================================================
+  // ADVANCED ADMIN SUITE: SHARE QR, WEBCRYPTO AES-GCM, COMMAND PALETTE, USAGE
+  // =========================================================================
+
+  // 1. Supabase Storage Usage Widget with 80% Warning
+  function updateVaultStorageQuota(files) {
+    const quotaPctEl = document.getElementById('vault-quota-percent');
+    const quotaStatusEl = document.getElementById('vault-quota-status');
+    const cardEl = document.getElementById('vault-storage-usage-card');
+    if (!quotaPctEl || !quotaStatusEl) return;
+
+    const totalBytes = (files || []).reduce((acc, f) => acc + (f.size || 0), 0);
+    const SUPABASE_FREE_LIMIT = 1024 * 1024 * 1024; // 1 GB free bucket limit
+    const pct = ((totalBytes / SUPABASE_FREE_LIMIT) * 100).toFixed(1);
+
+    quotaPctEl.textContent = `${pct}%`;
+    if (pct >= 80) {
+      quotaStatusEl.className = 'badge-danger';
+      quotaStatusEl.textContent = `High Usage (${pct}%) - Near 1GB limit`;
+      if (cardEl) cardEl.style.borderColor = '#ef4444';
+      showToast(`Warning: Staging Vault is using ${pct}% of free cloud storage quota.`, 'warning');
+    } else {
+      quotaStatusEl.className = 'badge-success';
+      quotaStatusEl.textContent = `Normal (${formatBytes(totalBytes)} of 1 GB)`;
+      if (cardEl) cardEl.style.borderColor = 'rgba(255,255,255,0.08)';
+    }
+  }
+
+  // 2. Share Staged File with QR Code (24h Signed URL)
+  async function shareVaultFile(objectKey, fileName) {
+    const { url, bucket } = getSupabaseConfig();
+    try {
+      showToast(`Generating secure share link for "${fileName}"...`, 'info');
+      const signRes = await supa('POST', `/storage/v1/object/sign/${bucket}/${encodeURIComponent(objectKey)}`, {
+        body: { expiresIn: 86400 }, // 24 hours
+        raw: true
+      });
+      const data = await signRes.json();
+      if (!data || !data.signedURL) throw new Error('Signed URL generation failed');
+
+      const fullUrl = data.signedURL.startsWith('http')
+        ? data.signedURL
+        : `${url}/storage/v1${data.signedURL.startsWith('/') ? '' : '/'}${data.signedURL}`;
+
+      const modal = document.getElementById('vault-share-modal');
+      const qrImg = document.getElementById('vault-qr-img');
+      const filenameEl = document.getElementById('vault-share-filename');
+      const urlInput = document.getElementById('vault-share-url-input');
+
+      if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(fullUrl)}`;
+      if (filenameEl) filenameEl.textContent = fileName;
+      if (urlInput) urlInput.value = fullUrl;
+
+      if (modal) modal.style.display = 'flex';
+    } catch (e) {
+      showToast('Share link error: ' + e.message, 'error');
+    }
+  }
+
+  const closeShareModalBtn = document.getElementById('close-vault-share-modal');
+  if (closeShareModalBtn) {
+    closeShareModalBtn.addEventListener('click', () => {
+      const modal = document.getElementById('vault-share-modal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
+
+  const copyShareUrlBtn = document.getElementById('copy-vault-share-url-btn');
+  if (copyShareUrlBtn) {
+    copyShareUrlBtn.addEventListener('click', () => {
+      const input = document.getElementById('vault-share-url-input');
+      if (input && input.value) {
+        navigator.clipboard.writeText(input.value).then(() => {
+          showToast('Signed link copied to clipboard!', 'success');
+        });
+      }
+    });
+  }
+
+  // 3. WebCrypto AES-GCM Client-Side Encryption
+  async function encryptBlobWithPassword(fileBlob, password) {
+    const enc = new TextEncoder();
+    const pwKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const aesKey = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+      pwKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt']
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const plaintext = await fileBlob.arrayBuffer();
+    const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, plaintext);
+
+    // Combine: 16-byte salt + 12-byte IV + ciphertext
+    const combined = new Uint8Array(salt.length + iv.length + ciphertext.byteLength);
+    combined.set(salt, 0);
+    combined.set(iv, salt.length);
+    combined.set(new Uint8Array(ciphertext), salt.length + iv.length);
+    return new Blob([combined], { type: 'application/octet-stream' });
+  }
+
+  // 4. Admin Command Palette (Ctrl+K)
+  function initAdminCommandPalette() {
+    const palette = document.getElementById('admin-cmd-palette');
+    const input = document.getElementById('admin-cmd-input');
+    const list = document.getElementById('admin-cmd-list');
+    if (!palette || !input) return;
+
+    const open = () => {
+      palette.style.display = 'flex';
+      input.value = '';
+      input.focus();
+    };
+
+    const close = () => {
+      palette.style.display = 'none';
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (palette.style.display === 'flex') close();
+        else open();
+      } else if (e.key === 'Escape' && palette.style.display === 'flex') {
+        close();
+      }
+    });
+
+    palette.addEventListener('click', (e) => {
+      if (e.target === palette) close();
+    });
+
+    if (list) {
+      list.querySelectorAll('.admin-cmd-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const tab = item.dataset.tab;
+          if (tab) switchTab(tab);
+          close();
+        });
+      });
+
+      list.querySelectorAll('.admin-cmd-action').forEach(item => {
+        item.addEventListener('click', () => {
+          const action = item.dataset.action;
+          if (action === 'sync-vault') renderStagedFiles();
+          close();
+        });
+      });
+    }
+
+    input.addEventListener('input', () => {
+      const q = input.value.toLowerCase().trim();
+      if (!list) return;
+      list.querySelectorAll('.admin-cmd-item, .admin-cmd-action').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    });
+  }
+
+  // Hook into renderStagedFiles to update quota
+  const oldRenderStaged = 'function attachVaultTableListeners()';
+  if (js.includes(oldRenderStaged)) {
+    js = js.replace(
+      'attachVaultTableListeners();',
+      'attachVaultTableListeners();\n    updateVaultStorageQuota(files);'
+    );
+  }
+
+  // Attach share button in row actions
+  js = js.replace(
+    '<button type="button" class="btn btn-secondary btn-sm vault-download-btn"',
+    '<button type="button" class="btn btn-secondary btn-sm vault-share-btn" data-key="${escapeHtml(f.rawName)}" data-name="${escapeHtml(f.name)}" title="Share with phone via QR">📱 Share</button>\n              <button type="button" class="btn btn-secondary btn-sm vault-download-btn"'
+  );
+
+  // Wire share button listener
+  js = js.replace(
+    "tempStagedTbody.querySelectorAll('.vault-download-btn')",
+    "tempStagedTbody.querySelectorAll('.vault-share-btn').forEach(btn => {\n      btn.addEventListener('click', (e) => {\n        e.stopPropagation();\n        shareVaultFile(btn.dataset.key, btn.dataset.name);\n      });\n    });\n\n    tempStagedTbody.querySelectorAll('.vault-download-btn')"
+  );
+
+  // Add command palette to setLoggedIn
+  js = js.replace(
+    'loadAccessLogs();',
+    'loadAccessLogs();\n    initAdminCommandPalette();'
+  );

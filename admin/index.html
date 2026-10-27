@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=20261026_v8">
+  <link rel="stylesheet" href="admin.css?v=v1.1.0">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="dashboard-body">
@@ -516,6 +516,7 @@
                   <span class="badge-neutral" id="metric-files-count-badge" style="font-size: 11px; margin-left: 6px;"></span>
                 </div>
                 <div class="table-actions">
+                <label style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: #94a3b8; cursor: pointer; user-select: none;" title="Encrypt binary client-side using WebCrypto AES-GCM before upload"><input type="checkbox" id="vault-encrypt-toggle"> <span>🔒 AES-GCM</span></label>
                   <select id="filter-type-select" class="clean-select">
                     <option value="all">All Items</option>
                     <option value="folders">Folders Only</option>
@@ -1216,6 +1217,11 @@
                 <div class="m-val" id="temp-staged-size">0 KB</div>
                 <div class="m-sub"><span class="badge-neutral">Cloud Buffer</span></div>
               </div>
+              <div class="metric-card" id="vault-storage-usage-card">
+                <div class="m-card-header"><span class="m-label">Supabase Quota</span><span class="m-icon purple"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span></div>
+                <div class="m-val" id="vault-quota-percent">0%</div>
+                <div class="m-sub"><span class="badge-neutral" id="vault-quota-status">Normal (&lt; 80%)</span></div>
+              </div>
               <div class="metric-card">
                 <div class="m-card-header"><span class="m-label">Google Drive Bridge</span><span class="m-icon green"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span></div>
                 <div class="m-val" id="temp-destination-status" style="font-size: 15px; line-height: 1.4;">24/7 Drive Ready</div>
@@ -1492,7 +1498,41 @@
     </div>
   </div>
 
-  <script src="config.js?v=20261027_v1"></script>
-  <script src="admin.js?v=20261027_v1"></script>
+  <script src="config.js?v=v1.1.0"></script>
+  <script src="admin.js?v=v1.1.0"></script>
+
+    <!-- VAULT SHARE & QR MODAL -->
+    <div id="vault-share-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 99999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
+      <div style="background: #181b22; border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; max-width: 440px; width: 100%; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); color: #f8fafc; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 700;">📱 Scan to Download on Phone</h3>
+          <button type="button" id="close-vault-share-modal" class="btn btn-secondary btn-sm" style="font-size: 16px; padding: 2px 8px;">&times;</button>
+        </div>
+        <div id="vault-qr-container" style="background: #ffffff; padding: 12px; border-radius: 8px; display: inline-block; margin-bottom: 14px;">
+          <img id="vault-qr-img" src="" alt="Download QR Code" style="width: 180px; height: 180px; display: block;">
+        </div>
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 14px; word-break: break-all;" id="vault-share-filename">File Name</div>
+        <input type="text" id="vault-share-url-input" class="clean-input" readonly style="font-size: 11px; margin-bottom: 12px; text-align: center;">
+        <button type="button" id="copy-vault-share-url-btn" class="btn btn-primary btn-sm" style="width: 100%;">Copy Signed Link (24h valid)</button>
+      </div>
+    </div>
+
+    <!-- ADMIN COMMAND PALETTE (CTRL+K) -->
+    <div id="admin-cmd-palette" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 999999; align-items: flex-start; justify-content: center; padding-top: 15vh; backdrop-filter: blur(5px);">
+      <div style="background: #181b22; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; width: 90%; max-width: 560px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); overflow: hidden; display: flex; flex-direction: column;">
+        <input type="text" id="admin-cmd-input" class="clean-input" placeholder="Type a tab name or command... (e.g. Drive, Notes, Logs, Sync, Logout)" style="border: none; border-bottom: 1px solid rgba(255,255,255,0.1); border-radius: 0; padding: 16px 20px; font-size: 14px; background: transparent;">
+        <div id="admin-cmd-list" style="max-height: 320px; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 4px;">
+          <div class="admin-cmd-item" data-tab="tab-overview" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #cbd5e1;"><span style="display:flex;align-items:center;gap:8px;">📊 System Overview</span><span style="font-size: 11px; color: #64748b;">Tab 1</span></div>
+          <div class="admin-cmd-item" data-tab="tab-files" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #cbd5e1;"><span style="display:flex;align-items:center;gap:8px;">📁 Google Drive Explorer</span><span style="font-size: 11px; color: #64748b;">Tab 2</span></div>
+          <div class="admin-cmd-item" data-tab="tab-portfolio" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #cbd5e1;"><span style="display:flex;align-items:center;gap:8px;">📈 Live Google Analytics (GA4)</span><span style="font-size: 11px; color: #64748b;">Tab 3</span></div>
+          <div class="admin-cmd-item" data-tab="tab-temp-drop" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #cbd5e1;"><span style="display:flex;align-items:center;gap:8px;">⚡ Temp Cloud Drop Vault</span><span style="font-size: 11px; color: #64748b;">Tab 4</span></div>
+          <div class="admin-cmd-item" data-tab="tab-notes" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #cbd5e1;"><span style="display:flex;align-items:center;gap:8px;">📝 Admin Scratchpad & Todo</span><span style="font-size: 11px; color: #64748b;">Tab 5</span></div>
+          <div class="admin-cmd-item" data-tab="tab-logs" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #cbd5e1;"><span style="display:flex;align-items:center;gap:8px;">🛡️ Security Audit Logs</span><span style="font-size: 11px; color: #64748b;">Tab 6</span></div>
+          <div class="admin-cmd-item" data-tab="tab-settings" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #cbd5e1;"><span style="display:flex;align-items:center;gap:8px;">⚙️ Settings & Credentials</span><span style="font-size: 11px; color: #64748b;">Tab 7</span></div>
+          <div class="admin-cmd-action" data-action="sync-vault" style="display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 6px; cursor: pointer; color: #38bdf8;"><span style="display:flex;align-items:center;gap:8px;">🔄 Sync Cloud Vault Now</span><span style="font-size: 11px; color: #64748b;">Action</span></div>
+        </div>
+      </div>
+    </div>
+
 </body>
 </html>

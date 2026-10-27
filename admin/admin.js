@@ -132,28 +132,6 @@
   // via authenticated calls to your private backend server.
   // =========================================================================
   // Safe Static Baseline Data (Zero Private Files Stored in Client Source)
-  const STATIC_CLOUD_DATA = {
-    storage: {
-      mode: "cloud_ready",
-      user: { displayName: "Hitesh V S", emailAddress: "hiteshvs616@gmail.com" },
-      usage: 0,
-      limit: 5497558138880,
-      usageInDrive: 0,
-      usageInPhotos: 0,
-      freeSpace: 5497558138880,
-      driveFormatted: "0 GB",
-      photosFormatted: "0 GB",
-      totalFormatted: "0 GB",
-      percentUsed: 0
-    },
-    files: [],
-    folderMap: {},
-    logs: [
-      { id: 'log_1', status: 'authorized', user: 'Hitesh', ip: 'Admin Client', os: 'Web Client', browser: 'Browser', device: 'Admin Terminal', location: 'Active Workspace', timestamp: 'Active' }
-    ],
-    visitors: []
-  };
-
   function formatBytes(bytes) {
     if (bytes === 0 || !bytes) return '0 B';
     if (bytes >= 1e12) return (bytes / 1e12).toFixed(1) + ' TB';
@@ -786,81 +764,58 @@
   }
 
   function applyStorageMetrics(q) {
-    if (!q) return;
-    if (metricDriveUsed) metricDriveUsed.textContent = q.driveFormatted || '13.9 GB';
-    if (metricPhotosUsed) metricPhotosUsed.textContent = q.photosFormatted || '65.5 GB';
-    if (metricTotalUsed) metricTotalUsed.textContent = q.totalFormatted || '79.4 GB';
-    if (metricFreeSpace) metricFreeSpace.textContent = q.freeFormatted || '4.92 TB';
-    if (metricPercentUsed) metricPercentUsed.textContent = `${q.percentUsed || 1.4}% Used`;
-    if (metricTotalLimit) metricTotalLimit.textContent = `of ${q.limitFormatted || '5 TB'} Google One Plan`;
-    if (photosTabUsage) photosTabUsage.textContent = q.photosFormatted || '65.5 GB';
+    if (!q) {
+      if (metricDriveUsed) metricDriveUsed.textContent = '--';
+      if (metricPhotosUsed) metricPhotosUsed.textContent = '--';
+      if (metricTotalUsed) metricTotalUsed.textContent = '--';
+      if (metricFreeSpace) metricFreeSpace.textContent = '--';
+      if (metricPercentUsed) metricPercentUsed.textContent = 'Disconnected';
+      if (metricTotalLimit) metricTotalLimit.textContent = 'Connect Google Drive';
+      if (photosTabUsage) photosTabUsage.textContent = '--';
+      if (sbDriveBar) sbDriveBar.style.width = '0%';
+      if (sbPhotosBar) sbPhotosBar.style.width = '0%';
+      if (sbTotalText) sbTotalText.textContent = '--';
+      if (sbLimitText) sbLimitText.textContent = '--';
+      return;
+    }
+
+    if (metricDriveUsed) metricDriveUsed.textContent = q.driveFormatted || '0 B';
+    if (metricPhotosUsed) metricPhotosUsed.textContent = q.photosFormatted || '0 B';
+    if (metricTotalUsed) metricTotalUsed.textContent = q.totalFormatted || '0 B';
+    if (metricFreeSpace) metricFreeSpace.textContent = q.freeFormatted || '0 B';
+    if (metricPercentUsed) metricPercentUsed.textContent = `${q.percentUsed || 0}% Used`;
+    if (metricTotalLimit) metricTotalLimit.textContent = `of ${q.limitFormatted || 'Plan'}`;
+    if (photosTabUsage) photosTabUsage.textContent = q.photosFormatted || '0 B';
 
     if (sbTotalText) sbTotalText.textContent = q.totalFormatted || '0 B';
-    if (sbLimitText) sbLimitText.textContent = q.limitFormatted || '5 TB';
-    
-    const limit = q.limit || 5497558138880;
+    if (sbLimitText) sbLimitText.textContent = q.limitFormatted || 'Plan';
+
+    const limit = q.limit || 0;
     const driveBytes = q.usageInDrive || 0;
-    const totalUsage = q.usage || 0;
-    const otherBytes = Math.max(0, totalUsage - driveBytes);
+    const otherBytes = Math.max(0, (q.usage || 0) - driveBytes);
 
-    const drivePct = limit > 0 ? Math.min(100, Math.max(0.5, (driveBytes / limit) * 100)) : 1;
-    const otherPct = limit > 0 ? Math.min(100, Math.max(0.5, (otherBytes / limit) * 100)) : 2;
-    const freePct = Math.max(0, 100 - drivePct - otherPct);
+    const drivePct = limit > 0 ? Math.min(100, (driveBytes / limit) * 100).toFixed(2) : 0;
+    const otherPct = limit > 0 ? Math.min(100, (otherBytes / limit) * 100).toFixed(2) : 0;
 
-    if (sbFillDrive) sbFillDrive.style.width = drivePct.toFixed(1) + '%';
-    if (sbFillPhotos) sbFillPhotos.style.width = otherPct.toFixed(1) + '%';
-    const sbFillFree = document.getElementById('sb-fill-free');
-    if (sbFillFree) sbFillFree.style.width = freePct.toFixed(1) + '%';
+    if (sbDriveBar) sbDriveBar.style.width = `${drivePct}%`;
+    if (sbPhotosBar) sbPhotosBar.style.width = `${otherPct}%`;
 
-    if (q.user) {
-      if (topbarUserName) topbarUserName.textContent = q.user.displayName || 'Hitesh V S';
-      if (userAvatarImg && q.user.photoLink) {
-        userAvatarImg.src = q.user.photoLink;
-      }
+    if (userAvatarImg && q.user && q.user.photoLink) {
+      userAvatarImg.src = q.user.photoLink;
     }
   }
 
-  // Load All Live Drive & Storage Metrics
+  // Load All Live Drive & Storage Metrics directly via Google Drive v3
   async function loadLiveDriveData() {
     if (getDirectDriveToken()) {
-      const directOk = await loadDirectDriveFiles();
-      if (directOk) return true;
+      return await loadDirectDriveFiles();
     }
-    let liveSuccess = false;
-    // 1. Storage Quota
-    try {
-      const storageRes = await apiFetch('/api/drive/storage');
-      if (storageRes.ok) {
-        const q = await storageRes.json();
-        applyStorageMetrics(q);
-        liveSuccess = true;
-        updateLiveModeUI(true);
-      } else {
-        applyStorageMetrics(STATIC_CLOUD_DATA.storage);
-        
-      }
-    } catch (e) {
-      applyStorageMetrics(STATIC_CLOUD_DATA.storage);
-    }
-
-    // 2. Drive Files
-    try {
-      const filesRes = await apiFetch('/api/drive/files');
-      if (filesRes.ok) {
-        const filesData = await filesRes.json();
-        cachedFiles = filesData.files || [];
-        liveSuccess = true;
-      } else {
-        cachedFiles = STATIC_CLOUD_DATA.files || [];
-      }
-    } catch (e) {
-      cachedFiles = STATIC_CLOUD_DATA.files || [];
-    }
-
-    if (metricFilesCountBadge) metricFilesCountBadge.textContent = `${cachedFiles.length} files & folders`;
-    renderOverviewFiles(cachedFiles);
-    renderCleanExplorerGrid(cachedFiles);
-    return liveSuccess;
+    applyStorageMetrics(null);
+    cachedFiles = [];
+    renderCleanExplorerGrid([]);
+    renderOverviewFiles([]);
+    updateLiveModeUI(false);
+    return false;
   }
 
   // =========================================================================
@@ -874,9 +829,8 @@
     const isFolder = file.mimeType === 'application/vnd.google-apps.folder' || file.isFolder;
 
     cmTargetName.textContent = file.name;
-    cmDownloadLabel.textContent = isFolder ? 'Download via Drive' : 'Download File';
+    cmDownloadLabel.textContent = isFolder ? 'Open Folder' : 'Download File';
 
-    // Position context menu safely within viewport
     customContextMenu.classList.remove('hidden');
     const menuWidth = 220;
     const menuHeight = 210;
@@ -901,361 +855,125 @@
     }
   });
 
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') hideContextMenu();
-  });
-
-  // Context Menu Actions
-  cmOpenBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const target = activeContextTarget;
-    hideContextMenu();
-    if (!target) return;
-    const isFolder = target.mimeType === 'application/vnd.google-apps.folder' || target.isFolder;
-    if (isFolder) {
-      openFolderInExplorer(target.id, target.name);
-    } else if (target.webViewLink) {
-      window.open(target.webViewLink, '_blank');
-    } else {
-      window.downloadDriveFile(target.id, target.name, target.mimeType);
+  cmOpenBtn.addEventListener('click', () => {
+    if (!activeContextTarget) return;
+    if (activeContextTarget.mimeType === 'application/vnd.google-apps.folder' || activeContextTarget.isFolder) {
+      navigateToFolder(activeContextTarget.id, activeContextTarget.name);
+    } else if (activeContextTarget.webViewLink) {
+      window.open(activeContextTarget.webViewLink, '_blank');
     }
+    hideContextMenu();
   });
 
-  cmDownloadBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const target = activeContextTarget;
-    hideContextMenu();
-    if (!target) return;
-    const isFolder = target.mimeType === 'application/vnd.google-apps.folder' || target.isFolder;
-    if (isFolder) {
-      if (target.webViewLink) {
-        window.open(target.webViewLink, '_blank');
-        showToast('Opening folder in Google Drive...', 'info');
-      }
+  cmDownloadBtn.addEventListener('click', () => {
+    if (!activeContextTarget) return;
+    if (activeContextTarget.mimeType === 'application/vnd.google-apps.folder' || activeContextTarget.isFolder) {
+      navigateToFolder(activeContextTarget.id, activeContextTarget.name);
     } else {
-      window.downloadDriveFile(target.id, target.name, target.mimeType);
+      downloadDriveFile(activeContextTarget.id, activeContextTarget.name, activeContextTarget.mimeType);
     }
+    hideContextMenu();
   });
 
-  cmZipBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const target = activeContextTarget;
+  cmCopyLinkBtn.addEventListener('click', () => {
+    if (!activeContextTarget) return;
+    const link = activeContextTarget.webViewLink || `https://drive.google.com/file/d/${activeContextTarget.id}/view`;
+    navigator.clipboard.writeText(link).then(() => {
+      showToast('File share link copied to clipboard!', 'success');
+    }).catch(() => {
+      prompt('Copy link:', link);
+    });
     hideContextMenu();
-    if (!target) return;
-    if (target.webViewLink) {
-      window.open(target.webViewLink, '_blank');
-      showToast('Opening folder in Google Drive to download as ZIP...', 'success');
-    } else {
-      window.downloadDriveFile(target.id, target.name, target.mimeType);
-    }
   });
 
-  cmDriveBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const target = activeContextTarget;
+  cmDeleteBtn.addEventListener('click', () => {
+    if (!activeContextTarget) return;
+    trashDriveFile(activeContextTarget.id, activeContextTarget.name);
     hideContextMenu();
-    if (!target) return;
-    if (target.webViewLink) {
-      window.open(target.webViewLink, '_blank');
-    } else {
-      window.open('https://drive.google.com', '_blank');
-    }
   });
 
-  cmCopyBtn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    const target = activeContextTarget;
-    hideContextMenu();
-    if (!target) return;
-    const link = target.webViewLink || `https://drive.google.com/open?id=${target.id}`;
+  // =========================================================================
+  // DIRECT GOOGLE DRIVE v3 API (Zone 1)
+  // =========================================================================
+  let currentDriveNextPageToken = null;
+
+  async function loadDirectDriveFiles(folderId = null, pageToken = null) {
+    const token = getDirectDriveToken();
+    if (!token) {
+      updateLiveModeUI(false);
+      applyStorageMetrics(null);
+      return false;
+    }
+
     try {
-      await navigator.clipboard.writeText(link);
-      showToast('Drive link copied to clipboard!', 'success');
+      // 1. Storage Quota & User
+      const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota,user', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (aboutRes.ok) {
+        const aboutData = await aboutRes.json();
+        const quota = aboutData.storageQuota || {};
+        const user = aboutData.user || {};
+        const usage = parseInt(quota.usage || 0, 10);
+        const limit = parseInt(quota.limit || 0, 10);
+        const driveUsage = parseInt(quota.usageInDrive || 0, 10);
+        const photosAndOther = Math.max(0, usage - driveUsage);
+
+        applyStorageMetrics({
+          mode: 'live_google_cloud',
+          user: {
+            displayName: user.displayName || 'Hitesh V S',
+            photoLink: user.photoLink || '',
+            emailAddress: user.emailAddress || 'hiteshvs616@gmail.com'
+          },
+          usage,
+          limit,
+          usageInDrive: driveUsage,
+          driveFormatted: formatBytes(driveUsage),
+          photosFormatted: formatBytes(photosAndOther) + ' (Photos + Gmail + other)',
+          totalFormatted: formatBytes(usage),
+          limitFormatted: limit > 0 ? formatBytes(limit) : 'Google One Plan',
+          freeFormatted: limit > 0 ? formatBytes(limit - usage) : '--',
+          percentUsed: limit > 0 ? ((usage / limit) * 100).toFixed(1) : 0
+        });
+      }
+
+      // 2. Files in Current Folder
+      const targetParent = folderId && folderId !== 'root' ? folderId : 'root';
+      currentFolderId = targetParent;
+      const q = encodeURIComponent(`'${targetParent.replace(/'/g, "\\'")}' in parents and trashed = false`);
+      const pageParam = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '';
+
+      const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?pageSize=50&fields=nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,parents,iconLink)&q=${q}&orderBy=folder,name${pageParam}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (filesRes.ok) {
+        const data = await filesRes.json();
+        currentDriveNextPageToken = data.nextPageToken || null;
+        cachedFiles = data.files || [];
+        renderOverviewFiles(cachedFiles);
+        renderCleanExplorerGrid(cachedFiles);
+        renderBreadcrumbs();
+        updateLiveModeUI(true);
+        return true;
+      } else {
+        if (filesRes.status === 401) {
+          setDirectDriveToken('');
+          updateLiveModeUI(false);
+          showToast('Google Drive authorization expired. Please reconnect.', 'warning');
+        }
+        return false;
+      }
     } catch (err) {
-      const tempInput = document.createElement('input');
-      tempInput.value = link;
-      document.body.appendChild(tempInput);
-      tempInput.select();
-      document.execCommand('copy');
-      tempInput.remove();
-      showToast('Drive link copied to clipboard!', 'success');
+      console.warn('Direct drive error:', err);
+      return false;
     }
-  });
-
-  cmDeleteBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const target = activeContextTarget;
-    hideContextMenu();
-    if (!target) return;
-    deleteFile(target.id, target.name);
-  });
-
-  // =========================================================================
-  // RENDER CLEAN GOOGLE DRIVE EXPLORER GRID (SINGLE CLICK OPEN, NO BUTTONS)
-  // =========================================================================
-  function renderCleanExplorerGrid(files) {
-    explorerFileGrid.innerHTML = '';
-
-    if (!files || files.length === 0) {
-      explorerFileGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 48px; color: #94a3b8;">No files in this folder.</div>';
-      return;
-    }
-
-    files.forEach(file => {
-      const isFolder = file.mimeType === 'application/vnd.google-apps.folder' || file.isFolder;
-      const typeStr = getReadableType(file);
-      const iconHtml = getFolderOrFileIcon(file);
-      const sizeStr = isFolder ? 'Folder' : (file.size ? formatBytes(file.size) : 'Cloud Doc');
-
-      const card = document.createElement('div');
-      card.className = 'clean-folder-card';
-      card.title = isFolder ? `Click to open folder: ${file.name}` : file.name;
-
-      card.innerHTML = `
-        <div class="cfc-top">
-          <div class="cfc-icon ${isFolder ? 'folder' : 'doc'}">
-            ${iconHtml}
-          </div>
-          <button class="cfc-menu-btn" title="More options">&bull;&bull;&bull;</button>
-        </div>
-        <div class="cfc-name">${escapeHtml(file.name)}</div>
-        <div class="cfc-meta">${sizeStr}</div>
-      `;
-
-      // Single click on card or folder name: immediately open!
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.cfc-menu-btn')) return; // handled by menu
-        if (isFolder) {
-          openFolderInExplorer(file.id, file.name);
-        } else if (file.webViewLink) {
-          window.open(file.webViewLink, '_blank');
-        } else {
-          window.downloadDriveFile(file.id, file.name, file.mimeType);
-        }
-      });
-
-      // Right-click context menu
-      card.addEventListener('contextmenu', (e) => {
-        showContextMenu(e, file);
-      });
-
-      // 3-dots button triggers context menu
-      const menuBtn = card.querySelector('.cfc-menu-btn');
-      menuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const rect = menuBtn.getBoundingClientRect();
-        showContextMenu({ clientX: rect.left, clientY: rect.bottom + 4, preventDefault: () => {}, stopPropagation: () => {} }, file);
-      });
-
-      explorerFileGrid.appendChild(card);
-    });
   }
 
-  // Open Folder (Never throws error - loads live files or subfolder contents)
-  // Robust Direct Google Drive Download Engine
-  async function downloadDriveFile(fileId, fileName, mimeType) {
-    if (!fileId) return;
-    const token = getDirectDriveToken();
-    showToast(`Preparing download for ${fileName || 'file'}...`, 'info');
-
-    if (token) {
-      try {
-        const isGoogleApp = mimeType && mimeType.startsWith('application/vnd.google-apps.');
-        let downloadUrl;
-        if (isGoogleApp) {
-          const exportMime = (mimeType.includes('spreadsheet') || mimeType.includes('sheet'))
-            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            : 'application/pdf';
-          downloadUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/export?mimeType=${encodeURIComponent(exportMime)}`;
-        } else {
-          downloadUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
-        }
-
-        const res = await fetch(downloadUrl, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-          const blob = await res.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = fileName || 'download';
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-          showToast(`Downloaded ${fileName || 'file'} successfully!`, 'success');
-          return;
-        }
-      } catch (err) {
-        console.warn('Direct token download note:', err);
-      }
-    }
-
-    // Direct Google Drive Fallback
-    const directUcUrl = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`;
-    const webViewUrl = `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view?usp=sharing`;
-    window.open(directUcUrl, '_blank') || window.open(webViewUrl, '_blank');
-    showToast(`Opening download link for ${fileName || 'file'}...`, 'info');
-  }
-  window.downloadDriveFile = downloadDriveFile;
-
-  // Fetch Folder Files directly from Google Drive v3 REST API
-  async function fetchFolderFiles(folderId) {
-    const token = getDirectDriveToken();
-    if (token) {
-      try {
-        const targetParent = folderId && folderId !== 'root' ? folderId : 'root';
-        const qStr = `'${targetParent.replace(/'/g, "\\'")}' in parents and trashed = false`;
-        const res = await fetch(`https://www.googleapis.com/drive/v3/files?pageSize=100&fields=nextPageToken,files(id,name,mimeType,size,modifiedTime,webViewLink,parents,iconLink)&q=${encodeURIComponent(qStr)}&orderBy=folder,name`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return data.files || [];
-        }
-      } catch (err) {
-        console.warn('Direct Drive folder fetch note:', err);
-      }
-    }
-    return (STATIC_CLOUD_DATA.folderMap && STATIC_CLOUD_DATA.folderMap[folderId]) || [];
-  }
-
-  async function openFolderInExplorer(folderId, folderName) {
-    currentFolderId = folderId;
-    explorerBreadcrumbs.push({ id: folderId, name: folderName });
-    renderBreadcrumbs();
-
-    // Switch to explorer tab
-    dockBtns.forEach(b => b.classList.remove('active'));
-    viewTabs.forEach(t => t.classList.remove('active'));
-    const driveDockBtn = document.querySelector('.dock-btn[data-tab="tab-drive"]');
-    if (driveDockBtn) driveDockBtn.classList.add('active');
-    const driveTab = document.getElementById('tab-drive');
-    if (driveTab) driveTab.classList.add('active');
-
-    const folderFiles = await fetchFolderFiles(folderId);
-    renderCleanExplorerGrid(folderFiles);
-  }
-
-  function renderBreadcrumbs() {
-    explorerBreadcrumbsEl.innerHTML = '';
-    explorerBreadcrumbs.forEach((crumb, idx) => {
-      const isLast = idx === explorerBreadcrumbs.length - 1;
-      const span = document.createElement('span');
-      span.className = `crumb ${isLast ? 'active' : ''}`;
-      span.textContent = crumb.name;
-
-      if (!isLast) {
-        span.style.cursor = 'pointer';
-        span.addEventListener('click', async () => {
-          explorerBreadcrumbs = explorerBreadcrumbs.slice(0, idx + 1);
-          currentFolderId = crumb.id;
-          renderBreadcrumbs();
-          const folderFiles = await fetchFolderFiles(crumb.id);
-          renderCleanExplorerGrid(folderFiles);
-        });
-      }
-
-      explorerBreadcrumbsEl.appendChild(span);
-      if (!isLast) {
-        const sep = document.createElement('span');
-        sep.textContent = ' / ';
-        sep.style.color = '#cbd5e1';
-        explorerBreadcrumbsEl.appendChild(sep);
-      }
-    });
-  }
-
-  // Render Table in Overview Tab
-  function renderOverviewFiles(files) {
-    if (!overviewFilesTbody) return;
-    overviewFilesTbody.innerHTML = '';
-
-    if (!files || files.length === 0) {
-      overviewFilesTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 36px; color: #94a3b8;">No matching Drive files found.</td></tr>';
-      return;
-    }
-
-    files.forEach(file => {
-      try {
-        const isFolder = file.mimeType === 'application/vnd.google-apps.folder' || file.isFolder;
-        const typeStr = getReadableType(file);
-        const sizeStr = isFolder ? '--' : (file.size ? formatBytes(file.size) : 'Cloud Doc');
-        const dateStr = file.modifiedTime ? new Date(file.modifiedTime).toLocaleDateString() : 'Recent';
-        const fileName = file.name || 'Untitled File';
-        const fileId = file.id || '';
-
-        let badgeClass = 'doc';
-        if (isFolder) badgeClass = 'folder';
-        else if (typeStr.includes('Notebook') || typeStr.includes('Python')) badgeClass = 'code';
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>
-            <div class="table-file-cell" style="cursor: pointer;">
-              <span style="font-size: 16px;">${isFolder ? '📁' : '📄'}</span>
-              <span style="font-weight: 600;">${escapeHtml(fileName)}</span>
-            </div>
-          </td>
-          <td><span class="file-badge ${badgeClass}">${typeStr}</span></td>
-          <td><span style="color: #64748b;">${sizeStr}</span></td>
-          <td><span style="color: #94a3b8; font-size: 12px;">${dateStr}</span></td>
-          <td style="text-align: right;">
-            <div style="display: inline-flex; gap: 6px;">
-              ${!isFolder ? `
-                <button type="button" class="table-btn" title="Download from Google Drive" onclick="event.stopPropagation(); downloadDriveFile('${fileId}', '${escapeHtml(file.name)}', '${file.mimeType || ''}')">
-                  &darr; Download
-                </button>
-              ` : ''}
-              ${file.webViewLink ? `
-                <a href="${file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`}" target="_blank" class="table-btn" title="Open in Google Drive">
-                  Open &nearr;
-                </a>
-              ` : ''}
-              <button class="table-btn row-more-btn" title="More options">&bull;&bull;&bull;</button>
-            </div>
-          </td>
-        `;
-
-        // Single click on entire row: opens folder or opens file directly in Drive
-        tr.style.cursor = 'pointer';
-        tr.addEventListener('click', (e) => {
-          if (e.target.closest('a') || e.target.closest('button')) return;
-          if (isFolder) {
-            openFolderInExplorer(fileId, fileName);
-          } else {
-            const openUrl = file.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
-            window.open(openUrl, '_blank');
-          }
-        });
-
-        tr.addEventListener('contextmenu', (e) => {
-          showContextMenu(e, file);
-        });
-
-        // Row more button
-        const moreBtn = tr.querySelector('.row-more-btn');
-        if (moreBtn) {
-          moreBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const rect = moreBtn.getBoundingClientRect();
-            showContextMenu({ clientX: rect.left - 150, clientY: rect.bottom + 4, preventDefault: () => {}, stopPropagation: () => {} }, file);
-          });
-        }
-
-        overviewFilesTbody.appendChild(tr);
-      } catch (err) {
-        console.warn('Error rendering file row:', err);
-      }
-    });
-  }
-
-  // =========================================================================
-  // FULLY FUNCTIONAL GOOGLE DRIVE SEARCH BAR (Enter switches to Drive section)
-  // =========================================================================
-    async function performDriveSearch(query) {
+  // Live Drive Search with URL encoding
+  async function performDriveSearch(query) {
     query = (query || '').trim();
     if (!query) {
       searchResultsBanner.classList.add('hidden');
@@ -1263,94 +981,220 @@
       if (overviewFilesTitle) overviewFilesTitle.textContent = 'Google Drive Cloud Files';
       explorerBreadcrumbs = [{ id: 'root', name: 'My Drive' }];
       renderBreadcrumbs();
-      renderOverviewFiles(cachedFiles);
-      renderCleanExplorerGrid(cachedFiles);
-      return;
+      return await loadDirectDriveFiles(currentFolderId);
     }
 
     clearSearchBtn.classList.remove('hidden');
     searchResultsBanner.classList.remove('hidden');
-    searchBannerText.textContent = `Searching across Google Drive for "${query}"...`;
+    searchBannerText.textContent = `Searching Google Drive for "${query}"...`;
 
-    const q = query.toLowerCase();
-
-    // 1. Gather all files: root files + all files inside subfolders (56 notebooks, research papers, certs, projects)
-    const allSearchPool = [...(cachedFiles || [])];
-    const seenIds = new Set(allSearchPool.map(f => f.id));
-
-    if (STATIC_CLOUD_DATA && STATIC_CLOUD_DATA.folderMap) {
-      for (const [folderId, folderFiles] of Object.entries(STATIC_CLOUD_DATA.folderMap)) {
-        if (Array.isArray(folderFiles)) {
-          for (const item of folderFiles) {
-            if (!seenIds.has(item.id)) {
-              seenIds.add(item.id);
-              allSearchPool.push(item);
-            }
-          }
-        }
-      }
+    const token = getDirectDriveToken();
+    if (!token) {
+      showToast('Connect Google Drive to search across cloud files', 'info');
+      return;
     }
 
-    // 2. Perform intelligent multi-field filter
-    let results = allSearchPool.filter(f => {
-      const name = (f.name || '').toLowerCase();
-      const mime = (f.mimeType || '').toLowerCase();
+    try {
+      const escaped = query.replace(/'/g, "\\'");
+      const q = encodeURIComponent(`name contains '${escaped}' and trashed = false`);
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,mimeType,size,modifiedTime,webViewLink,parents,iconLink)&q=${q}&orderBy=folder,name`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-      if (name.includes(q)) return true;
-
-      // Category shortcuts
-      if (q === 'pdf' && (mime.includes('pdf') || name.endsWith('.pdf'))) return true;
-      if ((q === 'notebook' || q === 'colab' || q === 'ipynb') && (name.endsWith('.ipynb') || mime.includes('colab'))) return true;
-      if (q === 'code' && (name.endsWith('.py') || name.endsWith('.js') || name.endsWith('.html') || name.endsWith('.cpp') || name.endsWith('.java'))) return true;
-      if ((q === 'image' || q === 'photo' || q === 'img') && (mime.includes('image') || name.match(/\.(jpg|jpeg|png|webp|svg)$/i))) return true;
-      if ((q === 'doc' || q === 'document') && (mime.includes('document') || name.match(/\.(doc|docx|txt|md)$/i))) return true;
-      if (q === 'sheet' && (mime.includes('spreadsheet') || name.match(/\.(xls|xlsx|csv)$/i))) return true;
-      if (q === 'slide' && (mime.includes('presentation') || name.match(/\.(ppt|pptx)$/i))) return true;
-      if (q === 'research' && (name.includes('paper') || name.includes('research') || name.includes('thesis') || name.includes('patent'))) return true;
-      if (q === 'ieee' && name.includes('ieee')) return true;
-      if (q === 'cert' && (name.includes('certificate') || name.includes('cert'))) return true;
-
-      return false;
-    });
-
-    // 3. Live Google Drive search if OAuth token active
-    const directToken = getDirectDriveToken();
-    if (directToken) {
-      try {
-        const escapedTerm = query.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const qParam = encodeURIComponent(`name contains '${escapedTerm}' and trashed = false`);
-        const liveRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${qParam}&fields=files(id,name,mimeType,size,modifiedTime,webViewLink)&pageSize=50`, {
-          headers: { 'Authorization': `Bearer ${directToken}` }
-        });
-        if (liveRes.ok) {
-          const liveData = await liveRes.json();
-          if (liveData.files && liveData.files.length > 0) {
-            for (const lf of liveData.files) {
-              if (!seenIds.has(lf.id)) {
-                seenIds.add(lf.id);
-                results.unshift(lf);
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Live API search notice:', e);
+      if (res.ok) {
+        const data = await res.json();
+        const results = data.files || [];
+        searchBannerText.textContent = `Found ${results.length} result(s) for "${query}"`;
+        renderCleanExplorerGrid(results);
+        renderOverviewFiles(results);
+      } else {
+        showToast('Search request failed (' + res.status + ')', 'error');
       }
+    } catch (err) {
+      showToast('Search error: ' + err.message, 'error');
     }
-
-    searchBannerText.textContent = `Found ${results.length} item${results.length === 1 ? '' : 's'} matching "${query}" in Google Drive`;
-    if (overviewFilesTitle) overviewFilesTitle.textContent = `Search Results: "${query}" (${results.length})`;
-
-    explorerBreadcrumbs = [
-      { id: 'root', name: 'My Drive' },
-      { id: 'search', name: `Search: "${query}" (${results.length})` }
-    ];
-    renderBreadcrumbs();
-
-    renderOverviewFiles(results);
-    renderCleanExplorerGrid(results);
   }
 
+  // Direct Binary & Google Workspace Download (Never opens broken uc?export)
+  async function downloadDriveFile(fileId, fileName, mimeType) {
+    if (!fileId) return;
+    const token = getDirectDriveToken();
+    if (!token) {
+      showToast('Please connect Google Drive to download files', 'warning');
+      triggerGoogleSignIn();
+      return;
+    }
+
+    showToast(`Downloading "${fileName || 'file'}"...`, 'info');
+
+    try {
+      const isGoogleApp = mimeType && mimeType.startsWith('application/vnd.google-apps.');
+      let downloadUrl;
+      let targetName = fileName || 'download';
+
+      if (isGoogleApp) {
+        let exportMime = 'application/pdf';
+        let ext = '.pdf';
+        if (mimeType.includes('spreadsheet') || mimeType.includes('sheet')) {
+          exportMime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          ext = '.xlsx';
+        } else if (mimeType.includes('presentation')) {
+          exportMime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+          ext = '.pptx';
+        }
+        if (!targetName.toLowerCase().endsWith(ext)) targetName += ext;
+        downloadUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/export?mimeType=${encodeURIComponent(exportMime)}`;
+      } else {
+        downloadUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`;
+      }
+
+      const res = await fetch(downloadUrl, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error((errJson.error && errJson.error.message) || `Download failed (${res.status})`);
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = targetName;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(blobUrl); }, 3000);
+      showToast(`Downloaded "${targetName}" successfully!`, 'success');
+    } catch (err) {
+      console.error('Drive download error:', err);
+      showToast(`Download failed: ${err.message}`, 'error');
+    }
+  }
+  window.downloadDriveFile = downloadDriveFile;
+
+  // Folder Navigation
+  async function navigateToFolder(folderId, folderName) {
+    if (!folderId) return;
+    const token = getDirectDriveToken();
+    if (!token) return;
+
+    if (folderId === 'root') {
+      explorerBreadcrumbs = [{ id: 'root', name: 'My Drive' }];
+    } else {
+      const existingIdx = explorerBreadcrumbs.findIndex(b => b.id === folderId);
+      if (existingIdx !== -1) {
+        explorerBreadcrumbs = explorerBreadcrumbs.slice(0, existingIdx + 1);
+      } else {
+        explorerBreadcrumbs.push({ id: folderId, name: folderName });
+      }
+    }
+
+    currentFolderId = folderId;
+    await loadDirectDriveFiles(folderId);
+  }
+
+  // Breadcrumbs rendering with click delegation
+  function renderBreadcrumbs() {
+    if (!breadcrumbList) return;
+    breadcrumbList.innerHTML = explorerBreadcrumbs.map((b, idx) => {
+      const isLast = idx === explorerBreadcrumbs.length - 1;
+      return `
+        <span class="breadcrumb-item ${isLast ? 'active' : ''}" data-folder-id="${escapeHtml(b.id)}" style="cursor: pointer;">
+          ${escapeHtml(b.name)}
+        </span>
+        ${!isLast ? '<span class="breadcrumb-separator">/</span>' : ''}
+      `;
+    }).join('');
+
+    breadcrumbList.querySelectorAll('.breadcrumb-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const fId = item.dataset.folderId;
+        navigateToFolder(fId, item.textContent.trim());
+      });
+    });
+  }
+
+  // Trash File
+  async function trashDriveFile(fileId, fileName) {
+    if (!confirm(`Move "${fileName}" to Google Drive Trash?`)) return;
+    const token = getDirectDriveToken();
+    if (!token) return;
+
+    try {
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ trashed: true })
+      });
+      if (!res.ok) throw new Error(`Trash failed (${res.status})`);
+      showToast(`Moved "${fileName}" to Trash`, 'success');
+      await loadDirectDriveFiles(currentFolderId);
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  // Rename File
+  async function renameDriveFile(fileId, currentName) {
+    const newName = prompt('Enter new file name:', currentName);
+    if (!newName || newName.trim() === '' || newName === currentName) return;
+    const token = getDirectDriveToken();
+    if (!token) return;
+
+    try {
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      if (!res.ok) throw new Error(`Rename failed (${res.status})`);
+      showToast(`Renamed to "${newName.trim()}"`, 'success');
+      await loadDirectDriveFiles(currentFolderId);
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  // Create Folder
+  async function createDriveFolder() {
+    const folderName = prompt('Enter new folder name:');
+    if (!folderName || !folderName.trim()) return;
+    const token = getDirectDriveToken();
+    if (!token) {
+      showToast('Please connect Google Drive first', 'warning');
+      return;
+    }
+
+    try {
+      const parents = currentFolderId && currentFolderId !== 'root' ? [currentFolderId] : [];
+      const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: folderName.trim(),
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: parents
+        })
+      });
+      if (!res.ok) throw new Error(`Create folder failed (${res.status})`);
+      showToast(`Created folder "${folderName.trim()}"`, 'success');
+      await loadDirectDriveFiles(currentFolderId);
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  // Search input listeners
   globalSearchInput.addEventListener('input', (e) => {
     clearTimeout(searchDebounceTimeout);
     const q = e.target.value;
@@ -1359,7 +1203,6 @@
     }, 350);
   });
 
-  // On Enter: Go to Google Drive section in sidebar and display related files!
   globalSearchInput.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -2161,22 +2004,23 @@
       return;
     }
 
+    const token = getSupabaseUserToken();
+    if (!token) {
+      showToast('Please log in first to update credentials', 'warning');
+      return;
+    }
+
     try {
-      const res = await apiFetch('/api/auth/update-credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newUsername, newPassword })
+      showToast('Updating admin password in Supabase Auth...', 'info');
+      await supa('PUT', '/auth/v1/user', {
+        body: { password: newPassword }
       });
-      const data = await res.json();
-      if (res.ok) {
-        showToast('Admin credentials updated!', 'success');
-        changePwdInput.value = '';
-        changeConfirmInput.value = '';
-      } else {
-        showToast(data.error || 'Update failed', 'error');
-      }
-    } catch (e) {
-      showToast('Error updating credentials', 'error');
+      showToast('Admin password updated successfully in Supabase Auth!', 'success');
+      changePwdInput.value = '';
+      changeConfirmInput.value = '';
+    } catch (err) {
+      console.error('Password update error:', err);
+      showToast('Password update failed: ' + err.message, 'error');
     }
   });
 
@@ -2196,9 +2040,9 @@
     setDirectDriveToken('');
     cachedFiles = [];
     currentFolderId = 'root';
-    applyStorageMetrics(STATIC_CLOUD_DATA.storage);
-    renderRecentFiles();
-    renderStorageBreakdown(STATIC_CLOUD_DATA.storage);
+    applyStorageMetrics(null);
+    renderOverviewFiles([]);
+    renderCleanExplorerGrid([]);
     updateLiveModeUI(false);
     showToast('Google Drive disconnected and token cleared', 'success');
   });
@@ -2335,7 +2179,7 @@
   const clientIdText = document.getElementById('client-id-text');
   let fullClientId = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
   // Dynamically load from authenticated backend status
-  apiFetch('/api/drive/status').then(r => r.json()).then(d => { if (d.clientId) fullClientId = d.clientId; }).catch(() => {});
+  // Client ID handled via admin/config.js
   const maskedClientId = '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
   let isClientIdRevealed = false;
 

@@ -743,10 +743,10 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- TAB 5: PORTFOLIO & LIVE GOOGLE ANALYTICS   -->
+        <!-- TAB 5: PORTFOLIO & LIVE GOOGLE ANALYTICS (GA4) -->
         <!-- ========================================== -->
         <section id="tab-portfolio" class="view-tab">
-          <!-- TOP: GOOGLE ANALYTICS LIVE PERFORMANCE DASHBOARD -->
+          <!-- TOP: GOOGLE ANALYTICS 4 CONTROL BAR -->
           <div class="section-card">
             <div class="card-title-bar">
               <div class="title-with-icon">
@@ -756,313 +756,350 @@
                   <path fill="#EA4335" d="M3.5 20C1.57 20 0 18.43 0 16.5V13c0-1.93 1.57-3.5 3.5-3.5S7 11.07 7 13v3.5C7 18.43 5.43 20 3.5 20z"/>
                 </svg>
                 <div>
-                  <h2>Portfolio Live Google Analytics</h2>
+                  <h2>Portfolio Live Google Analytics (GA4)</h2>
                   <span class="sub-text">Real-time visitor metrics, traffic channels, and audience analytics for <strong>hitesh070.github.io</strong></span>
                 </div>
               </div>
-              <div class="table-actions">
-                <span class="status-pill green"><span class="status-dot"></span>GA Connected: G-P45N7V2EL8</span>
-                <a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn btn-primary btn-sm">Open GA Console &nearr;</a>
+              <div class="table-actions" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span id="ga-stream-pill" class="status-pill neutral"><span class="status-dot"></span>Stream: G-KVRYQ5NBK4</span>
+                <span id="ga-status-pill" class="status-pill amber"><span class="status-dot"></span>Disconnected</span>
+                <select id="ga-property-select" class="clean-select" style="display: none; max-width: 200px; font-size: 12px;"></select>
+                <button type="button" id="connect-ga-btn" class="btn btn-primary btn-sm">Connect Google Analytics</button>
+                <button type="button" id="refresh-ga-btn" class="btn btn-secondary btn-sm" style="display: none;">↻ Refresh</button>
+                <button type="button" id="disconnect-ga-btn" class="btn btn-danger-soft btn-sm" style="display: none;">Disconnect</button>
+                <a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn btn-secondary btn-sm">GA4 Console &nearr;</a>
               </div>
             </div>
 
-            <!-- ANALYTICS METRICS CARDS -->
-            <div class="metrics-row">
-              <div class="metric-card ga-card">
-                <div class="m-card-header">
-                  <span class="m-label">Active Users (Realtime)</span>
-                  <span class="m-icon green">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </span>
-                </div>
-                <div class="m-val" style="color: #16a34a;" id="ga-realtime-users">4</div>
-                <div class="m-sub"><span class="badge-success"><span class="live-pulse-dot"></span>Live on Site</span><span class="m-sub-text">Right now</span></div>
-              </div>
-
-              <div class="metric-card ga-card">
-                <div class="m-card-header"><span class="m-label">28-Day Total Visitors</span><span class="m-icon blue"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span></div>
-                <div class="m-val">2,840</div>
-                <div class="m-sub"><span class="badge-blue">+18.4%</span><span class="m-sub-text">vs previous period</span></div>
-              </div>
-
-              <div class="metric-card ga-card">
-                <div class="m-card-header"><span class="m-label">Page Views</span><span class="m-icon purple"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span></div>
-                <div class="m-val">7,490</div>
-                <div class="m-sub"><span class="badge-purple">+22.5%</span><span class="m-sub-text">Growth trend</span></div>
-              </div>
-
-              <div class="metric-card ga-card">
-                <div class="m-card-header"><span class="m-label">Avg Engagement Duration</span><span class="m-icon amber"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div>
-                <div class="m-val">2m 18s</div>
-                <div class="m-sub"><span class="badge-amber">High Retention</span></div>
-              </div>
+            <!-- EMPTY STATE (WHEN NOT CONNECTED) -->
+            <div id="ga-empty-state" style="text-align: center; padding: 48px 24px; background: #f8fafc; border: 1px dashed var(--border-color); border-radius: 8px; margin-top: 16px;">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" style="margin-bottom: 16px;">
+                <path fill="#F9AB00" d="M21 16.5c0 1.93-1.57 3.5-3.5 3.5s-3.5-1.57-3.5-3.5 1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5z"/>
+                <path fill="#E37400" d="M12 20c-1.93 0-3.5-1.57-3.5-3.5V7.5c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5v9c0 1.93-1.57 3.5-3.5 3.5z"/>
+                <path fill="#EA4335" d="M3.5 20C1.57 20 0 18.43 0 16.5V13c0-1.93 1.57-3.5 3.5-3.5S7 11.07 7 13v3.5C7 18.43 5.43 20 3.5 20z"/>
+              </svg>
+              <h3 style="font-size: 17px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Google Analytics (GA4) Not Connected</h3>
+              <p style="color: var(--text-muted); max-width: 580px; margin: 0 auto 20px; font-size: 13.5px; line-height: 1.5;">
+                Connect your Google account with Analytics Read-Only permission (<code class="font-mono">analytics.readonly</code>) to load real traffic metrics, visitor channels, device breakdown, and custom project conversion events for your site (<code class="font-mono">G-KVRYQ5NBK4</code>).
+              </p>
+              <button type="button" id="empty-connect-ga-btn" class="btn btn-primary">Connect Google Analytics Account</button>
             </div>
 
-            <!-- TRAFFIC BREAKDOWN & GEOGRAPHY -->
-            <div class="split-row" style="margin-bottom: 20px;">
-              <!-- TOP REFERRAL CHANNELS -->
-              <div class="section-card flex-1" style="background: #f8fafc; border: 1px solid var(--border-color); margin-bottom: 0;">
-                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Top Traffic Acquisition Channels</h4>
-                <div class="ga-bar-item">
-                  <div class="ga-bar-label"><span>GitHub (Repositories &amp; Profile)</span><span style="font-weight: 700;">44%</span></div>
-                  <div class="ga-track"><div class="ga-fill" style="width: 44%; background: #0f172a;"></div></div>
+            <!-- DASHBOARD VIEW (WHEN CONNECTED) -->
+            <div id="ga-dashboard-view" style="display: none; margin-top: 16px;">
+              <!-- ERROR / LOADING BANNERS -->
+              <div id="ga-loading-indicator" class="hidden" style="text-align: center; padding: 24px; color: #2563eb; font-size: 13.5px; font-weight: 600;">
+                <span class="live-pulse-dot"></span> Fetching live Google Analytics 4 reports...
+              </div>
+              <div id="ga-error-banner" class="error-banner hidden" style="margin-bottom: 16px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="ga-error-msg">Error loading Google Analytics data</span>
+              </div>
+
+              <!-- CONTROLS & TIMEFRAME SELECTOR -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">Date Range:</span>
+                  <div class="chart-time-filters">
+                    <button type="button" class="chart-filter-btn" data-range="7">7D</button>
+                    <button type="button" class="chart-filter-btn" data-range="14">14D</button>
+                    <button type="button" class="chart-filter-btn active" data-range="30">30D</button>
+                    <button type="button" class="chart-filter-btn" data-range="90">90D</button>
+                  </div>
                 </div>
-                <div class="ga-bar-item">
-                  <div class="ga-bar-label"><span>Direct (Bookmarks &amp; Resume link)</span><span style="font-weight: 700;">28%</span></div>
-                  <div class="ga-track"><div class="ga-fill" style="width: 28%; background: #2563eb;"></div></div>
-                </div>
-                <div class="ga-bar-item">
-                  <div class="ga-bar-label"><span>LinkedIn Profile</span><span style="font-weight: 700;">18%</span></div>
-                  <div class="ga-track"><div class="ga-fill" style="width: 18%; background: #0077B5;"></div></div>
-                </div>
-                <div class="ga-bar-item">
-                  <div class="ga-bar-label"><span>Google Search / Organic</span><span style="font-weight: 700;">10%</span></div>
-                  <div class="ga-track"><div class="ga-fill" style="width: 10%; background: #16a34a;"></div></div>
+                <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-muted);">
+                  <span id="ga-comparison-label">Comparing vs previous period</span>
+                  <span class="badge-success"><span class="live-pulse-dot"></span><span id="ga-realtime-count">0</span> Active Realtime</span>
                 </div>
               </div>
 
-              <!-- VISITOR GEOGRAPHY -->
-              <div class="section-card flex-1" style="background: #f8fafc; border: 1px solid var(--border-color); margin-bottom: 0;">
-                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 14px;">Visitor Geography Breakdown</h4>
-                <div class="ga-bar-item">
-                  <div class="ga-bar-label"><span>🇮🇳 India (Chennai, Bangalore, Hyderabad)</span><span style="font-weight: 700;">64%</span></div>
-                  <div class="ga-track"><div class="ga-fill" style="width: 64%; background: #f97316;"></div></div>
+              <!-- 7 REAL GA4 KPI CARDS -->
+              <div class="metrics-row" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 20px;">
+                <div class="metric-card ga-card">
+                  <div class="m-card-header"><span class="m-label">Active Users</span></div>
+                  <div class="m-val" id="ga-kpi-active-users">--</div>
+                  <div class="m-sub"><span id="ga-kpi-active-users-change" class="badge-neutral">--</span></div>
                 </div>
-                <div class="ga-bar-item">
-                  <div class="ga-bar-label"><span>🇺🇸 United States (California, Texas)</span><span style="font-weight: 700;">20%</span></div>
-                  <div class="ga-track"><div class="ga-fill" style="width: 20%; background: #3b82f6;"></div></div>
+                <div class="metric-card ga-card">
+                  <div class="m-card-header"><span class="m-label">New Users</span></div>
+                  <div class="m-val" id="ga-kpi-new-users">--</div>
+                  <div class="m-sub"><span id="ga-kpi-new-users-change" class="badge-neutral">--</span></div>
                 </div>
-                <div class="ga-bar-item">
-                  <div class="ga-bar-label"><span>🇩🇪 Germany &bull; 🇬🇧 UK &bull; 🇸🇬 Singapore</span><span style="font-weight: 700;">16%</span></div>
-                  <div class="ga-track"><div class="ga-fill" style="width: 16%; background: #8b5cf6;"></div></div>
+                <div class="metric-card ga-card">
+                  <div class="m-card-header"><span class="m-label">Sessions</span></div>
+                  <div class="m-val" id="ga-kpi-sessions">--</div>
+                  <div class="m-sub"><span id="ga-kpi-sessions-change" class="badge-neutral">--</span></div>
                 </div>
-              </div>
-            </div>
-
-            <!-- INTERACTIVE GOOGLE ANALYTICS LIVE PERFORMANCE DASHBOARD -->
-            <div class="ga-dashboard-panel">
-              <div class="ga-panel-header">
-                <div>
-                  <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="#2563eb"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
-                    Audience Traffic &amp; Page Views Over Time
-                  </h3>
-                  <span class="sub-text">Interactive timeline for <strong>hitesh070.github.io</strong></span>
+                <div class="metric-card ga-card">
+                  <div class="m-card-header"><span class="m-label">Screen Page Views</span></div>
+                  <div class="m-val" id="ga-kpi-views">--</div>
+                  <div class="m-sub"><span id="ga-kpi-views-change" class="badge-neutral">--</span></div>
                 </div>
-                <div class="chart-time-filters">
-                  <button type="button" class="chart-filter-btn" data-range="7">7D</button>
-                  <button type="button" class="chart-filter-btn active" data-range="14">14D</button>
-                  <button type="button" class="chart-filter-btn" data-range="30">30D</button>
+                <div class="metric-card ga-card">
+                  <div class="m-card-header"><span class="m-label">Avg Duration</span></div>
+                  <div class="m-val" id="ga-kpi-duration">--</div>
+                  <div class="m-sub"><span id="ga-kpi-duration-change" class="badge-neutral">--</span></div>
                 </div>
-              </div>
-
-              <!-- INTERACTIVE SVG TIMELINE CHART -->
-              <div class="ga-chart-wrapper">
-                <svg id="ga-svg-chart" viewBox="0 0 800 220" class="ga-chart-svg" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.32"/>
-                      <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0"/>
-                    </linearGradient>
-                    <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.22"/>
-                      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.0"/>
-                    </linearGradient>
-                  </defs>
-                  <!-- Dynamic SVG elements rendered by JS -->
-                  <g id="chart-grid"></g>
-                  <path id="chart-views-area" fill="url(#viewsGrad)" d=""/>
-                  <path id="chart-visitors-area" fill="url(#visitorsGrad)" d=""/>
-                  <path id="chart-views-line" fill="none" stroke="#8b5cf6" stroke-width="2.5" d=""/>
-                  <path id="chart-visitors-line" fill="none" stroke="#2563eb" stroke-width="3" d=""/>
-                  <g id="chart-points"></g>
-                </svg>
-                <!-- Tooltip -->
-                <div id="chart-tooltip" class="chart-tooltip hidden">
-                  <div class="ct-date" id="ct-date">Oct 26</div>
-                  <div class="ct-stat"><span class="ct-dot blue"></span>Visitors: <strong id="ct-visitors">218</strong></div>
-                  <div class="ct-stat"><span class="ct-dot purple"></span>Pageviews: <strong id="ct-views">540</strong></div>
+                <div class="metric-card ga-card">
+                  <div class="m-card-header"><span class="m-label">Engagement Rate</span></div>
+                  <div class="m-val" id="ga-kpi-engagement">--</div>
+                  <div class="m-sub"><span id="ga-kpi-engagement-change" class="badge-neutral">--</span></div>
+                </div>
+                <div class="metric-card ga-card">
+                  <div class="m-card-header"><span class="m-label">Bounce Rate</span></div>
+                  <div class="m-val" id="ga-kpi-bounce">--</div>
+                  <div class="m-sub"><span id="ga-kpi-bounce-change" class="badge-neutral">--</span></div>
                 </div>
               </div>
 
-              <div class="chart-legend-row">
-                <div class="chart-legend-item"><span class="legend-color-dot" style="background: #2563eb;"></span><span>Unique Visitors</span></div>
-                <div class="chart-legend-item"><span class="legend-color-dot" style="background: #8b5cf6;"></span><span>Total Page Views</span></div>
-                <span class="chart-legend-hint">Hover or tap on points for daily breakdown</span>
+              <!-- CODE-GENERATED INSIGHTS PANEL -->
+              <div class="section-card" style="background: #f8fafc; border: 1px solid var(--border-color); margin-bottom: 20px;">
+                <div class="card-title-bar" style="margin-bottom: 8px;">
+                  <h4 style="font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="#f59e0b"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    Audience Intelligence &amp; Data Insights
+                  </h4>
+                  <span class="sub-text" style="font-size: 11.5px;">Synthesized from live GA4 query metrics</span>
+                </div>
+                <div id="ga-insights-list" style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-primary);">
+                  <!-- Populated dynamically via JS -->
+                </div>
+                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-color); font-size: 11.5px; color: var(--text-muted); line-height: 1.4;">
+                  💡 <strong>Advisory:</strong> Standard GA4 reports have an intrinsic 24-48 hour processing latency. Realtime numbers reflect the last 30 minutes. Internal visits from your own devices are included by default; configure internal traffic filters in GA4 Admin &rarr; Data Streams &rarr; Configure Tag Settings &rarr; Define Internal Traffic to exclude them.
+                </div>
               </div>
 
-              <!-- REAL-TIME ACTIVE BROWSING SECTION -->
-              <div class="ga-realtime-section" style="margin-top: 22px;">
-                <h4 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                  <span class="live-pulse-dot"></span>
-                  Active Pages Being Viewed Right Now
-                </h4>
+              <!-- TIMELINE CHART (DAILY USERS & PAGE VIEWS) -->
+              <div class="ga-dashboard-panel" style="margin-bottom: 20px;">
+                <div class="ga-panel-header">
+                  <div>
+                    <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="#2563eb"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+                      Daily Active Users &amp; Page Views Timeline
+                    </h3>
+                    <span class="sub-text">Dimension: <code class="font-mono">date</code> &bull; Metric: <code class="font-mono">activeUsers</code> &amp; <code class="font-mono">screenPageViews</code></span>
+                  </div>
+                </div>
+                <div class="ga-chart-wrapper">
+                  <svg id="ga-svg-chart" viewBox="0 0 800 220" class="ga-chart-svg" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="visitorsGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#2563eb" stop-opacity="0.32"/>
+                        <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0"/>
+                      </linearGradient>
+                      <linearGradient id="viewsGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.22"/>
+                        <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.0"/>
+                      </linearGradient>
+                    </defs>
+                    <g id="chart-grid"></g>
+                    <path id="chart-views-area" fill="url(#viewsGrad)" d=""/>
+                    <path id="chart-visitors-area" fill="url(#visitorsGrad)" d=""/>
+                    <path id="chart-views-line" fill="none" stroke="#8b5cf6" stroke-width="2.5" d=""/>
+                    <path id="chart-visitors-line" fill="none" stroke="#2563eb" stroke-width="3" d=""/>
+                    <g id="chart-points"></g>
+                  </svg>
+                  <div id="chart-tooltip" class="chart-tooltip hidden">
+                    <div class="ct-date" id="ct-date">--</div>
+                    <div class="ct-stat"><span class="ct-dot blue"></span>Active Users: <strong id="ct-visitors">0</strong></div>
+                    <div class="ct-stat"><span class="ct-dot purple"></span>Page Views: <strong id="ct-views">0</strong></div>
+                  </div>
+                </div>
+                <div class="chart-legend-row">
+                  <div class="chart-legend-item"><span class="legend-color-dot" style="background: #2563eb;"></span><span>Active Users</span></div>
+                  <div class="chart-legend-item"><span class="legend-color-dot" style="background: #8b5cf6;"></span><span>Screen Page Views</span></div>
+                  <span class="chart-legend-hint">Hover on points for daily breakdown</span>
+                </div>
+              </div>
+
+              <!-- REALTIME BROWSING ACTIVITY (LAST 30 MINUTES) -->
+              <div class="section-card" style="margin-bottom: 20px;">
+                <div class="card-title-bar">
+                  <div class="title-with-icon">
+                    <span class="live-pulse-dot"></span>
+                    <h4>Active Realtime Screens &amp; Audience (Last 30 Min)</h4>
+                  </div>
+                  <span class="sub-text" style="font-size: 11.5px;">Auto-refreshes every 30s</span>
+                </div>
                 <div class="table-container">
                   <table class="clean-table">
                     <thead>
                       <tr>
-                        <th>Page / Section</th>
+                        <th>Page / Screen (<code class="font-mono">unifiedScreenName</code>)</th>
                         <th>Active Users</th>
-                        <th>Traffic Origin</th>
-                        <th>Device</th>
-                        <th>Duration</th>
+                        <th>Country</th>
+                        <th>Device Category</th>
+                        <th>Recency</th>
                       </tr>
                     </thead>
-                    <tbody id="ga-active-pages-tbody">
-                      <tr>
-                        <td><strong>/ (Hero &amp; Portfolio Intro)</strong></td>
-                        <td><span class="badge-success">2 users</span></td>
-                        <td>Chennai, India &bull; Direct / Bookmarks</td>
-                        <td>Desktop Chrome</td>
-                        <td>1m 45s</td>
-                      </tr>
-                      <tr>
-                        <td><strong>/#projects (VLSI &amp; Embedded Systems)</strong></td>
-                        <td><span class="badge-success">1 user</span></td>
-                        <td>California, US &bull; GitHub Referral</td>
-                        <td>Desktop Safari</td>
-                        <td>3m 12s</td>
-                      </tr>
-                      <tr>
-                        <td><strong>/#scholarly-inquiry (Patents &amp; Research)</strong></td>
-                        <td><span class="badge-success">1 user</span></td>
-                        <td>Bengaluru, India &bull; LinkedIn Referral</td>
-                        <td>Mobile Android</td>
-                        <td>2m 04s</td>
-                      </tr>
+                    <tbody id="ga-realtime-pages-tbody">
+                      <tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 18px;">No active users in the last 30 minutes.</td></tr>
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <!-- DIRECT GOOGLE ANALYTICS LAUNCH STRIP -->
-              <div class="ga-launch-strip" style="margin-top: 20px;">
-                <div class="ga-ls-info">
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
-                    <path fill="#F9AB00" d="M21 16.5c0 1.93-1.57 3.5-3.5 3.5s-3.5-1.57-3.5-3.5 1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5z"/>
-                    <path fill="#E37400" d="M12 20c-1.93 0-3.5-1.57-3.5-3.5V7.5c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5v9c0 1.93-1.57 3.5-3.5 3.5z"/>
-                    <path fill="#EA4335" d="M3.5 20C1.57 20 0 18.43 0 16.5V13c0-1.93 1.57-3.5 3.5-3.5S7 11.07 7 13v3.5C7 18.43 5.43 20 3.5 20z"/>
-                  </svg>
-                  <div>
-                    <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">Google Analytics Console &bull; hiteshvs616@gmail.com</div>
-                    <div style="font-size: 12px; color: var(--text-muted);">Access deep custom reports, user journeys, conversion funnels, and retention charts in Google Analytics.</div>
+              <!-- SPLIT ROW: TRAFFIC CHANNELS & GEOGRAPHY -->
+              <div class="split-row" style="margin-bottom: 20px;">
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Acquisition Channels &amp; Source / Medium</h4>
+                  <div class="table-container" style="max-height: 280px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>Channel Group</th>
+                          <th>Source / Medium</th>
+                          <th>Users</th>
+                          <th>Engagement</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-channels-tbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">Loading channel data...</td></tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-                <a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn btn-primary btn-sm">
-                  <span>Open GA Console (hiteshvs616@gmail.com)</span>
-                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                </a>
-              </div>
-            </div>
-          </div>
 
-          <!-- DETAILED VISITOR & IP INTELLIGENCE AUDIT -->
-          <div class="section-card" id="portfolio-detailed-analytics-card">
-            <div class="card-title-bar">
-              <div class="title-with-icon">
-                <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                <div>
-                  <h3>Detailed Visitor Intelligence &amp; IP Audit Log</h3>
-                  <span class="sub-text">In-depth session breakdown by visitor, IP address, geolocation, device, pages explored, and traffic referral channel</span>
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Audience Geography (Country &amp; City)</h4>
+                  <div class="table-container" style="max-height: 280px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>Country</th>
+                          <th>City</th>
+                          <th>Users</th>
+                          <th>Views</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-geo-tbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">Loading geography data...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-              <div class="table-actions">
-                <a href="/api/portfolio/analytics/export" target="_blank" class="btn btn-secondary btn-sm" id="export-visitors-csv-btn" title="Download audit log in CSV format">
-                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  <span>Export CSV</span>
-                </a>
-                <button type="button" class="btn btn-secondary btn-sm" id="refresh-visitors-btn" title="Refresh visitor list">
-                  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                  <span>Refresh</span>
-                </button>
-              </div>
-            </div>
 
-            <!-- VISITOR SUMMARY KPI CARDS -->
-            <div class="metrics-row" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
-              <div class="metric-card" style="padding: 16px;">
-                <div class="m-card-header"><span class="m-label">Active Visitors Now</span><span class="m-icon green"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></span></div>
-                <div class="m-val" id="va-stat-active" style="color: #16a34a; font-size: 22px;">4 Active</div>
-                <div class="m-sub"><span class="badge-success"><span class="live-pulse-dot"></span>Real-time</span><span class="m-sub-text">Browsing site</span></div>
-              </div>
-              <div class="metric-card" style="padding: 16px;">
-                <div class="m-card-header"><span class="m-label">Unique IP Addresses</span><span class="m-icon blue"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span></div>
-                <div class="m-val" id="va-stat-ips" style="font-size: 22px;">15 IPs</div>
-                <div class="m-sub"><span class="badge-blue">100% Unique</span><span class="m-sub-text">Indexed</span></div>
-              </div>
-              <div class="metric-card" style="padding: 16px;">
-                <div class="m-card-header"><span class="m-label">Top Location</span><span class="m-icon amber"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span></div>
-                <div class="m-val" id="va-stat-top-loc" style="font-size: 18px; line-height: 1.3;">Chennai, IN</div>
-                <div class="m-sub"><span class="badge-amber">42% of total</span><span class="m-sub-text">Primary cluster</span></div>
-              </div>
-              <div class="metric-card" style="padding: 16px;">
-                <div class="m-card-header"><span class="m-label">Top Referral Channel</span><span class="m-icon purple"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span></div>
-                <div class="m-val" id="va-stat-top-src" style="font-size: 18px; line-height: 1.3;">GitHub /Hitesh070</div>
-                <div class="m-sub"><span class="badge-neutral">44% share</span><span class="m-sub-text">Direct repo flow</span></div>
-              </div>
-            </div>
+              <!-- SPLIT ROW: TECHNOLOGY & TOP PAGES -->
+              <div class="split-row" style="margin-bottom: 20px;">
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Technology (Device, OS &amp; Browser)</h4>
+                  <div class="table-container" style="max-height: 280px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>Device</th>
+                          <th>Operating System</th>
+                          <th>Browser</th>
+                          <th>Users</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-tech-tbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">Loading tech data...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-            <!-- SEARCH & FILTER TOOLBAR -->
-            <div class="va-toolbar">
-              <div class="va-search-box">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="#94a3b8" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="va-search-input" placeholder="Search by IP address, city, country, or page path..." autocomplete="off">
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Top Visited Page Paths</h4>
+                  <div class="table-container" style="max-height: 280px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>Page Path</th>
+                          <th>Views</th>
+                          <th>Avg Engagement</th>
+                          <th>Bounce</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-pages-tbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">Loading page data...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
-              <div class="va-filters-row">
-                <select id="va-filter-country" class="clean-select">
-                  <option value="all">All Countries</option>
-                  <option value="india">🇮🇳 India</option>
-                  <option value="united states">🇺🇸 United States</option>
-                  <option value="germany">🇩🇪 Germany</option>
-                  <option value="united kingdom">🇬🇧 United Kingdom</option>
-                  <option value="singapore">🇸🇬 Singapore</option>
-                </select>
 
-                <select id="va-filter-device" class="clean-select">
-                  <option value="all">All Devices</option>
-                  <option value="desktop">💻 Desktop / PC</option>
-                  <option value="macbook">💻 Mac / MacBook</option>
-                  <option value="mobile">📱 Mobile / Phone</option>
-                  <option value="ipad">📱 iPad / Tablet</option>
-                </select>
+              <!-- SPLIT ROW: LANDING PAGES & RETURNING USERS -->
+              <div class="split-row" style="margin-bottom: 20px;">
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Landing Pages</h4>
+                  <div class="table-container" style="max-height: 260px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>Landing Page</th>
+                          <th>Sessions</th>
+                          <th>Engagement Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-landing-tbody">
+                        <tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 18px;">Loading landing page data...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-                <select id="va-filter-source" class="clean-select">
-                  <option value="all">All Traffic Sources</option>
-                  <option value="github">GitHub</option>
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="direct">Direct / Bookmarks</option>
-                  <option value="google search">Google Search</option>
-                  <option value="research">Research / Overleaf</option>
-                </select>
-
-                <button type="button" class="btn btn-secondary btn-sm" id="va-reset-filters-btn">Reset</button>
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Audience Loyalty (New vs. Returning)</h4>
+                  <div class="table-container" style="max-height: 260px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>User Type</th>
+                          <th>Users</th>
+                          <th>Sessions</th>
+                          <th>Share</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-new-returning-tbody">
+                        <tr><td colspan="4" style="text-align: center; color: #94a3b8; padding: 18px;">Loading loyalty data...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <!-- DETAILED VISITORS TABLE -->
-            <div class="table-container" style="max-height: 520px; overflow-y: auto;">
-              <table class="clean-table va-table">
-                <thead>
-                  <tr>
-                    <th>Visitor &amp; Status</th>
-                    <th>IP Address &amp; ISP</th>
-                    <th>Location / City</th>
-                    <th>Device &amp; Browser</th>
-                    <th>Session Flow (Pages Visited)</th>
-                    <th>Traffic Origin</th>
-                    <th>Duration</th>
-                    <th>Time</th>
-                  </tr>
-                </thead>
-                <tbody id="va-visitors-tbody">
-                  <!-- Populated via JS -->
-                </tbody>
-              </table>
-            </div>
+              <!-- SPLIT ROW: DAY/HOUR HEATMAP & CUSTOM EVENTS -->
+              <div class="split-row" style="margin-bottom: 20px;">
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Peak Traffic Time (Day of Week &amp; Hour)</h4>
+                  <div class="table-container" style="max-height: 260px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>Day of Week</th>
+                          <th>Hour (0-23)</th>
+                          <th>Active Users</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-heatmap-tbody">
+                        <tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 18px;">Loading peak hours...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-            <div class="va-footer-info">
-              <span id="va-showing-count">Showing 15 of 15 visitors</span>
-              <span style="color: #64748b; font-size: 11.5px;">Auto-records all live portfolio traffic on port 3000 &bull; IP geolocation mapped</span>
+                <div class="section-card flex-1" style="margin-bottom: 0;">
+                  <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px;">Custom Events &amp; Conversions</h4>
+                  <div class="table-container" style="max-height: 260px; overflow-y: auto;">
+                    <table class="clean-table">
+                      <thead>
+                        <tr>
+                          <th>Event Name</th>
+                          <th>Event Count</th>
+                          <th>Users</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ga-events-tbody">
+                        <tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 18px;">Loading event conversions...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -1081,7 +1118,7 @@
                 <h4>Live Deployment</h4>
                 <p><strong>Host:</strong> GitHub Pages</p>
                 <p><strong>URL:</strong> <a href="https://hitesh070.github.io" target="_blank">https://hitesh070.github.io</a></p>
-                <p><strong>Local Preview:</strong> <a href="/" target="_blank">http://localhost:3000/</a></p>
+                <p><strong>Status:</strong> Production Active</p>
               </div>
 
               <div class="p-card">
@@ -1107,9 +1144,6 @@
           </div>
         </section>
 
-        <!-- ========================================== -->
-        
-        <!-- ========================================== -->
         <!-- TAB 6: TEMP CLOUD DROP / STAGING VAULT     -->
         <!-- ========================================== -->
         <section id="tab-temp-drop" class="view-tab">

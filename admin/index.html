@@ -1253,39 +1253,37 @@
             </div>
           </div>
         
-            <!-- TEMP CLOUD VAULT SETTINGS (SUPABASE CLOUD SYNC) -->
-            <div class="section-card" style="margin-top: 24px; border-left: 4px solid #f59e0b;">
+            <!-- SUPABASE CONNECTION STATUS & DIAGNOSTICS CARD -->
+            <div class="section-card" style="margin-top: 24px; border-left: 4px solid #2563eb;">
               <div class="card-title-bar">
                 <div class="title-with-icon">
-                  <svg viewBox="0 0 24 24" width="22" height="22" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  <svg viewBox="0 0 24 24" width="22" height="22" stroke="#2563eb" stroke-width="2" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                   <div>
-                    <h3>Temp Cloud Storage Vault (Supabase)</h3>
-                    <span class="sub-text">Optional 24/7 cloud buffer for public and college lab computers without signing into Google.</span>
+                    <h3>Supabase Cloud Connection &amp; Diagnostics</h3>
+                    <span class="sub-text">Persistent cloud buffer, multi-device staging, and encrypted auth backend.</span>
                   </div>
                 </div>
-                <span id="supabase-status-badge" class="badge-amber">Staging Vault (Local Active)</span>
+                <span id="supabase-status-badge" class="badge-neutral">● Initializing...</span>
               </div>
 
-              <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;">
-                <div class="input-group" style="margin-bottom: 0;">
-                  <label for="supabase-url-input">Supabase Project URL</label>
-                  <div style="display: flex; gap: 8px;">
-                    <input type="url" id="supabase-url-input" class="clean-input" placeholder="https://your-project.supabase.co">
-                    <button type="button" id="paste-supabase-url-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">📋 Paste</button>
+              <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px 18px;">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+                    Config Source: <code class="font-mono">admin/config.js</code>
                   </div>
-                </div>
-                <div class="input-group" style="margin-bottom: 0;">
-                  <label for="supabase-key-input">Supabase Anon Public Key</label>
-                  <div style="display: flex; gap: 8px;">
-                    <input type="password" id="supabase-key-input" class="clean-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-                    <button type="button" id="paste-supabase-key-btn" class="btn btn-secondary btn-sm" style="white-space: nowrap;">📋 Paste</button>
+                  <div style="font-size: 12px; color: var(--text-muted);">
+                    Host: <span id="settings-supa-host" class="font-mono" style="color: #2563eb;">--</span> &bull; 
+                    Bucket: <span id="settings-supa-bucket" class="font-mono" style="color: #0284c7;">temp_vault</span> &bull;
+                    Session: <span id="settings-supa-auth" class="font-mono" style="color: #16a34a;">--</span>
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <button type="button" id="save-supabase-btn" class="btn btn-primary">Save &amp; Link</button>
-                  <button type="button" id="reset-supabase-btn" class="btn btn-secondary">Clear</button>
+                  <button type="button" id="test-supabase-btn" class="btn btn-secondary btn-sm">Test Connection</button>
+                  <a href="https://supabase.com/dashboard" target="_blank" class="btn btn-primary btn-sm">Supabase Dashboard &nearr;</a>
                 </div>
               </div>
+
+              <div id="connection-test-results" style="display: none; margin-top: 12px; font-size: 12px; padding: 10px 14px; border-radius: 6px; background: rgba(0,0,0,0.03); border: 1px solid var(--border-color); font-family: monospace;"></div>
             </div>
         </section>
 
@@ -1361,6 +1359,7 @@
     </div>
   </div>
 
-  <script src="admin.js?v=20261026_v8"></script>
+  <script src="config.js?v=20261027_v1"></script>
+  <script src="admin.js?v=20261027_v1"></script>
 </body>
 </html>

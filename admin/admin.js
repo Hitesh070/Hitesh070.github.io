@@ -214,6 +214,7 @@
     renderStagedFiles();
     initVaultRealtime();
     runVaultAutoClean();
+    loadAdminNotes(true);
     populateDriveFolderPicker();
     startClockAndWeather();
     syncLaunchpadTabs();
@@ -1534,143 +1535,619 @@
     }
   });
 
-  // Admin Scratchpad (Automatic Real-Time Cloud Sync with Supabase + Persistent Backup)
-  let cloudSaveTimeout = null;
+  // ============================================================================
+  // ADMIN SCRATCHPAD & MARKDOWN TODO LIST (public.admin_notes + admin_notes_history)
+  // ============================================================================
+  let scratchpadDebounceTimer = null;
+  let scratchpadPollInterval = null;
+  let autoSnapshotInterval = null;
+  let lastKnownCloudUpdatedAt = null;
+  let lastSyncedContent = null;
+  let lastSnapshotContent = null;
+  let isSavingScratchpad = false;
+  let currentTodoFilter = 'all';
 
-  async function syncScratchpadToCloud(text) {
-    const { url, key } = getSupabaseConfig();
-    const setStatus = (msg, isErr = false) => {
-      const cls = isErr ? 'amber' : 'green';
-      if (scratchpadStatus) scratchpadStatus.innerHTML = `<span class="badge-${cls}">${msg}</span>`;
-      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = `<span class="badge-${cls}">${msg}</span>`;
+  function isPublicComputerMode() {
+    return sessionStorage.getItem('admin_public_pc_mode') === 'true' || localStorage.getItem('admin_public_pc_mode') === 'true';
+  }
+
+  function setScratchpadBadge(html) {
+    if (scratchpadStatus) scratchpadStatus.innerHTML = html;
+    const fullStatus = document.getElementById('full-scratchpad-status');
+    if (fullStatus) fullStatus.innerHTML = html;
+  }
+
+  function setScratchpadValues(val) {
+    if (adminScratchpad && adminScratchpad.value !== val) adminScratchpad.value = val;
+    const fullScratchpad = document.getElementById('full-admin-scratchpad');
+    if (fullScratchpad && fullScratchpad.value !== val) fullScratchpad.value = val;
+    updateWordCount(val);
+    renderMarkdownTodoList(val);
+  }
+
+  function getCurrentScratchpadValue() {
+    const fullScratchpad = document.getElementById('full-admin-scratchpad');
+    return (fullScratchpad ? fullScratchpad.value : (adminScratchpad ? adminScratchpad.value : '')) || '';
+  }
+
+  function updateWordCount(text) {
+    const el = document.getElementById('scratchpad-word-count');
+    if (!el) return;
+    const trimmed = (text || '').trim();
+    const words = trimmed ? trimmed.split(/\s+/).length : 0;
+    const lines = text ? text.split('\n').length : 0;
+    el.textContent = `${words} words • ${lines} lines`;
+  }
+
+  // Conflict Resolution Modal
+  function showConflictModal({ cloudUpdatedAt, cloudContent, localContent, onResolve }) {
+    const existing = document.getElementById('scratchpad-conflict-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'scratchpad-conflict-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(4px);';
+    const timeFormatted = new Date(cloudUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    modal.innerHTML = `
+      <div style="background:#181b22;border:1px solid rgba(255,255,255,0.15);border-radius:14px;max-width:520px;width:100%;padding:1.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);color:#f1f5f9;font-family:inherit;">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;color:#f59e0b;font-size:1.1rem;">
+            ⚠️
+          </div>
+          <h3 style="margin:0;font-size:1.1rem;font-weight:700;">Scratchpad Conflict Detected</h3>
+        </div>
+        <p style="font-size:0.875rem;color:#94a3b8;line-height:1.5;margin-bottom:1.25rem;">
+          Cloud has newer edits (<strong>${timeFormatted}</strong> from another device/tab). How would you like to resolve this conflict?
+        </p>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;">
+          <button id="modal-btn-load-cloud" class="btn btn-secondary" style="display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:0.65rem 1rem;background:#242938;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:8px;cursor:pointer;">
+            <span style="font-weight:600;color:#38bdf8;">📥 Load Cloud Version</span>
+            <span style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">Discard local edits and pull latest changes from cloud</span>
+          </button>
+          <button id="modal-btn-keep-local" class="btn btn-secondary" style="display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:0.65rem 1rem;background:#242938;border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:8px;cursor:pointer;">
+            <span style="font-weight:600;color:#f59e0b;">🖥️ Keep Local Version</span>
+            <span style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">Overwrite cloud notes with your current device edits</span>
+          </button>
+          <button id="modal-btn-append-both" class="btn btn-primary" style="display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:0.65rem 1rem;border-radius:8px;cursor:pointer;">
+            <span style="font-weight:600;">📑 Append Both</span>
+            <span style="font-size:0.75rem;opacity:0.85;margin-top:2px;">Keep both local and cloud content separated by a timestamp divider</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('modal-btn-load-cloud').onclick = () => {
+      modal.remove();
+      onResolve(cloudContent, false);
     };
+    document.getElementById('modal-btn-keep-local').onclick = () => {
+      modal.remove();
+      onResolve(localContent, true);
+    };
+    document.getElementById('modal-btn-append-both').onclick = () => {
+      modal.remove();
+      const combined = `${localContent.trim()}\n\n--- [Cloud Edits (${timeFormatted})] ---\n${cloudContent.trim()}`;
+      onResolve(combined, true);
+    };
+  }
 
-    if (!url || !key) {
-      setStatus('Saved Locally (Link Supabase in Settings for Cloud Sync)');
+  // Sync Scratchpad to Supabase public.admin_notes
+  async function syncScratchpadToCloud(text, isBeacon = false) {
+    if (isSavingScratchpad && !isBeacon) return;
+    const token = getSupabaseUserToken();
+    const { url, key } = getSupabaseConfig();
+
+    if (!token || !url) {
+      if (!isPublicComputerMode()) {
+        localStorage.setItem('portfolio_admin_notes', text);
+      }
+      setScratchpadBadge('<span class="badge-amber">Offline (Login for Cloud Sync)</span>');
       return;
     }
 
-    setStatus('Saving to Cloud...');
-    try {
-      const bucketName = getSupabaseConfig().bucket || 'temp_vault';
-      const uploadUrl = `${url}/storage/v1/object/${bucketName}/admin_scratchpad.txt`;
-      let res = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`,
-          'Content-Type': 'text/plain; charset=utf-8',
-          'x-upsert': 'true'
-        },
-        body: text
-      });
-
-      if (!res.ok) {
-        res = await fetch(uploadUrl, {
-          method: 'PUT',
+    if (isBeacon) {
+      try {
+        const nowIso = new Date().toISOString();
+        fetch(`${url}/rest/v1/admin_notes?on_conflict=id`, {
+          method: 'POST',
           headers: {
             'apikey': key,
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'text/plain; charset=utf-8'
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
           },
-          body: text
+          body: JSON.stringify({ id: 'main', content: text, updated_at: nowIso }),
+          keepalive: true
         });
+      } catch (_) {}
+      return;
+    }
+
+    setScratchpadBadge('<span class="badge-amber">Saving...</span>');
+    isSavingScratchpad = true;
+
+    try {
+      const nowIso = new Date().toISOString();
+      const res = await supa('POST', '/rest/v1/admin_notes?on_conflict=id', {
+        headers: {
+          'Prefer': 'resolution=merge-duplicates,return=representation'
+        },
+        body: {
+          id: 'main',
+          content: text,
+          updated_at: nowIso
+        },
+        raw: true
+      });
+
+      const data = await res.json();
+      lastKnownCloudUpdatedAt = (Array.isArray(data) && data[0]?.updated_at) ? data[0].updated_at : nowIso;
+      lastSyncedContent = text;
+
+      if (!isPublicComputerMode()) {
+        localStorage.setItem('portfolio_admin_notes', text);
+        localStorage.setItem('portfolio_admin_notes_updated', lastKnownCloudUpdatedAt);
       }
 
-      if (res.ok) {
-        setStatus('Saved to Cloud (Supabase)');
-      } else {
-        const errText = await res.text().catch(() => '');
-        console.warn('Supabase scratchpad error response:', res.status, errText);
-        if (res.status === 401 || res.status === 403) {
-          setStatus('Cloud Sync Error (Check Supabase RLS / Policy)', true);
-        } else if (res.status === 404) {
-          setStatus(`Bucket "${bucketName}" not found in Supabase`, true);
-        } else {
-          setStatus(`Cloud Sync Failed (${res.status}) - Saved Locally`, true);
-        }
-      }
-    } catch (e) {
-      console.warn('Scratchpad cloud sync error:', e);
-      setStatus('Saved Locally (Offline)', true);
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setScratchpadBadge(`<span class="badge-success">Saved to Cloud (${timeStr})</span>`);
+    } catch (err) {
+      console.error('Scratchpad cloud save error:', err);
+      const statusNum = err.status || 500;
+      setScratchpadBadge(`<span class="badge-danger" style="color:#ef4444;font-weight:600;">Failed (${statusNum}: ${escapeHtml(err.message)}) - <a href="javascript:void(0)" id="retry-scratchpad-btn" style="text-decoration:underline;color:#ef4444;margin-left:4px;">Retry</a></span>`);
+      const retryBtn = document.getElementById('retry-scratchpad-btn');
+      if (retryBtn) retryBtn.onclick = () => syncScratchpadToCloud(getCurrentScratchpadValue());
+    } finally {
+      isSavingScratchpad = false;
     }
   }
 
-  async function loadAdminNotes() {
-    const { url, key } = getSupabaseConfig();
-    if (url && key) {
-      try {
-        const bucketName = getSupabaseConfig().bucket || 'temp_vault';
-        const fetchUrl = `${url}/storage/v1/object/public/${bucketName}/admin_scratchpad.txt?t=${Date.now()}`;
-        let res = await fetch(fetchUrl, {
-          headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-        });
-        if (!res.ok) {
-          res = await fetch(`${url}/storage/v1/object/authenticated/temp_vault/admin_scratchpad.txt?t=${Date.now()}`, {
-            headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-          });
-        }
-        if (res.ok) {
-          const cloudText = await res.text();
-          if (cloudText && !cloudText.includes('"statusCode":404')) {
-            localStorage.setItem('portfolio_admin_notes', cloudText);
-            if (adminScratchpad) adminScratchpad.value = cloudText;
-            if (fullAdminScratchpad) fullAdminScratchpad.value = cloudText;
-            if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-success">Synced with Cloud (Supabase)</span>';
-            if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-success">Synced with Cloud (Supabase)</span>';
-            return;
+  // Load Admin Notes from public.admin_notes
+  async function loadAdminNotes(force = false) {
+    const token = getSupabaseUserToken();
+    if (!token) {
+      const localFallback = !isPublicComputerMode() ? (localStorage.getItem('portfolio_admin_notes') || '') : '';
+      setScratchpadValues(localFallback);
+      setScratchpadBadge('<span class="badge-neutral">Ready</span>');
+      return;
+    }
+
+    const fullScratchpad = document.getElementById('full-admin-scratchpad');
+    const isTypingNow = document.activeElement === adminScratchpad || document.activeElement === fullScratchpad;
+    if (isTypingNow && !force) return;
+
+    try {
+      const res = await supa('GET', '/rest/v1/admin_notes?id=eq.main&select=id,content,updated_at', { raw: true });
+      const rows = await res.json();
+
+      if (!Array.isArray(rows) || rows.length === 0) {
+        const localContent = !isPublicComputerMode() ? (localStorage.getItem('portfolio_admin_notes') || '') : '';
+        if (localContent) syncScratchpadToCloud(localContent);
+        else setScratchpadBadge('<span class="badge-neutral">Ready</span>');
+        return;
+      }
+
+      const cloudRow = rows[0];
+      const cloudUpdatedAt = cloudRow.updated_at;
+      const cloudContent = cloudRow.content || '';
+      const currentVal = getCurrentScratchpadValue();
+
+      const cloudIsNewer = lastKnownCloudUpdatedAt ? (new Date(cloudUpdatedAt) > new Date(lastKnownCloudUpdatedAt)) : true;
+      const localHasUnsavedEdits = lastSyncedContent !== null && currentVal !== lastSyncedContent && currentVal !== cloudContent;
+
+      if (cloudIsNewer && localHasUnsavedEdits && lastKnownCloudUpdatedAt) {
+        showConflictModal({
+          cloudUpdatedAt,
+          cloudContent,
+          localContent: currentVal,
+          onResolve: (resolvedText, shouldPush) => {
+            setScratchpadValues(resolvedText);
+            if (shouldPush) {
+              syncScratchpadToCloud(resolvedText);
+            } else {
+              lastKnownCloudUpdatedAt = cloudUpdatedAt;
+              lastSyncedContent = cloudContent;
+              if (!isPublicComputerMode()) {
+                localStorage.setItem('portfolio_admin_notes', cloudContent);
+                localStorage.setItem('portfolio_admin_notes_updated', cloudUpdatedAt);
+              }
+              const timeStr = new Date(cloudUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              setScratchpadBadge(`<span class="badge-success">Synced (${timeStr})</span>`);
+            }
           }
-        }
-      } catch (e) {
-        console.warn('Error loading notes from Supabase:', e);
+        });
+        return;
       }
-    }
 
-    const savedNotes = localStorage.getItem('portfolio_admin_notes') || '';
-    if (adminScratchpad) adminScratchpad.value = savedNotes;
-    if (fullAdminScratchpad) fullAdminScratchpad.value = savedNotes;
-    if (url && key) {
-      if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-success">Cloud Sync Ready (Supabase)</span>';
-      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-success">Cloud Sync Ready (Supabase)</span>';
-    } else {
-      if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
-      if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-neutral">Ready</span>';
+      if (!lastKnownCloudUpdatedAt || new Date(cloudUpdatedAt) > new Date(lastKnownCloudUpdatedAt) || force) {
+        lastKnownCloudUpdatedAt = cloudUpdatedAt;
+        lastSyncedContent = cloudContent;
+        setScratchpadValues(cloudContent);
+        if (!isPublicComputerMode()) {
+          localStorage.setItem('portfolio_admin_notes', cloudContent);
+          localStorage.setItem('portfolio_admin_notes_updated', cloudUpdatedAt);
+        }
+        const timeStr = new Date(cloudUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setScratchpadBadge(`<span class="badge-success">Synced (${timeStr})</span>`);
+      }
+    } catch (err) {
+      console.warn('Failed to load notes from Supabase:', err);
+      if (!isPublicComputerMode()) {
+        const localSaved = localStorage.getItem('portfolio_admin_notes') || '';
+        setScratchpadValues(localSaved);
+      }
+      setScratchpadBadge(`<span class="badge-amber">Offline (${escapeHtml(err.message || 'Error')})</span>`);
     }
   }
 
+  // Handle Scratchpad Typing with 800ms debounce
   function handleScratchpadInput(sourceEl, targetEl) {
     const val = sourceEl.value;
     if (targetEl && targetEl.value !== val) targetEl.value = val;
-    localStorage.setItem('portfolio_admin_notes', val);
+    updateWordCount(val);
+    renderMarkdownTodoList(val);
 
-    if (scratchpadStatus) scratchpadStatus.innerHTML = '<span class="badge-amber">Syncing...</span>';
-    if (fullScratchpadStatus) fullScratchpadStatus.innerHTML = '<span class="badge-amber">Syncing...</span>';
+    if (!isPublicComputerMode()) {
+      localStorage.setItem('portfolio_admin_notes', val);
+    }
 
-    clearTimeout(cloudSaveTimeout);
-    cloudSaveTimeout = setTimeout(() => {
+    setScratchpadBadge('<span class="badge-amber">Saving...</span>');
+
+    clearTimeout(scratchpadDebounceTimer);
+    scratchpadDebounceTimer = setTimeout(() => {
       syncScratchpadToCloud(val);
-    }, 600);
+    }, 800);
   }
 
-  if (adminScratchpad) {
-    adminScratchpad.addEventListener('input', () => handleScratchpadInput(adminScratchpad, fullAdminScratchpad));
+  // =========================================================================
+  // MARKDOWN TASK CHECKLIST PARSER & INTERACTIVE TODO SYSTEM
+  // =========================================================================
+  function renderMarkdownTodoList(text) {
+    const container = document.getElementById('markdown-todo-list');
+    const labelEl = document.getElementById('todo-progress-label');
+    const percentEl = document.getElementById('todo-progress-percent');
+    const barEl = document.getElementById('todo-progress-bar');
+    if (!container) return;
+
+    const lines = (text || '').split('\n');
+    const tasks = [];
+
+    // Parse lines matching - [ ] or - [x]
+    lines.forEach((line, index) => {
+      const match = line.match(/^(\s*)-\s*\[([ xX])\]\s*(.*)$/);
+      if (match) {
+        const isDone = match[2].toLowerCase() === 'x';
+        const taskRaw = match[3];
+
+        let dueDate = null;
+        let isOverdue = false;
+        let isToday = false;
+        const dateMatch = taskRaw.match(/@(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch) {
+          dueDate = dateMatch[1];
+          const todayIso = new Date().toISOString().slice(0, 10);
+          if (dueDate < todayIso) isOverdue = true;
+          else if (dueDate === todayIso) isToday = true;
+        }
+
+        let priority = null;
+        const prioMatch = taskRaw.match(/#(p1|p2|p3)\b/i);
+        if (prioMatch) {
+          priority = prioMatch[1].toLowerCase();
+        }
+
+        let cleanText = taskRaw
+          .replace(/@\d{4}-\d{2}-\d{2}/, '')
+          .replace(/#(p1|p2|p3)\b/gi, '')
+          .trim();
+
+        tasks.push({
+          lineIndex: index,
+          originalLine: line,
+          isDone,
+          text: cleanText || taskRaw,
+          dueDate,
+          isOverdue,
+          isToday,
+          priority
+        });
+      }
+    });
+
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.isDone).length;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    if (labelEl) labelEl.textContent = `Task Progress: ${completed} of ${total} completed`;
+    if (percentEl) percentEl.textContent = `${pct}%`;
+    if (barEl) barEl.style.width = `${pct}%`;
+
+    const filtered = tasks.filter(t => {
+      if (currentTodoFilter === 'today') return t.isToday;
+      if (currentTodoFilter === 'overdue') return t.isOverdue && !t.isDone;
+      if (currentTodoFilter === 'pending') return !t.isDone;
+      if (currentTodoFilter === 'done') return t.isDone;
+      return true;
+    });
+
+    if (tasks.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 40px 10px; color: #64748b; font-size: 13px;">No task items found.<br>Add lines starting with <code style="color: #38bdf8;">- [ ]</code> in the scratchpad to track them here!</div>';
+      return;
+    }
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="text-align: center; padding: 30px 10px; color: #64748b; font-size: 13px;">No tasks match filter "<strong>${escapeHtml(currentTodoFilter)}</strong>".</div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(t => {
+      let badgeHtml = '';
+      if (t.priority === 'p1') badgeHtml += '<span class="badge-danger" style="font-size: 10px; padding: 1px 6px;">P1 URGENT</span> ';
+      else if (t.priority === 'p2') badgeHtml += '<span class="badge-amber" style="font-size: 10px; padding: 1px 6px;">P2 MEDIUM</span> ';
+      else if (t.priority === 'p3') badgeHtml += '<span class="badge-neutral" style="font-size: 10px; padding: 1px 6px;">P3 LOW</span> ';
+
+      if (t.isOverdue) badgeHtml += `<span class="badge-danger" style="font-size: 10px; padding: 1px 6px;">Overdue: ${escapeHtml(t.dueDate)}</span> `;
+      else if (t.isToday) badgeHtml += `<span class="badge-amber" style="font-size: 10px; padding: 1px 6px;">Due Today</span> `;
+      else if (t.dueDate) badgeHtml += `<span class="badge-neutral" style="font-size: 10px; padding: 1px 6px;">Due: ${escapeHtml(t.dueDate)}</span> `;
+
+      return `
+        <div class="todo-item-card" data-line="${t.lineIndex}" style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; background: #1e293b; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); transition: background 0.15s ease;">
+          <input type="checkbox" class="todo-checkbox" data-line="${t.lineIndex}" ${t.isDone ? 'checked' : ''} style="cursor: pointer; margin-top: 3px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 13px; color: ${t.isDone ? '#64748b' : '#f1f5f9'}; text-decoration: ${t.isDone ? 'line-through' : 'none'}; word-break: break-word;">
+              ${escapeHtml(t.text)}
+            </div>
+            ${badgeHtml ? `<div style="margin-top: 4px; display: flex; gap: 4px; flex-wrap: wrap;">${badgeHtml}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.todo-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const lineIdx = parseInt(cb.dataset.line, 10);
+        toggleMarkdownTodoLine(lineIdx, cb.checked);
+      });
+    });
   }
-  if (fullAdminScratchpad) {
-    fullAdminScratchpad.addEventListener('input', () => handleScratchpadInput(fullAdminScratchpad, adminScratchpad));
+
+  function toggleMarkdownTodoLine(lineIdx, checkState) {
+    const currentVal = getCurrentScratchpadValue();
+    const lines = currentVal.split('\n');
+    if (lineIdx < 0 || lineIdx >= lines.length) return;
+
+    const targetLine = lines[lineIdx];
+    if (checkState) {
+      lines[lineIdx] = targetLine.replace(/^(\s*)-\s*\[ \]/, '$1- [x]');
+    } else {
+      lines[lineIdx] = targetLine.replace(/^(\s*)-\s*\[[xX]\]/, '$1- [ ]');
+    }
+
+    const newVal = lines.join('\n');
+    setScratchpadValues(newVal);
+    syncScratchpadToCloud(newVal);
+  }
+
+  // Add Task Helper Button
+  const quickAddTodoBtn = document.getElementById('quick-add-todo-btn');
+  const newTodoInput = document.getElementById('new-todo-input');
+  if (quickAddTodoBtn && newTodoInput) {
+    const handleQuickAdd = () => {
+      const taskText = newTodoInput.value.trim();
+      if (!taskText) return;
+      const currentVal = getCurrentScratchpadValue();
+      const newLine = `- [ ] ${taskText}`;
+      const updatedVal = currentVal ? `${currentVal.trimEnd()}\n${newLine}\n` : `${newLine}\n`;
+      newTodoInput.value = '';
+      setScratchpadValues(updatedVal);
+      syncScratchpadToCloud(updatedVal);
+      showToast('Task added to scratchpad!', 'success');
+    };
+    quickAddTodoBtn.addEventListener('click', handleQuickAdd);
+    newTodoInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleQuickAdd();
+    });
+  }
+
+  // Filter Buttons
+  document.querySelectorAll('.todo-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.todo-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTodoFilter = btn.dataset.filter || 'all';
+      renderMarkdownTodoList(getCurrentScratchpadValue());
+    });
+  });
+
+  // =========================================================================
+  // NOTES VERSION HISTORY & SNAPSHOTS (public.admin_notes_history)
+  // =========================================================================
+  async function saveScratchpadSnapshot(isAuto = false) {
+    const token = getSupabaseUserToken();
+    if (!token) {
+      if (!isAuto) showToast('Supabase login required to save snapshot', 'warning');
+      return;
+    }
+
+    const content = getCurrentScratchpadValue();
+    if (!content.trim()) return;
+    if (isAuto && content === lastSnapshotContent) return;
+
+    try {
+      const deviceLabel = await getDeviceLabel();
+      const uuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '_' + Math.random().toString(36).substr(2, 8));
+      await supa('POST', '/rest/v1/admin_notes_history', {
+        body: {
+          id: uuid,
+          note_id: 'main',
+          content: content,
+          saved_at: new Date().toISOString(),
+          device_label: deviceLabel
+        }
+      });
+
+      lastSnapshotContent = content;
+      if (!isAuto) showToast('Notes snapshot saved to version history!', 'success');
+    } catch (err) {
+      console.warn('Snapshot error:', err);
+      if (!isAuto) showToast(`Snapshot failed: ${err.message}`, 'error');
+    }
+  }
+
+  // Snapshot History Viewer Modal
+  async function openScratchpadHistoryModal() {
+    const token = getSupabaseUserToken();
+    if (!token) {
+      showToast('Login required to access version history', 'warning');
+      return;
+    }
+
+    showToast('Fetching version history...', 'info');
+    try {
+      const res = await supa('GET', '/rest/v1/admin_notes_history?note_id=eq.main&order=saved_at.desc&limit=25', { raw: true });
+      const rows = await res.json();
+      const history = Array.isArray(rows) ? rows : [];
+
+      const modal = document.createElement('div');
+      modal.id = 'scratchpad-history-modal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(5px);';
+
+      modal.innerHTML = `
+        <div style="background:#181b22;border:1px solid rgba(255,255,255,0.15);border-radius:14px;max-width:750px;width:100%;max-height:85vh;display:flex;flex-direction:column;padding:1.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7);color:#f1f5f9;font-family:inherit;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:0.75rem;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:20px;">📜</span>
+              <h3 style="margin:0;font-size:1.1rem;font-weight:700;">Scratchpad Version History</h3>
+            </div>
+            <button id="close-history-modal-btn" class="btn btn-secondary btn-sm" style="font-size:16px;padding:2px 8px;">&times;</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:220px 1fr;gap:14px;flex:1;overflow:hidden;min-height:350px;">
+            <div id="history-items-list" style="overflow-y:auto;border-right:1px solid rgba(255,255,255,0.08);padding-right:10px;display:flex;flex-direction:column;gap:6px;">
+              ${history.length === 0 ? '<div style="color:#64748b;font-size:12px;padding:20px 0;">No snapshots recorded yet. Click "📸 Snapshot" to save one.</div>' : history.map((item, idx) => {
+                const dateStr = new Date(item.saved_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                return `
+                  <button type="button" class="history-item-btn ${idx === 0 ? 'active' : ''}" data-idx="${idx}" style="text-align:left;background:#1e293b;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px 10px;color:#cbd5e1;cursor:pointer;">
+                    <div style="font-size:12px;font-weight:600;color:#f8fafc;">${dateStr}</div>
+                    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${escapeHtml(item.device_label || 'Cloud')}</div>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;overflow:hidden;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span id="history-preview-meta" style="font-size:12px;color:#94a3b8;">Select a snapshot on the left to preview</span>
+                <button type="button" id="history-restore-btn" class="btn btn-primary btn-sm" style="display:none;">Restore This Version</button>
+              </div>
+              <pre id="history-preview-content" style="flex:1;overflow-y:auto;background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:12px;font-family:monospace;font-size:12px;color:#cbd5e1;white-space:pre-wrap;margin:0;"></pre>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      document.getElementById('close-history-modal-btn').onclick = () => modal.remove();
+
+      let selectedSnapshot = history[0] || null;
+
+      const updatePreview = (item) => {
+        selectedSnapshot = item;
+        const pre = document.getElementById('history-preview-content');
+        const meta = document.getElementById('history-preview-meta');
+        const restoreBtn = document.getElementById('history-restore-btn');
+        if (!item) return;
+
+        const timeStr = new Date(item.saved_at).toLocaleString();
+        if (meta) meta.textContent = `Snapshot: ${timeStr} (${item.device_label || 'Device'})`;
+        if (pre) pre.textContent = item.content || '';
+        if (restoreBtn) restoreBtn.style.display = 'inline-block';
+      };
+
+      if (history.length > 0) updatePreview(history[0]);
+
+      modal.querySelectorAll('.history-item-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modal.querySelectorAll('.history-item-btn').forEach(b => b.style.borderColor = 'rgba(255,255,255,0.08)');
+          btn.style.borderColor = '#38bdf8';
+          const idx = parseInt(btn.dataset.idx, 10);
+          updatePreview(history[idx]);
+        });
+      });
+
+      const restoreBtn = document.getElementById('history-restore-btn');
+      if (restoreBtn) {
+        restoreBtn.onclick = () => {
+          if (!selectedSnapshot) return;
+          if (confirm('Restore this snapshot? It will replace your current scratchpad notes.')) {
+            setScratchpadValues(selectedSnapshot.content || '');
+            syncScratchpadToCloud(selectedSnapshot.content || '');
+            modal.remove();
+            showToast('Snapshot restored and synced!', 'success');
+          }
+        };
+      }
+    } catch (err) {
+      console.error('History modal error:', err);
+      showToast(`Could not load history: ${err.message}`, 'error');
+    }
+  }
+
+  // Wire buttons
+  const snapshotBtn = document.getElementById('scratchpad-snapshot-btn');
+  if (snapshotBtn) snapshotBtn.addEventListener('click', () => saveScratchpadSnapshot(false));
+
+  const historyBtn = document.getElementById('scratchpad-history-btn');
+  if (historyBtn) historyBtn.addEventListener('click', openScratchpadHistoryModal);
+
+  const fullScratchpadEl = document.getElementById('full-admin-scratchpad');
+  if (adminScratchpad) {
+    adminScratchpad.addEventListener('input', () => handleScratchpadInput(adminScratchpad, fullScratchpadEl));
+    adminScratchpad.addEventListener('blur', () => syncScratchpadToCloud(adminScratchpad.value));
+  }
+  if (fullScratchpadEl) {
+    fullScratchpadEl.addEventListener('input', () => handleScratchpadInput(fullScratchpadEl, adminScratchpad));
+    fullScratchpadEl.addEventListener('blur', () => syncScratchpadToCloud(fullScratchpadEl.value));
   }
 
   if (saveScratchpadBtn) {
     saveScratchpadBtn.addEventListener('click', () => {
-      syncScratchpadToCloud(adminScratchpad ? adminScratchpad.value : '');
+      syncScratchpadToCloud(getCurrentScratchpadValue());
       showToast('Scratchpad synced to Cloud!', 'success');
     });
   }
-  if (fullSaveScratchpadBtn) {
-    fullSaveScratchpadBtn.addEventListener('click', () => {
-      syncScratchpadToCloud(fullAdminScratchpad ? fullAdminScratchpad.value : '');
+  const fullSaveBtn = document.getElementById('full-save-scratchpad-btn');
+  if (fullSaveBtn) {
+    fullSaveBtn.addEventListener('click', () => {
+      syncScratchpadToCloud(getCurrentScratchpadValue());
       showToast('Scratchpad synced to Cloud!', 'success');
     });
   }
+
+  // Flush on beforeunload
+  window.addEventListener('beforeunload', () => {
+    syncScratchpadToCloud(getCurrentScratchpadValue(), true);
+  });
+
+  // Auto-poll notes every 20s when visible
+  if (scratchpadPollInterval) clearInterval(scratchpadPollInterval);
+  scratchpadPollInterval = setInterval(() => {
+    if (document.visibilityState === 'visible' && getSupabaseUserToken()) {
+      loadAdminNotes(false);
+    }
+  }, 20000);
+
+  // Auto-snapshot every 30 minutes if changed
+  if (autoSnapshotInterval) clearInterval(autoSnapshotInterval);
+  autoSnapshotInterval = setInterval(() => {
+    if (getSupabaseUserToken()) {
+      saveScratchpadSnapshot(true);
+    }
+  }, 30 * 60 * 1000);
 
   // Update Credentials
   updateAuthForm.addEventListener('submit', async (e) => {

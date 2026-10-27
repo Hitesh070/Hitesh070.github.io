@@ -1214,17 +1214,75 @@
         <!-- TAB 6: ADMIN SCRATCHPAD FULL PAGE          -->
         <!-- ========================================== -->
         <section id="tab-notes" class="view-tab">
-          <div class="section-card">
-            <div class="card-title-bar">
-              <div class="title-with-icon">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                <h2>Admin Scratchpad &amp; Project Todo List</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+            <!-- LEFT PANEL: MARKDOWN SCRATCHPAD & SNAPSHOTS -->
+            <div class="section-card">
+              <div class="card-title-bar" style="flex-wrap: wrap; gap: 10px;">
+                <div class="title-with-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" stroke="#f59e0b" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <div>
+                    <h2 style="font-size: 16px; margin: 0;">Cloud Scratchpad</h2>
+                    <span class="sub-text">Persistent cloud notes synced with Supabase</span>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span id="full-scratchpad-status" class="save-indicator"><span class="badge-neutral">Ready</span></span>
+                  <button type="button" id="scratchpad-snapshot-btn" class="btn btn-secondary btn-sm" title="Save snapshot to version history">📸 Snapshot</button>
+                  <button type="button" id="scratchpad-history-btn" class="btn btn-secondary btn-sm" title="View version history">📜 History</button>
+                  <button type="button" id="full-save-scratchpad-btn" class="btn btn-primary btn-sm">Save</button>
+                </div>
               </div>
-              <span id="full-scratchpad-status" class="save-indicator">Saved</span>
+              <textarea id="full-admin-scratchpad" class="scratchpad-textarea" style="height: 520px; width: 100%; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 13px; line-height: 1.6; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0f172a; color: #f8fafc; resize: vertical;" placeholder="Type markdown notes, reminders, or tasks here...
+- [ ] Task item @2026-10-30 #p1
+- [x] Completed task"></textarea>
+              <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #64748b;">
+                <span>Auto-syncs after typing (800ms) and on blur</span>
+                <span id="scratchpad-word-count">0 words &bull; 0 lines</span>
+              </div>
             </div>
-            <textarea id="full-admin-scratchpad" class="scratchpad-textarea" style="height: 480px;"></textarea>
-            <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
-              <button id="full-save-scratchpad-btn" class="btn btn-primary">Save Notes</button>
+
+            <!-- RIGHT PANEL: INTERACTIVE TASK CHECKLIST & PROGRESS -->
+            <div class="section-card">
+              <div class="card-title-bar" style="flex-wrap: wrap; gap: 10px;">
+                <div class="title-with-icon">
+                  <svg viewBox="0 0 24 24" width="20" height="20" stroke="#38bdf8" stroke-width="2" fill="none"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  <div>
+                    <h2 style="font-size: 16px; margin: 0;">Task Checklist</h2>
+                    <span class="sub-text">Parsed from markdown tasks (<code style="color: #38bdf8;">- [ ]</code> and <code style="color: #38bdf8;">- [x]</code>)</span>
+                  </div>
+                </div>
+                <div class="todo-filter-group" style="display: flex; gap: 4px;">
+                  <button type="button" class="btn btn-secondary btn-sm todo-filter-btn active" data-filter="all">All</button>
+                  <button type="button" class="btn btn-secondary btn-sm todo-filter-btn" data-filter="today">Today</button>
+                  <button type="button" class="btn btn-secondary btn-sm todo-filter-btn" data-filter="overdue">Overdue</button>
+                  <button type="button" class="btn btn-secondary btn-sm todo-filter-btn" data-filter="pending">Pending</button>
+                  <button type="button" class="btn btn-secondary btn-sm todo-filter-btn" data-filter="done">Done</button>
+                </div>
+              </div>
+
+              <!-- PROGRESS BAR -->
+              <div style="margin: 14px 0; background: #1e293b; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: #cbd5e1;">
+                  <span id="todo-progress-label">Task Progress: 0 of 0 completed</span>
+                  <span id="todo-progress-percent" style="font-weight: 600; color: #38bdf8;">0%</span>
+                </div>
+                <div style="height: 8px; background: #334155; border-radius: 4px; overflow: hidden;">
+                  <div id="todo-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #10b981); transition: width 0.25s ease;"></div>
+                </div>
+              </div>
+
+              <!-- PARSED TASKS LIST -->
+              <div id="markdown-todo-list" style="max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+                <div style="text-align: center; padding: 40px 10px; color: #64748b; font-size: 13px;">
+                  No task items found.<br>Add lines starting with <code style="color: #38bdf8;">- [ ]</code> in the scratchpad to see them here!
+                </div>
+              </div>
+
+              <!-- TASK CREATION HELPER -->
+              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px;">
+                <input type="text" id="new-todo-input" class="clean-input" placeholder="Quick add: e.g. Review thesis draft @2026-10-31 #p1" style="flex: 1; font-size: 12px;">
+                <button type="button" id="quick-add-todo-btn" class="btn btn-primary btn-sm">+ Add</button>
+              </div>
             </div>
           </div>
         </section>

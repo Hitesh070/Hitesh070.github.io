@@ -946,7 +946,8 @@ p {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+    transition: transform var(--transition-slow), opacity var(--transition-slow), border-color var(--transition-normal), box-shadow var(--transition-normal);
+    will-change: transform, opacity;
 }
 
 .project-editorial-card:hover {

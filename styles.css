@@ -1006,19 +1006,7 @@ p {
 }
 
 .thumbnail-hover-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(3, 3, 3, 0.82);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-}
-
-.project-editorial-card:hover .thumbnail-hover-overlay {
-    opacity: 1;
+    display: none !important;
 }
 
 .btn-inspect-arch {

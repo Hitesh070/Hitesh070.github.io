@@ -307,6 +307,7 @@ const projectDetailsMap = {
     alps: {
         title: "ALPS — Autonomous Aquatic Waste Skimmer USV",
         subtitle: "Unmanned Surface Vehicle for AI River Cleaning & Waste Mapping",
+        diagramImg: "assets/alps_diagram.png",
         category: "Embedded & Robotics",
         img: "assets/project1.jpg",
         description: "An autonomous Unmanned Surface Vehicle (USV) engineered for river water surface cleaning, featuring real-time AI trash mapping, Raspberry Pi ML vision, and an extendable robotic collector arm.",
@@ -316,37 +317,13 @@ const projectDetailsMap = {
             "Motor driver PWM bridge controlling dual propulsion thrusters and conveyor arm.",
             "Ongoing Indian Patent Application for novel waste mapping & collection mechanism."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(59,130,246,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem;">SYSTEM ARCHITECTURE & SENSOR FLOWCHART</h5>
-                <svg viewBox="0 0 700 180" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="10" y="50" width="120" height="60" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="70" y="85" fill="#fff" font-size="12" text-anchor="middle">Camera & GPS</text>
-                    
-                    <path d="M 130 80 L 190 80" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow)"/>
-                    
-                    <rect x="190" y="40" width="150" height="80" rx="8" fill="#241223" stroke="#ff2a5f" stroke-width="1.5"/>
-                    <text x="265" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Raspberry Pi 4 ML</text>
-                    <text x="265" y="95" fill="#a0a0a0" font-size="10" text-anchor="middle">Trash Classifier</text>
-                    
-                    <path d="M 340 80 L 400 80" stroke="#3b82f6" stroke-width="2"/>
-                    
-                    <rect x="400" y="50" width="130" height="60" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="465" y="80" fill="#fff" font-size="12" text-anchor="middle">Motor Driver PWM</text>
-
-                    <path d="M 530 80 L 590 80" stroke="#3b82f6" stroke-width="2"/>
-
-                    <rect x="590" y="50" width="100" height="60" rx="8" fill="#082b1a" stroke="#10b981" stroke-width="1.5"/>
-                    <text x="640" y="80" fill="#fff" font-size="12" text-anchor="middle">Robotic Arm</text>
-                </svg>
-            </div>
-        `,
         stack: ["Python", "Embedded C", "Raspberry Pi", "OpenCV", "Robotic Actuator", "Patent Pending"],
         repoUrl: "https://github.com/Hitesh070"
     },
     approx_adder: {
         title: "Approximate Arithmetic Adder for Edge Computing",
         subtitle: "Energy-Efficient VLSI Hardware Architecture for Edge AI",
+        diagramImg: "assets/approx_adder_diagram.png",
         category: "VLSI & Digital",
         img: "assets/project2.jpg",
         description: "Digital VLSI research and hardware implementation of approximate arithmetic adders tailored for energy-efficient image processing and edge computing accelerators.",
@@ -356,30 +333,13 @@ const projectDetailsMap = {
             "PSNR and image quality degradation trade-off evaluation in Python and MATLAB.",
             "Featured in research paper under publication in The Journal of Supercomputing (Springer Nature)."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(59,130,246,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem;">ETA-1 APPROXIMATE ADDER LOGIC SCHEMATIC</h5>
-                <svg viewBox="0 0 700 160" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="20" y="40" width="180" height="80" rx="8" fill="#0c1e38" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="110" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Accurate MSB Part</text>
-                    <text x="110" y="95" fill="#3b82f6" font-size="11" text-anchor="middle">Carry Lookahead (CLA)</text>
-                    
-                    <rect x="250" y="40" width="180" height="80" rx="8" fill="#380c18" stroke="#ff2a5f" stroke-width="1.5"/>
-                    <text x="340" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Approximate LSB Part</text>
-                    <text x="340" y="95" fill="#ff2a5f" font-size="11" text-anchor="middle">Error Tolerant ETA-1 Logic</text>
-
-                    <rect x="480" y="40" width="190" height="80" rx="8" fill="#182e1c" stroke="#10b981" stroke-width="1.5"/>
-                    <text x="575" y="75" fill="#fff" font-size="13" font-weight="bold" text-anchor="middle">Error Control Unit</text>
-                    <text x="575" y="95" fill="#10b981" font-size="11" text-anchor="middle">Facial Recognition Out</text>
-                </svg>
-            </div>
-        `,
         stack: ["Verilog HDL", "ModelSim", "Python", "MATLAB", "Springer Nature", "Edge AI"],
         repoUrl: "https://github.com/Hitesh070"
     },
     buck_converter: {
         title: "Cascade Dual-Loop Control of Buck Converter",
         subtitle: "High-Performance Power Electronics Closed-Loop Regulation",
+        diagramImg: "assets/buck_converter_diagram.png",
         category: "Power & Control",
         img: "assets/project3.jpg",
         description: "Closed-loop design of a DC-DC Buck Converter using dual-loop cascade control (inner current loop, outer voltage loop) to achieve rapid dynamic load response and tight output voltage regulation.",
@@ -389,27 +349,13 @@ const projectDetailsMap = {
             "Circuit transient analysis and Bode plot stability verification in LTspice.",
             "Simulink block model and firmware logic prototype in Embedded C."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(59,130,246,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem;">CASCADE DUAL-LOOP CONTROL FEEDBACK DIAGRAM</h5>
-                <svg viewBox="0 0 700 160" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="20" y="45" width="150" height="70" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="95" y="75" fill="#fff" font-size="12" text-anchor="middle">Voltage Outer PI Loop</text>
-
-                    <rect x="220" y="45" width="150" height="70" rx="8" fill="#29111c" stroke="#ff2a5f" stroke-width="1.5"/>
-                    <text x="295" y="75" fill="#fff" font-size="12" text-anchor="middle">Current Inner PWM</text>
-
-                    <rect x="420" y="45" width="140" height="70" rx="8" fill="#152033" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="490" y="75" fill="#fff" font-size="12" text-anchor="middle">Buck MOSFET Power Stage</text>
-                </svg>
-            </div>
-        `,
         stack: ["MATLAB", "Simulink", "LTspice", "Embedded C", "Control Engineering", "Power Electronics"],
         repoUrl: "https://github.com/Hitesh070"
     },
     irrigation: {
         title: "Analog Automatic Irrigation Controller",
         subtitle: "Microcontroller-Free Precision Hysteresis Circuit",
+        diagramImg: "assets/irrigation_diagram.png",
         category: "Embedded & Circuits",
         img: "assets/project4.jpg",
         description: "A robust, low-cost analog feedback circuit designed for automated soil moisture sensing and pump actuation without needing microcontrollers.",
@@ -425,6 +371,7 @@ const projectDetailsMap = {
     thermal_runaway: {
         title: "Thermal Runaway Prediction in Lithium-Ion Batteries",
         subtitle: "Early Detection ML Framework for EV Battery Safety",
+        diagramImg: "assets/thermal_runaway_diagram.png",
         category: "Software & AI",
         img: "assets/project5.jpg",
         description: "Research and predictive modeling pipeline to forecast thermal runaway hazards in Lithium-Ion battery packs used in Electric Vehicles.",
@@ -439,6 +386,7 @@ const projectDetailsMap = {
     learning_system: {
         title: "Advance Online Learning System",
         subtitle: "Full-Stack Portal for Interactive Courses & Progress Analytics",
+        diagramImg: "assets/learning_system_diagram.png",
         category: "Software & Web",
         img: "assets/project6.jpg",
         description: "A feature-complete online learning portal facilitating micro-courses, student-teacher workspace orchestration, live practice modules, and progress tracking.",
@@ -453,6 +401,7 @@ const projectDetailsMap = {
     goto_telescope: {
         title: "Custom GoTo Telescope Mount",
         subtitle: "3-Axis Motorized Alt-Azimuth Mount & Stellarium Bridge (PyQt6 / Arduino Uno)",
+        diagramImg: "assets/goto_telescope_diagram.png",
         category: "Embedded & Robotics",
         img: "assets/goto_telescope_icon.png",
         description: "A precision 3-axis motorized astronomical telescope controller engineered for 60mm F/2.8 refractors. Pairs an Arduino Uno ATmega328P firmware engine with an asynchronous PyQt6 Fluent desktop client, bridging Stellarium via TCP/HTTP protocols, calculating real-time astrometric ephemeris, and executing automated V-curve autofocus routines.",
@@ -463,60 +412,13 @@ const projectDetailsMap = {
             "Precision astrometry engine implementing Jean Meeus algorithms, coordinate precession, multi-rate tracking (Sidereal, Lunar, Solar, King refraction), and parabolic V-curve autofocusing.",
             "Hardware safety protocols including active solar proximity exclusion barriers, cable anti-wrap tracking with 1-click unwind, and global keyboard emergency aborts."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:#38bdf8; font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem; letter-spacing:0.05em;">SYSTEM ARCHITECTURE &amp; HARDWARE BRIDGE</h5>
-                <svg viewBox="0 0 740 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="15" y="30" width="140" height="70" rx="8" fill="#0c2340" stroke="#38bdf8" stroke-width="1.5"/>
-                    <text x="85" y="60" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Stellarium Core</text>
-                    <text x="85" y="80" fill="#93c5fd" font-size="10" text-anchor="middle">TCP 10001 / REST 8090</text>
-
-                    <rect x="15" y="125" width="140" height="65" rx="8" fill="#111827" stroke="#6b7280" stroke-width="1.5"/>
-                    <text x="85" y="152" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">Open-Meteo API</text>
-                    <text x="85" y="170" fill="#9ca3af" font-size="9" text-anchor="middle">Live Cloud &amp; Seeing</text>
-
-                    <path d="M 155 65 L 205 90" stroke="#38bdf8" stroke-width="2"/>
-                    <path d="M 155 155 L 205 130" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="3,3"/>
-
-                    <rect x="205" y="45" width="180" height="130" rx="10" fill="#1e1035" stroke="#c084fc" stroke-width="2"/>
-                    <text x="295" y="75" fill="#f3e8ff" font-size="13" font-weight="bold" text-anchor="middle">PyQt6 Fluent App (PC)</text>
-                    <text x="295" y="98" fill="#c084fc" font-size="10" text-anchor="middle">Astrometry &amp; Meeus Engine</text>
-                    <text x="295" y="118" fill="#e9d5ff" font-size="9.5" text-anchor="middle">Vector Sky Radar • 20Hz Telemetry</text>
-                    <text x="295" y="136" fill="#f43f5e" font-size="9.5" text-anchor="middle">OLED Pure-Red Night Vision</text>
-                    <text x="295" y="154" fill="#a855f7" font-size="9" text-anchor="middle">V-Curve AutoFocus Routine</text>
-
-                    <path d="M 385 110 L 440 110" stroke="#38bdf8" stroke-width="2"/>
-                    <text x="412" y="102" fill="#38bdf8" font-size="9" text-anchor="middle">USB 115.2k</text>
-
-                    <rect x="440" y="55" width="135" height="110" rx="8" fill="#062817" stroke="#34d399" stroke-width="1.5"/>
-                    <text x="507" y="85" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Arduino Uno</text>
-                    <text x="507" y="103" fill="#6ee7b7" font-size="10" text-anchor="middle">ATmega328P Firmware</text>
-                    <text x="507" y="123" fill="#a7f3d0" font-size="9" text-anchor="middle">Step Pulse Dispatcher</text>
-                    <text x="507" y="141" fill="#a7f3d0" font-size="9" text-anchor="middle">Emergency Interlock</text>
-
-                    <path d="M 575 80 L 615 50" stroke="#34d399" stroke-width="1.5"/>
-                    <rect x="615" y="25" width="115" height="50" rx="6" fill="#111827" stroke="#38bdf8" stroke-width="1.5"/>
-                    <text x="672" y="47" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Azimuth (RA)</text>
-                    <text x="672" y="63" fill="#93c5fd" font-size="8.5" text-anchor="middle">ULN2003 + 28BYJ-48</text>
-
-                    <path d="M 575 110 L 615 110" stroke="#34d399" stroke-width="1.5"/>
-                    <rect x="615" y="85" width="115" height="50" rx="6" fill="#111827" stroke="#f43f5e" stroke-width="1.5"/>
-                    <text x="672" y="107" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Altitude (Dec)</text>
-                    <text x="672" y="123" fill="#fda4af" font-size="8.5" text-anchor="middle">ULN2003 + 28BYJ-48</text>
-
-                    <path d="M 575 140 L 615 170" stroke="#34d399" stroke-width="1.5"/>
-                    <rect x="615" y="145" width="115" height="50" rx="6" fill="#111827" stroke="#a855f7" stroke-width="1.5"/>
-                    <text x="672" y="167" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Focus Motor</text>
-                    <text x="672" y="183" fill="#d8b4fe" font-size="8.5" text-anchor="middle">ULN2003 + 28BYJ-48</text>
-                </svg>
-            </div>
-        `,
         stack: ["Python 3.12", "PyQt6 Fluent", "Arduino Uno", "Embedded C", "Stellarium Protocol", "Astrometry", "ULN2003 Drivers", "Hardware Diagnostics"],
         repoUrl: "https://github.com/Hitesh070/Custom-GoTo-Telescope"
     },
     solar_simulator: {
         title: "HI Grid — Solar Power System Simulator",
         subtitle: "Computational Rooftop PV Physics & Indian Discom Net-Metering Engine",
+        diagramImg: "assets/solar_simulator_diagram.png",
         category: "Power & Energy Systems",
         description: "A physics-grade computational photovoltaic (PV) simulation platform specifically engineered for Indian residential and commercial rooftop solar installations. Simulates authentic flat RCC concrete terraces (chhat) with parapet walls and overhead tanks, evaluates real-time shadow casting using Three.js, and models 25-year Discom net-metering cash flows and PM Surya Ghar subsidies.",
         highlights: [
@@ -526,45 +428,6 @@ const projectDetailsMap = {
             "India-specific Discom net-metering tariff models (BESCOM, BSES, MSEDCL, JVVNL, UGVCL) computing 25-year cumulative cash flow, LCOE, and PM Surya Ghar subsidies.",
             "Real-time Three.js 3D sun trajectory animation with accurate seasonal solar angles, shadow raytracing, and CEA carbon offset analytics."
         ],
-        schematicSvg: `
-            <div style="background:#080b12; border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
-                <h5 style="color:#f59e0b; font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem; letter-spacing:0.05em;">COMPUTATIONAL PV PIPELINE &amp; 3D SIMULATION ARCHITECTURE</h5>
-                <svg viewBox="0 0 740 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="15" y="45" width="130" height="110" rx="8" fill="#241407" stroke="#f59e0b" stroke-width="1.5"/>
-                    <text x="80" y="75" fill="#fde68a" font-size="11" font-weight="bold" text-anchor="middle">Leaflet GPS Map</text>
-                    <text x="80" y="95" fill="#fff" font-size="10" text-anchor="middle">Open-Meteo API</text>
-                    <text x="80" y="115" fill="#fcd34d" font-size="9" text-anchor="middle">GHI, DNI, DHI</text>
-                    <text x="80" y="133" fill="#cbd5e1" font-size="8.5" text-anchor="middle">Wind &amp; Ambient Temp</text>
-
-                    <path d="M 145 100 L 195 100" stroke="#f59e0b" stroke-width="2"/>
-
-                    <rect x="195" y="40" width="160" height="120" rx="8" fill="#18181b" stroke="#38bdf8" stroke-width="1.5"/>
-                    <text x="275" y="70" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">PV Physics Engine</text>
-                    <text x="275" y="92" fill="#fff" font-size="9.5" text-anchor="middle">Hay-Davies POA Model</text>
-                    <text x="275" y="110" fill="#93c5fd" font-size="9" text-anchor="middle">Sandia King Cell Temp</text>
-                    <text x="275" y="128" fill="#cbd5e1" font-size="9" text-anchor="middle">Thermal Power Derating</text>
-                    <text x="275" y="146" fill="#cbd5e1" font-size="8.5" text-anchor="middle">Inverter Efficiency Curve</text>
-
-                    <path d="M 355 100 L 405 100" stroke="#38bdf8" stroke-width="2"/>
-
-                    <rect x="405" y="40" width="160" height="120" rx="8" fill="#0c2340" stroke="#60a5fa" stroke-width="1.5"/>
-                    <text x="485" y="70" fill="#bfdbfe" font-size="12" font-weight="bold" text-anchor="middle">Three.js 3D Terrace</text>
-                    <text x="485" y="92" fill="#fff" font-size="9.5" text-anchor="middle">Indian Flat RCC Roof</text>
-                    <text x="485" y="110" fill="#93c5fd" font-size="9" text-anchor="middle">Parapet &amp; Tank Shadows</text>
-                    <text x="485" y="128" fill="#cbd5e1" font-size="9" text-anchor="middle">Seasonal Sun Raytracing</text>
-                    <text x="485" y="146" fill="#cbd5e1" font-size="8.5" text-anchor="middle">Elevated GI Strut Racks</text>
-
-                    <path d="M 565 100 L 610 100" stroke="#34d399" stroke-width="2"/>
-
-                    <rect x="610" y="45" width="115" height="110" rx="8" fill="#062817" stroke="#10b981" stroke-width="1.5"/>
-                    <text x="667" y="75" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">Discom Tariff</text>
-                    <text x="667" y="95" fill="#fff" font-size="9.5" text-anchor="middle">Net-Metering</text>
-                    <text x="667" y="113" fill="#6ee7b7" font-size="9" text-anchor="middle">25-Yr LCOE ROI</text>
-                    <text x="667" y="131" fill="#cbd5e1" font-size="8.5" text-anchor="middle">PM Surya Ghar</text>
-                    <text x="667" y="147" fill="#cbd5e1" font-size="8.5" text-anchor="middle">CO₂ Offset Metric</text>
-                </svg>
-            </div>
-        `,
         stack: ["React 18", "TypeScript", "Three.js", "Leaflet", "Tailwind CSS", "Vite", "Open-Meteo API", "PV Physics Engine"],
         repoUrl: "https://github.com/Hitesh070/Solar-Power-System-Simulator"
     }
@@ -614,7 +477,21 @@ function initProjectFiltersAndModals() {
                 ${data.img ? `<img src="${data.img}" alt="${data.title}" style="width:100%; border-radius:var(--radius-md); margin-bottom:1.5rem; border:1px solid var(--border-subtle);">` : ''}
                 <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 1.5rem; line-height:1.7;">${data.description}</p>
 
-                ${data.schematicSvg ? data.schematicSvg : ''}
+                ${data.diagramImg ? `
+                <div class="schematic-container" style="margin: 1.8rem 0; padding: 1.25rem; background: rgba(13, 17, 23, 0.85); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.6rem;">
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <i class="fa-solid fa-diagram-project" style="color:var(--accent-blue); font-size:0.9rem;"></i>
+                            <span style="font-family:var(--font-mono); font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-primary); font-weight:600;">System Architecture &amp; Block Diagram</span>
+                        </div>
+                        <span style="font-family:var(--font-mono); font-size:0.7rem; color:var(--accent-green); background:rgba(0,255,102,0.08); padding:0.2rem 0.6rem; border-radius:12px; border:1px solid rgba(0,255,102,0.25);">
+                            <i class="fa-solid fa-code-branch" style="margin-right:0.3rem;"></i>From GitHub README
+                        </span>
+                    </div>
+                    <div style="text-align:center; overflow-x:auto; border-radius:var(--radius-sm); background:#05070a; padding:0.8rem; border:1px solid rgba(255,255,255,0.05);">
+                        <img src="${data.diagramImg}" alt="${data.title} Block Diagram" style="max-width:100%; height:auto; display:inline-block; border-radius:var(--radius-sm);" loading="lazy" />
+                    </div>
+                </div>` : ''}
                 
                 <h4 style="font-size: 1.1rem; font-weight:500; margin-bottom: 0.8rem; color: var(--text-primary);">Key Architectural Highlights</h4>
                 <ul style="padding-left: 1.2rem; margin-bottom: 1.5rem; color: var(--text-secondary); display:flex; flex-direction:column; gap:0.6rem; font-size:0.95rem;">

@@ -4,13 +4,12 @@
   <a href="https://hitesh070.github.io">
     <img src="https://img.shields.io/badge/Live_Website-hitesh070.github.io-2563eb?style=for-the-badge&logo=github&logoColor=white" alt="Live Website" />
   </a>
-  <img src="https://img.shields.io/badge/Institution-VIT%20Chennai-0284c7?style=for-the-badge" alt="VIT Chennai" />
   <img src="https://img.shields.io/badge/Degree-B.Tech%20EEE%20(2025--2029)-0f172a?style=for-the-badge" alt="B.Tech EEE" />
   <img src="https://img.shields.io/badge/Backend-Node.js%20%7C%20Express-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js Express" />
   <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License MIT" />
 </p>
 
-The official engineering portfolio and personal website of **Hitesh V S**, undergraduate student in Electrical and Electronics Engineering (EEE) at **Vellore Institute of Technology (VIT), Chennai**.
+The official engineering portfolio and personal website of **Hitesh V S**, engineer specializing in Electrical and Electronics Engineering (EEE).
 
 The website showcases interdisciplinary engineering projects spanning **Embedded Systems**, **Digital VLSI Design**, **Power Electronics**, **Control Systems**, **Software Development**, peer-reviewed research publications, and intellectual property / patent filings.
 
@@ -169,8 +168,6 @@ To access the administrative dashboard locally:
 ## Author & Contact Information
 
 - **Developer**: Hitesh V S
-- **Institution**: Vellore Institute of Technology (VIT), Chennai
-- **Major**: B.Tech in Electrical and Electronics Engineering (EEE)
 - **Email**: [hiteshvs616@gmail.com](mailto:hiteshvs616@gmail.com)
 - **LinkedIn**: [linkedin.com/in/hiteshvs](https://www.linkedin.com/in/hiteshvs)
 - **GitHub**: [@Hitesh070](https://github.com/Hitesh070)

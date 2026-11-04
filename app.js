@@ -450,66 +450,123 @@ const projectDetailsMap = {
         stack: ["Python", "JavaScript", "SQL", "PHP", "HTML5", "CSS3"],
         repoUrl: "https://github.com/Hitesh070"
     },
-    uav_guardian: {
-        title: "UAV Guardian — Autonomous Disturbance Detection & Rerouting System",
-        subtitle: "Onboard ESP32 Sensor Fusion, Priority AI Threat Classifier & Closed-Loop Actuation",
+    goto_telescope: {
+        title: "Custom GoTo Telescope Mount v4.0",
+        subtitle: "3-Axis Motorized Alt-Azimuth Mount & Stellarium Bridge (PyQt6 / Arduino Uno)",
         category: "Embedded & Robotics",
-        img: "assets/uav_guardian.png",
-        description: "A self-contained onboard module that senses real-time environmental disturbances (RF/GPS jamming, adverse weather, wind buffeting, biological intrusion, and mid-air obstacles), classifies threat severity using a priority AI classifier engine, and autonomously executes rerouting maneuvers via physical servo direction pointing and telemetry reporting.",
+        img: "assets/goto_telescope_icon.png",
+        description: "A precision 3-axis motorized astronomical telescope controller engineered for 60mm F/2.8 refractors. Pairs an Arduino Uno ATmega328P firmware engine with an asynchronous PyQt6 Fluent desktop client, bridging Stellarium via TCP/HTTP protocols, calculating real-time astrometric ephemeris, and executing automated V-curve autofocus routines.",
+        highlights: [
+            "Arduino Uno ATmega328P firmware orchestrating 3-axis motion (Azimuth, Altitude, and Motorized Focuser) using 28BYJ-48 steppers and ULN2003 drivers at 4075.77 steps/rev.",
+            "Bidirectional Stellarium planetarium software integration via TCP server (Port 10001) and HTTP REST follower API (Port 8090) for synchronized sky slewing.",
+            "Windows 11 Fluent PyQt6 desktop application featuring 20Hz tabular telemetry, real-time vector polar sky radar, and retina-protecting Pure-Red OLED Night Vision mode.",
+            "Precision astrometry engine implementing Jean Meeus algorithms, coordinate precession, multi-rate tracking (Sidereal, Lunar, Solar, King refraction), and parabolic V-curve autofocusing.",
+            "Hardware safety protocols including active solar proximity exclusion barriers, cable anti-wrap tracking with 1-click unwind, and global keyboard emergency aborts."
+        ],
         schematicSvg: `
-            <div class="schematic-container" style="margin-bottom:1.5rem; background:#080808; padding:1.2rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
-                <span class="schematic-title" style="color:var(--accent-blue); font-family:var(--font-mono); font-size:0.8rem; display:block; margin-bottom:1rem;">
-                    <i class="fa-solid fa-diagram-project"></i> SYSTEM ARCHITECTURE — ESP32 DISTURBANCE FUSION & REROUTING
-                </span>
-                <svg viewBox="0 0 700 240" style="width:100%; height:auto;" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="20" y="25" width="140" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="90" y="52" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">NEO-6M GPS & MPU-6050</text>
-                    <text x="90" y="67" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">GPS Satellites & IMU Accel</text>
+            <div style="background:#080b12; border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
+                <h5 style="color:#38bdf8; font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem; letter-spacing:0.05em;">SYSTEM ARCHITECTURE &amp; HARDWARE BRIDGE</h5>
+                <svg viewBox="0 0 740 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="30" width="140" height="70" rx="8" fill="#0c2340" stroke="#38bdf8" stroke-width="1.5"/>
+                    <text x="85" y="60" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Stellarium Core</text>
+                    <text x="85" y="80" fill="#93c5fd" font-size="10" text-anchor="middle">TCP 10001 / REST 8090</text>
 
-                    <rect x="20" y="95" width="140" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="90" y="122" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">BMP280 & DHT22</text>
-                    <text x="90" y="137" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Baro Pressure & Humidity</text>
+                    <rect x="15" y="125" width="140" height="65" rx="8" fill="#111827" stroke="#6b7280" stroke-width="1.5"/>
+                    <text x="85" y="152" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">Open-Meteo API</text>
+                    <text x="85" y="170" fill="#9ca3af" font-size="9" text-anchor="middle">Live Cloud &amp; Seeing</text>
 
-                    <rect x="20" y="165" width="140" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="90" y="192" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">Ultrasonic & PIR Motion</text>
-                    <text x="90" y="207" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Obstacle & Intrusion Sense</text>
+                    <path d="M 155 65 L 205 90" stroke="#38bdf8" stroke-width="2"/>
+                    <path d="M 155 155 L 205 130" stroke="#9ca3af" stroke-width="1.5" stroke-dasharray="3,3"/>
 
-                    <rect x="240" y="60" width="200" height="120" rx="10" fill="#0d1527" stroke="#3b82f6" stroke-width="2"/>
-                    <text x="340" y="95" fill="#3b82f6" font-size="15" font-weight="bold" text-anchor="middle" font-family="sans-serif">ESP32 Dual-Core (240MHz)</text>
-                    <text x="340" y="118" fill="#aaa" font-size="11" text-anchor="middle" font-family="sans-serif">Sensor Data Aggregator</text>
-                    <text x="340" y="138" fill="#aaa" font-size="10" text-anchor="middle" font-family="sans-serif">Priority Threat AI Classifier</text>
-                    <text x="340" y="158" fill="#10b981" font-size="10" text-anchor="middle" font-family="sans-serif">50Hz PWM Maneuver Engine</text>
+                    <rect x="205" y="45" width="180" height="130" rx="10" fill="#1e1035" stroke="#c084fc" stroke-width="2"/>
+                    <text x="295" y="75" fill="#f3e8ff" font-size="13" font-weight="bold" text-anchor="middle">PyQt6 Fluent App (PC)</text>
+                    <text x="295" y="98" fill="#c084fc" font-size="10" text-anchor="middle">Astrometry &amp; Meeus Engine</text>
+                    <text x="295" y="118" fill="#e9d5ff" font-size="9.5" text-anchor="middle">Vector Sky Radar • 20Hz Telemetry</text>
+                    <text x="295" y="136" fill="#f43f5e" font-size="9.5" text-anchor="middle">OLED Pure-Red Night Vision</text>
+                    <text x="295" y="154" fill="#a855f7" font-size="9" text-anchor="middle">V-Curve AutoFocus Routine</text>
 
-                    <rect x="520" y="30" width="160" height="55" rx="8" fill="#111" stroke="#10b981" stroke-width="1.5"/>
-                    <text x="600" y="57" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">SG90 Servo Direction Pointer</text>
-                    <text x="600" y="72" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Physical Maneuver Angle θ</text>
+                    <path d="M 385 110 L 440 110" stroke="#38bdf8" stroke-width="2"/>
+                    <text x="412" y="102" fill="#38bdf8" font-size="9" text-anchor="middle">USB 115.2k</text>
 
-                    <rect x="520" y="95" width="160" height="55" rx="8" fill="#111" stroke="#3b82f6" stroke-width="1.5"/>
-                    <text x="600" y="122" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">SSD1306 OLED & RGB Alarm</text>
-                    <text x="600" y="137" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Live Threat Dashboard</text>
+                    <rect x="440" y="55" width="135" height="110" rx="8" fill="#062817" stroke="#34d399" stroke-width="1.5"/>
+                    <text x="507" y="85" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Arduino Uno</text>
+                    <text x="507" y="103" fill="#6ee7b7" font-size="10" text-anchor="middle">ATmega328P Firmware</text>
+                    <text x="507" y="123" fill="#a7f3d0" font-size="9" text-anchor="middle">Step Pulse Dispatcher</text>
+                    <text x="507" y="141" fill="#a7f3d0" font-size="9" text-anchor="middle">Emergency Interlock</text>
 
-                    <rect x="520" y="165" width="160" height="55" rx="8" fill="#111" stroke="#8b5cf6" stroke-width="1.5"/>
-                    <text x="600" y="192" fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">Wi-Fi Web Telemetry Link</text>
-                    <text x="600" y="207" fill="#888" font-size="9" text-anchor="middle" font-family="sans-serif">Live Ground Station Buffer</text>
+                    <path d="M 575 80 L 615 50" stroke="#34d399" stroke-width="1.5"/>
+                    <rect x="615" y="25" width="115" height="50" rx="6" fill="#111827" stroke="#38bdf8" stroke-width="1.5"/>
+                    <text x="672" y="47" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Azimuth (RA)</text>
+                    <text x="672" y="63" fill="#93c5fd" font-size="8.5" text-anchor="middle">ULN2003 + 28BYJ-48</text>
 
-                    <path d="M 160 52 L 240 95" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
-                    <path d="M 160 122 L 240 120" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
-                    <path d="M 160 192 L 240 145" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+                    <path d="M 575 110 L 615 110" stroke="#34d399" stroke-width="1.5"/>
+                    <rect x="615" y="85" width="115" height="50" rx="6" fill="#111827" stroke="#f43f5e" stroke-width="1.5"/>
+                    <text x="672" y="107" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Altitude (Dec)</text>
+                    <text x="672" y="123" fill="#fda4af" font-size="8.5" text-anchor="middle">ULN2003 + 28BYJ-48</text>
 
-                    <path d="M 440 95 L 520 57" stroke="#10b981" stroke-width="1.5" fill="none"/>
-                    <path d="M 440 120 L 520 122" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
-                    <path d="M 440 145 L 520 192" stroke="#8b5cf6" stroke-width="1.5" fill="none"/>
+                    <path d="M 575 140 L 615 170" stroke="#34d399" stroke-width="1.5"/>
+                    <rect x="615" y="145" width="115" height="50" rx="6" fill="#111827" stroke="#a855f7" stroke-width="1.5"/>
+                    <text x="672" y="167" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Focus Motor</text>
+                    <text x="672" y="183" fill="#d8b4fe" font-size="8.5" text-anchor="middle">ULN2003 + 28BYJ-48</text>
                 </svg>
             </div>
         `,
+        stack: ["Python 3.12", "PyQt6 Fluent", "Arduino Uno", "Embedded C", "Stellarium Protocol", "Astrometry", "ULN2003 Drivers", "Hardware Diagnostics"],
+        repoUrl: "https://github.com/Hitesh070/Custom-GoTo-Telescope"
+    },
+    solar_simulator: {
+        title: "HI Grid — Solar Power System Simulator",
+        subtitle: "Computational Rooftop PV Physics & Indian Discom Net-Metering Engine",
+        category: "Power & Energy Systems",
+        description: "A physics-grade computational photovoltaic (PV) simulation platform specifically engineered for Indian residential and commercial rooftop solar installations. Simulates authentic flat RCC concrete terraces (chhat) with parapet walls and overhead tanks, evaluates real-time shadow casting using Three.js, and models 25-year Discom net-metering cash flows and PM Surya Ghar subsidies.",
         highlights: [
-            "ESP32 Dual-Core (240MHz) sensor fusion aggregating NEO-6M GPS, BMP280, MPU-6050 IMU, ultrasonic & PIR sensor vectors every 500ms.",
-            "Priority Rule-Based AI Classifier Engine evaluating 6 threat severity levels (GPS Jamming, Severe Weather, Wind Buffeting, Obstacles, Human Intrusion).",
-            "Closed-loop SG90 servo motor directional pointer executing 50Hz PWM escape maneuvers (180° Reverse Escape, 90° RTH, 45° Descend & Hover).",
-            "Integrated SSD1306 128x64 OLED status display, RGB alert beacons, active buzzer alarms, and MATLAB Simulink control system analysis."
+            "Authentic Indian flat RCC concrete terrace 3D architecture modeling parapet walls, mumty headroom, Sintex water tank, and elevated hot-dip GI strut mounting racks.",
+            "Computational solar radiation physics utilizing Hay-Davies Plane of Array (POA) irradiance formulation and Sandia/King operating cell temperature equations.",
+            "Interactive Leaflet GPS rooftop pinpoint map with live locality search and real-time satellite solar irradiance fetching via Open-Meteo API.",
+            "India-specific Discom net-metering tariff models (BESCOM, BSES, MSEDCL, JVVNL, UGVCL) computing 25-year cumulative cash flow, LCOE, and PM Surya Ghar subsidies.",
+            "Real-time Three.js 3D sun trajectory animation with accurate seasonal solar angles, shadow raytracing, and CEA carbon offset analytics."
         ],
-        stack: ["ESP32", "Arduino C++", "MATLAB Simulink", "MPU-6050", "BMP280", "NEO-6M GPS", "HC-SR04"],
-        repoUrl: "https://github.com/Hitesh070/UAV-Guardian-ESP32"
+        schematicSvg: `
+            <div style="background:#080b12; border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:1.5rem; margin:1.5rem 0; text-align:center;">
+                <h5 style="color:#f59e0b; font-family:var(--font-mono); font-size:0.85rem; margin-bottom:1rem; letter-spacing:0.05em;">COMPUTATIONAL PV PIPELINE &amp; 3D SIMULATION ARCHITECTURE</h5>
+                <svg viewBox="0 0 740 200" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="15" y="45" width="130" height="110" rx="8" fill="#241407" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="80" y="75" fill="#fde68a" font-size="11" font-weight="bold" text-anchor="middle">Leaflet GPS Map</text>
+                    <text x="80" y="95" fill="#fff" font-size="10" text-anchor="middle">Open-Meteo API</text>
+                    <text x="80" y="115" fill="#fcd34d" font-size="9" text-anchor="middle">GHI, DNI, DHI</text>
+                    <text x="80" y="133" fill="#cbd5e1" font-size="8.5" text-anchor="middle">Wind &amp; Ambient Temp</text>
+
+                    <path d="M 145 100 L 195 100" stroke="#f59e0b" stroke-width="2"/>
+
+                    <rect x="195" y="40" width="160" height="120" rx="8" fill="#18181b" stroke="#38bdf8" stroke-width="1.5"/>
+                    <text x="275" y="70" fill="#38bdf8" font-size="12" font-weight="bold" text-anchor="middle">PV Physics Engine</text>
+                    <text x="275" y="92" fill="#fff" font-size="9.5" text-anchor="middle">Hay-Davies POA Model</text>
+                    <text x="275" y="110" fill="#93c5fd" font-size="9" text-anchor="middle">Sandia King Cell Temp</text>
+                    <text x="275" y="128" fill="#cbd5e1" font-size="9" text-anchor="middle">Thermal Power Derating</text>
+                    <text x="275" y="146" fill="#cbd5e1" font-size="8.5" text-anchor="middle">Inverter Efficiency Curve</text>
+
+                    <path d="M 355 100 L 405 100" stroke="#38bdf8" stroke-width="2"/>
+
+                    <rect x="405" y="40" width="160" height="120" rx="8" fill="#0c2340" stroke="#60a5fa" stroke-width="1.5"/>
+                    <text x="485" y="70" fill="#bfdbfe" font-size="12" font-weight="bold" text-anchor="middle">Three.js 3D Terrace</text>
+                    <text x="485" y="92" fill="#fff" font-size="9.5" text-anchor="middle">Indian Flat RCC Roof</text>
+                    <text x="485" y="110" fill="#93c5fd" font-size="9" text-anchor="middle">Parapet &amp; Tank Shadows</text>
+                    <text x="485" y="128" fill="#cbd5e1" font-size="9" text-anchor="middle">Seasonal Sun Raytracing</text>
+                    <text x="485" y="146" fill="#cbd5e1" font-size="8.5" text-anchor="middle">Elevated GI Strut Racks</text>
+
+                    <path d="M 565 100 L 610 100" stroke="#34d399" stroke-width="2"/>
+
+                    <rect x="610" y="45" width="115" height="110" rx="8" fill="#062817" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="667" y="75" fill="#a7f3d0" font-size="11" font-weight="bold" text-anchor="middle">Discom Tariff</text>
+                    <text x="667" y="95" fill="#fff" font-size="9.5" text-anchor="middle">Net-Metering</text>
+                    <text x="667" y="113" fill="#6ee7b7" font-size="9" text-anchor="middle">25-Yr LCOE ROI</text>
+                    <text x="667" y="131" fill="#cbd5e1" font-size="8.5" text-anchor="middle">PM Surya Ghar</text>
+                    <text x="667" y="147" fill="#cbd5e1" font-size="8.5" text-anchor="middle">CO₂ Offset Metric</text>
+                </svg>
+            </div>
+        `,
+        stack: ["React 18", "TypeScript", "Three.js", "Leaflet", "Tailwind CSS", "Vite", "Open-Meteo API", "PV Physics Engine"],
+        repoUrl: "https://github.com/Hitesh070/Solar-Power-System-Simulator"
     }
 };
 
@@ -527,8 +584,9 @@ function initProjectFiltersAndModals() {
             const filter = btn.getAttribute('data-proj-filter');
             const allCards = document.querySelectorAll('#projects .project-editorial-card');
             allCards.forEach(card => {
-                const cat = card.getAttribute('data-category');
-                if (filter === 'all' || cat === filter) {
+                const cat = card.getAttribute('data-category') || '';
+                const categories = cat.split(/\s+/);
+                if (filter === 'all' || categories.includes(filter)) {
                     card.style.display = 'flex';
                 } else {
                     card.style.display = 'none';

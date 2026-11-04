@@ -47,7 +47,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css?v=20261008_resume">
+    <link rel="stylesheet" href="styles.css?v=20261104_v5">
 </head>
 
 <body class="bg-void">
@@ -164,9 +164,8 @@
                     </p>
                     <p class="body-paragraph">
                         My technical work spans physical hardware design, digital VLSI logic, control system modeling,
-                        and embedded robotics. I have developed autonomous aquatic waste skimmers (ALPS), approximate
-                        arithmetic adders for edge computing, dual-loop buck converter control, and precision analog
-                        irrigation controllers.
+                        and embedded robotics. I have developed motorized GoTo telescope mounts, autonomous aquatic waste skimmers (ALPS),
+                        solar PV grid simulators, approximate arithmetic adders for edge computing, dual-loop buck converters, and precision analog controllers.
                     </p>
                     <p class="body-paragraph">
                         Beyond engineering, I enjoy listening to Carnatic Music, attending live Carnatic and
@@ -186,7 +185,7 @@
                             <div class="stat-caption">Chennai Campus</div>
                         </div>
                         <div class="stat-unit">
-                            <div class="stat-value">6+</div>
+                            <div class="stat-value">8+</div>
                             <div class="stat-caption">Engineering Repos</div>
                         </div>
                     </div>
@@ -460,6 +459,84 @@
             </div>
 
             <div class="projects-list-grid" id="projects-container">
+                <!-- Project: Custom GoTo Telescope Mount v4.0 (Telescope / Crosshairs Icon Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up"
+                    data-category="embedded" style="transition-delay: 0.05s;">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-cyan">
+                            <i class="fa-solid fa-crosshairs"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="goto_telescope">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">Embedded &amp; Robotics</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">Custom GoTo Telescope Mount v4.0</h3>
+                        <p class="project-abstract">
+                            Professional 3-axis motorized Alt-Azimuth telescope controller &amp; Stellarium bridge featuring Arduino Uno firmware, 28BYJ-48 micro-steppers, Meeus astrometry kinematics, and a PyQt6 Fluent GUI with OLED night vision.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>Python 3.12</span>
+                            <span>PyQt6 Fluent</span>
+                            <span>Arduino Uno</span>
+                            <span>Astrometry</span>
+                            <span>Embedded C</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="goto_telescope">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070/Custom-GoTo-Telescope" target="_blank" class="icon-link-subtle"
+                                title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Project: HI Grid — Solar Power System Simulator (Solar Panel Icon Graphic) -->
+                <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up"
+                    data-category="power software" style="transition-delay: 0.1s;">
+                    <div class="project-thumbnail-wrapper">
+                        <div class="project-icon-graphic graphic-orange">
+                            <i class="fa-solid fa-solar-panel"></i>
+                        </div>
+                        <div class="thumbnail-hover-overlay">
+                            <button class="btn-inspect-arch" data-project-id="solar_simulator">
+                                <i class="fa-solid fa-sliders"></i> Inspect Details
+                            </button>
+                        </div>
+                        <span class="project-tag-badge">Power &amp; Energy Systems</span>
+                    </div>
+                    <div class="project-info-block">
+                        <h3 class="project-heading">HI Grid — Solar Power System Simulator</h3>
+                        <p class="project-abstract">
+                            Physics-grade computational rooftop PV simulation dashboard engineered for Indian conditions. Models flat RCC terrace 3D raytracing, Open-Meteo satellite irradiance, and Discom net-metering cash flows.
+                        </p>
+                        <div class="tech-stack-row">
+                            <span>React 18</span>
+                            <span>TypeScript</span>
+                            <span>Three.js</span>
+                            <span>Leaflet</span>
+                            <span>Solar Physics</span>
+                        </div>
+                        <div class="project-card-footer">
+                            <button class="btn-text-link open-modal-btn" data-project-id="solar_simulator">
+                                <span>Project Details</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
+                            <a href="https://github.com/Hitesh070/Solar-Power-System-Simulator" target="_blank" class="icon-link-subtle"
+                                title="View on GitHub">
+                                <i class="fa-brands fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+
                 <!-- Repo 1: ALPS (Boat Icon Graphic) -->
                 <article class="project-editorial-card magnetic-card reveal-on-scroll reveal-up"
                     data-category="embedded">
@@ -978,7 +1055,7 @@
     <div class="toast-container" id="toast-container"></div>
 
     <!-- JavaScript Engine -->
-    <script src="app.js?v=20261008_resume"></script>
+    <script src="app.js?v=20261104_v5"></script>
 </body>
 
 </html>

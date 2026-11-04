@@ -117,8 +117,8 @@ flowchart TD
 │   ├── ieee_sscs.png                # IEEE SSCS society emblem
 │   ├── robotics_club.png            # Robotics Club emblem
 │   ├── santiniketan_logo.png        # Alma mater emblem
+│   ├── goto_telescope_icon.png      # Custom GoTo Telescope Mount icon asset
 │   ├── little_kingdom_logo.png      # Alma mater emblem
-│   ├── uav_guardian.png             # UAV project schematic diagram
 │   └── project1.jpg - project6.jpg  # Project showcase media banners
 │
 └── server/                          # Contact Form Backend Service

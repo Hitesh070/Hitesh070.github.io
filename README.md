@@ -113,7 +113,7 @@ flowchart TD
 │   ├── hero.jpg                     # High-resolution profile portrait
 │   ├── og_banner.svg                # Social share preview card
 │   ├── Hitesh_VS_Resume.pdf         # Downloadable curriculum vitae (CV)
-│   ├── vit_logo.png                 # VIT Chennai institutional emblem
+│   ├── vit_logo.png                 # Institutional emblem logo
 │   ├── ieee_sscs.png                # IEEE SSCS society emblem
 │   ├── robotics_club.png            # Robotics Club emblem
 │   ├── santiniketan_logo.png        # Alma mater emblem

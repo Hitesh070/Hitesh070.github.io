@@ -274,7 +274,7 @@ function initScrollRevealEngine() {
    5. 3D MAGNETIC TILT CARDS
    ========================================================================== */
 function init3DMagneticTiltCards() {
-    const magneticCards = document.querySelectorAll('.magnetic-card');
+    const magneticCards = document.querySelectorAll('.magnetic-card:not(.project-editorial-card)');
     const isMobile = window.innerWidth <= 768;
 
     if (isMobile) return;

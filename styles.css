@@ -946,12 +946,11 @@ p {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: all var(--transition-normal);
+    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .project-editorial-card:hover {
     border-color: var(--accent-blue);
-    transform: translateY(-7px) scale(1.01);
     box-shadow: var(--glow-blue);
 }
 
@@ -970,11 +969,10 @@ p {
     align-items: center;
     justify-content: center;
     font-size: 4.5rem;
-    transition: transform var(--transition-slow);
 }
 
 .project-editorial-card:hover .project-icon-graphic {
-    transform: scale(1.1);
+    transform: none;
 }
 
 .graphic-blue {

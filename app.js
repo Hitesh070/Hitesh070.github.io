@@ -451,7 +451,7 @@ const projectDetailsMap = {
         repoUrl: "https://github.com/Hitesh070"
     },
     goto_telescope: {
-        title: "Custom GoTo Telescope Mount v4.0",
+        title: "Custom GoTo Telescope Mount",
         subtitle: "3-Axis Motorized Alt-Azimuth Mount & Stellarium Bridge (PyQt6 / Arduino Uno)",
         category: "Embedded & Robotics",
         img: "assets/goto_telescope_icon.png",

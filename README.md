@@ -67,11 +67,15 @@ flowchart TD
 ## Key Features & Functional Highlights
 
 - **Featured Engineering Projects Showcase**: Deep-dive showcases covering:
-  - *Autonomous Aquatic Waste Mapping Catamaran Vessel* (Marine Robotics / YOLOv8 / PID)
-  - *Cascade (Dual-Loop) Soft-Clamped Buck Converter* (Power Electronics / 12V to 5V)
-  - *MSB-Triggered ETA-1 Approximate Arithmetic Adder* (VLSI 45nm CMOS / Edge AI)
-  - *Smart Automatic Irrigation & Foliage Misting System* (NI LabVIEW / Analog LM358/LM393)
-  - *UAV Guardian Security Drones* & *HI Grid Solar Power System Simulator*
+  - *Autonomous Aquatic Waste Mapping Catamaran Vessel* (Marine Robotics / YOLOv8 / 3-DOF Hydrodynamics / Closed-Loop PID)
+  - *Cascade (Dual-Loop) Soft-Clamped Buck Converter* (Power Electronics / 12V to 5V / 10kHz ATmega328P ISR / Discrete PI)
+  - *MSB-Triggered ETA-1 Approximate Arithmetic Adder* (Digital VLSI / 45nm CMOS / Edge AI FaceNet Biometrics)
+  - *Smart Automatic Irrigation & Foliage Misting System* (NI LabVIEW / Dual NE556 / LM358 Buffer / LM393 Schmitt Trigger)
+  - *Custom 3-Axis Motorized GoTo Telescope Mount* (60mm Refractor / PyQt6 Fluent / Next.js Web Bridge / Stellarium)
+  - *ISRO Orbit Watch* (Electron 31 / React 18 / Three.js / SGP4 Ephemeris / NASA Blue Marble 3D Globe)
+  - *HI Grid Solar Power System Simulator* (Hay-Davies POA / Sandia Cell Temp / Indian Discom Tariffs / 3D Raytracing)
+  - *Lithium-Ion Battery Thermal Runaway Prediction* (Physics-Informed Deep Learning / PINN / BiLSTM-Attention / TCN / Transformer)
+  - *UpliftEd Advance Online Learning System* (Web Speech AI Multilingual Translation / YOLOv8 Vision Moderation / CustomTkinter)
 - **Interactive Technical Modals**: Architectural schematics, mathematical transfer functions, hardware specifications, and live simulation links for each project.
 - **Scholarly Inquiry & Intellectual Property**: Highlighted portfolio section indexing research paper manuscripts, journal submissions, and patent documentation.
 - **Interactive Ambient Particle Canvas**: Custom multi-layer particle mesh rendering organic background motion via the HTML5 Canvas API with zero external dependencies.
@@ -109,7 +113,18 @@ flowchart TD
 │   ├── admin.css                    # Admin-specific stylesheet
 │   └── admin.js                     # Message reader & dashboard controller
 │
-├── assets/                          # Photographic and vector media assets
+├── assets/                          # Photographic, vector, and architectural diagram assets
+│   ├── alps_diagram.png             # Aquatic waste mapping vessel architecture diagram
+│   ├── approx_adder_diagram.png     # ETA-1 approximate adder gate logic schematic
+│   ├── buck_converter_diagram.png   # Cascade buck converter dual-loop architecture
+│   ├── buck_converter_circuit_block.png # Buck converter circuit block schematic
+│   ├── goto_telescope_diagram.png   # GoTo telescope kinematics & electronics diagram
+│   ├── goto_build_media.png         # Physical telescope build showcase
+│   ├── goto_telescope_icon.png      # Custom GoTo Telescope Mount icon asset
+│   ├── irrigation_diagram.png       # Analog irrigation & misting block schematic
+│   ├── learning_system_diagram.png  # UpliftEd online learning system dataflow
+│   ├── solar_simulator_diagram.png  # HI Grid computational solar physics pipeline
+│   ├── thermal_runaway_diagram.png  # Battery thermal runaway PINN architecture
 │   ├── hero.jpg                     # High-resolution profile portrait
 │   ├── og_banner.svg                # Social share preview card
 │   ├── Hitesh_VS_Resume.pdf         # Downloadable curriculum vitae (CV)
@@ -117,7 +132,6 @@ flowchart TD
 │   ├── ieee_sscs.png                # IEEE SSCS society emblem
 │   ├── robotics_club.png            # Robotics Club emblem
 │   ├── santiniketan_logo.png        # Alma mater emblem
-│   ├── goto_telescope_icon.png      # Custom GoTo Telescope Mount icon asset
 │   ├── little_kingdom_logo.png      # Alma mater emblem
 │   └── project1.jpg - project6.jpg  # Project showcase media banners
 │

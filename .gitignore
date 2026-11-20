@@ -1,7 +1,3 @@
-# Python virtual environments
-venv/
-__pycache__/
-
 # Node.js dependencies
 node_modules/
 npm-debug.log*
@@ -11,37 +7,23 @@ yarn-error.log*
 # Sensitive credentials & API tokens (NEVER commit to version control)
 config.json
 **/config.json
-!**/config.example.json
 *tokens*.json
 *token*.json
 client_secret*.json
 *.env
 *.env.*
 
-# Local server runtime data, logs & caches
-server/config/
-**/server/config/
-admin_notes.json
-**/admin_notes.json
-access_logs.json
-**/access_logs.json
-drive_cache.json
-**/drive_cache.json
-visitor_analytics.json
-**/visitor_analytics.json
-cloud_data.json
-**/cloud_data.json
-admin/cloud_data.json
-temp_uploads/
-**/temp_uploads/
-mock_storage/
-**/mock_storage/
+# Local runtime data, logs & caches
 *.log
 cookies.txt
+temp_uploads/
+**/temp_uploads/
 
-# Local experimental development directory
+# OS and Editor metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local experimental directory
 experimental/
-
-# Local tunnel binaries
-*.exe
-server/bin/

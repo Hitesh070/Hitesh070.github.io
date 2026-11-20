@@ -29,7 +29,7 @@ The official engineering portfolio and personal web platform of **Hitesh V S**, 
 - [9. Installation and Setup](#9-installation-and-setup)
 - [10. Usage Instructions](#10-usage-instructions)
 - [11. System Workflow](#11-system-workflow)
-- [12. Core Engineering Project Modules](#12-core-engineering-project-modules)
+- [12. API Documentation](#12-api-documentation)
 - [13. Results and Demonstration](#13-results-and-demonstration)
 - [14. Configuration](#14-configuration)
 - [15. Troubleshooting](#15-troubleshooting)
@@ -61,7 +61,7 @@ This repository implements a lightweight, high-performance static website:
 ### Project Objectives
 - Achieve high Google Lighthouse performance (95+ across Performance, Accessibility, and Best Practices).
 - Provide unified access to 9 core engineering projects, academic manuscripts, and patent documentation.
-- Maintain responsive layout across all viewport breakpoints ($320\text{px}$ mobile to $4\text{K}$ monitors).
+- Maintain responsive layout across all viewport breakpoints (320px mobile to 4K monitors).
 
 ### Intended Applications & Use Cases
 - Engineering portfolio presentation for academic admissions, industry recruitment, and research collaborations.
@@ -95,7 +95,7 @@ flowchart TD
         HTML["index.html (Semantic Structure)"]
         CSS["styles.css (Glassmorphic Design Tokens)"]
         AppJS["app.js (Particle Canvas, Modal Router, State)"]
-        Assets["assets/ (Circuit Schematics & Diagrams)"]
+        Assets["assets/ (Circuit Schematics and Diagrams)"]
     end
 
     subgraph CDN ["Static Distribution Layer"]
@@ -200,35 +200,41 @@ Open `http://localhost:8000` in your web browser.
 sequenceDiagram
     autonumber
     actor Visitor
-    participant Browser as Web Browser (DOM & Canvas)
+    participant Browser as Web Browser (DOM and Canvas)
     participant Modal as Project Modal Controller
 
     Visitor->>Browser: Access https://hitesh070.github.io
     Browser->>Browser: Initialize Particle Canvas Mesh (60 FPS)
     Browser->>Browser: Evaluate IntersectionObserver on project cards
-    Visitor->>Browser: Click "Technical Details" on project card
-    Browser->>Modal: Fetch engineering schematics & transfer functions
+    Visitor->>Browser: Click 'Technical Details' on project card
+    Browser->>Modal: Fetch engineering schematics and transfer functions
     Modal-->>Visitor: Render high-resolution modal overlay
 ```
 
 ---
 
-## 12. Core Engineering Project Modules
+## 12. API Documentation
+
+*Not applicable.* This platform operates as a 100% static client-side web application hosted on GitHub Pages edge CDN. Following the removal of the administrative dashboard, the platform operates entirely without server runtimes, backend daemons, or network API endpoints.
+
+---
+
+## 13. Results and Demonstration
+
+### Core Engineering Project Modules
 
 The portfolio presents structured deep dives into Hitesh V S's core engineering works:
 
 | Module | Engineering Domain | Primary Stack | Key Mathematical / Design Artifact |
 | :--- | :--- | :--- | :--- |
 | **ALPS Catamaran Vessel** | Marine Robotics / Computer Vision | C++, Python, ROS2, YOLOv8 | 3-DOF hydrodynamics, closed-loop heading PID |
-| **Cascade Buck Converter** | Power Electronics & Embedded Control | ATmega328P, C, C1D1 Topology | Dual-loop discrete PI, $10\text{kHz}$ timer ISR |
+| **Cascade Buck Converter** | Power Electronics & Embedded Control | ATmega328P, C, C1D1 Topology | Dual-loop discrete PI, 10 kHz timer ISR |
 | **ETA-1 Approximate Adder** | Digital VLSI & Computer Arithmetic | Verilog HDL, 45nm CMOS | MSB-triggered clock gating, error rate reduction |
 | **GoTo Telescope Mount** | Mechatronics & Astronomy Kinematics | Python, PyQt6, STM32, Next.js | Right Ascension/Declination kinematic coordinate transforms |
 | **HI Grid Solar Simulator** | Renewable Energy Modeling | TypeScript, Next.js, Python | Hay-Davies POA irradiance model, Sandia thermal model |
 | **Battery PINN Predictor** | Machine Learning & Energy Storage | PyTorch, Python, Physics Loss | Conservation of energy PDE loss constraints |
 
----
-
-## 13. Results and Demonstration
+### Verified Architectural Diagrams & Schematics
 
 The `assets/` folder contains verified, high-resolution architectural diagrams rendered across project modals:
 - `assets/alps_diagram.png`: Catamaran marine robotics architecture.
